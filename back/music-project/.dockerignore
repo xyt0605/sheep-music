@@ -1,0 +1,56 @@
+# 后端 .dockerignore
+# 构建 Docker 镜像时忽略这些文件
+
+# Maven
+target/
+!target/*.jar
+.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+.mvn/wrapper/MavenWrapperDownloader.java
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+
+# 日志文件
+logs/
+*.log
+
+# 环境变量
+.env
+.env.local
+
+# 临时文件
+*.tmp
+*.temp
+.DS_Store
+*~
+
+# Git
+.git/
+.gitignore
+
+# 文档
+*.md
+README.md
+CHANGELOG.md
+docs/
+
+# 测试
+src/test/
+**/test/
+
+# 数据库文件（已在 docker-compose.yml 中单独挂载）
+*.sql
+!database.sql
+
+# 其他
+.github/
+.gitlab-ci.yml
+

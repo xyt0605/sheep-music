@@ -14,7 +14,9 @@ Thumbs.db
 # Node.js / 前端
 # ========================
 node_modules/
-/front/sheep-music/dist/
+# 注意：dist 目录需要提交到 Git（Docker 部署需要）
+# 如果使用容器内构建，可以取消注释下面这行
+# /front/sheep-music/dist/
 /front/sheep-music/node_modules/
 npm-debug.log*
 yarn-debug.log*
@@ -110,10 +112,15 @@ logs/
 sheepmusic_backup.sql
 backup*.sql
 
+# 但保留初始化 SQL 文件（部署需要）
+!back/music-project/database.sql
+!back/music-project/src/main/resources/db/init.sql
+
 # ========================
 # Docker 相关
 # ========================
-.dockerignore
+# 保留 .dockerignore（部署需要）
+# .dockerignore
 
 # ========================
 # 部署相关

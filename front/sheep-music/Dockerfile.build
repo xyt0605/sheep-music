@@ -1,0 +1,54 @@
+# 前端 Dockerfile - 容器内构建版本
+# 如果需要在服务器上直接构建，使用此 Dockerfile
+# 使用方法：docker-compose.yml 中指定 dockerfile: Dockerfile.build
+
+# 阶段1：构建阶段
+FROM node:20-alpine AS builder
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制 package.json 和 package-lock.json
+COPY package*.json ./
+
+# 安装依赖
+RUN npm install --legacy-peer-deps
+
+# 复制源代码（排除 node_modules 和 dist）
+COPY . .
+
+# 构建生产版本
+RUN npm run build
+
+# 验证构建结果
+RUN echo "=== Build completed ===" && \
+    ls -la dist/ && \
+    echo "=== dist contents ===" && \
+    ls -la dist/assets/ || echo "No assets directory"
+
+# 阶段2：运行阶段
+FROM nginx:alpine
+
+# 设置维护者信息
+LABEL maintainer="sheep-music"
+
+# 复制自定义 Nginx 配置
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# 从构建阶段复制打包后的文件
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# 验证文件已复制
+RUN echo "=== Nginx html contents ===" && \
+    ls -la /usr/share/nginx/html/
+
+# 暴露端口
+EXPOSE 80
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+
+# 启动 Nginx
+CMD ["nginx", "-g", "daemon off;"]
+

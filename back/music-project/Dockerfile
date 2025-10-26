@@ -9,13 +9,16 @@ WORKDIR /app
 
 # 复制 pom.xml 并下载依赖（利用 Docker 缓存）
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -B || true
 
 # 复制源代码
 COPY src ./src
 
 # 打包应用（跳过测试）
 RUN mvn clean package -DskipTests
+
+# 验证构建结果
+RUN echo "=== Build completed ===" && ls -la target/
 
 # 阶段2：运行阶段
 FROM openjdk:11-jre-slim

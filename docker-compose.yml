@@ -1,4 +1,6 @@
-version: '3.8'
+# Docker Compose 配置文件
+# Sheep Music 项目 - 完整部署配置
+# 包含：MySQL 数据库、Spring Boot 后端、Vue.js 前端
 
 services:
   # MySQL 数据库

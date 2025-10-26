@@ -1,32 +1,19 @@
 # 前端 Dockerfile
-# 使用多阶段构建
+# 使用简化版本 - 直接使用本地构建的 dist 目录
+# 优点：避免容器内构建问题，构建速度更快
+# 使用方法：在本地先运行 npm run build 生成 dist 目录
 
-# 阶段1：构建阶段
-FROM node:16-alpine AS builder
-
-# 设置工作目录
-WORKDIR /app
-
-# 复制 package.json 和 package-lock.json
-COPY package*.json ./
-
-# 安装依赖（使用 --legacy-peer-deps 解决依赖冲突）
-RUN npm install --legacy-peer-deps
-
-# 复制源代码
-COPY . .
-
-# 构建生产版本
-RUN npm run build
-
-# 阶段2：运行阶段（使用 Nginx 提供静态文件服务）
 FROM nginx:alpine
+
+# 设置维护者信息
+LABEL maintainer="sheep-music"
 
 # 复制自定义 Nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# 从构建阶段复制打包后的文件
-COPY --from=builder /app/dist /usr/share/nginx/html
+# 复制已构建的前端静态文件
+# 注意：部署前需要在本地运行 npm run build 生成 dist 目录
+COPY dist /usr/share/nginx/html
 
 # 暴露端口
 EXPOSE 80
