@@ -91,6 +91,10 @@ build/
 .env.test.local
 .env.production.local
 
+# 允许提交这两个文件（部署需要）
+!front/sheep-music/.env.development
+!front/sheep-music/.env.production
+
 # ========================
 # 日志文件
 # ========================

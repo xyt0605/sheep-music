@@ -1,0 +1,46 @@
+# 应用服务 WEB 访问端口
+server:
+  port: ${PORT:9000}
+
+spring:
+  application:
+    name: Sheep-music
+  
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/sheepmusic?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:1234}
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update  # 自动创建/更新表结构
+    show-sql: true      # 显示SQL语句
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true  # 启用文件上传
+      max-file-size: 30MB  # 单个文件最大大小
+      max-request-size: 30MB  # 整个请求最大大小
+
+# JWT配置
+jwt:
+  secret: ${JWT_SECRET:sheep-music-secret-key-2025}
+  expiration: 604800000  # 7天有效期（毫秒）
+
+# 阿里云OSS配置
+aliyun:
+  oss:
+    endpoint: ${ALIYUN_OSS_ENDPOINT:oss-cn-hangzhou.aliyuncs.com}
+    accessKeyId: ${ALIYUN_OSS_ACCESS_KEY_ID}
+    accessKeySecret: ${ALIYUN_OSS_ACCESS_KEY_SECRET}
+    bucketName: ${ALIYUN_OSS_BUCKET_NAME:sheepmusic}
+    urlPrefix: ${ALIYUN_OSS_URL_PREFIX:https://sheepmusic.oss-cn-hangzhou.aliyuncs.com/}
+
