@@ -1,0 +1,1 @@
+import{r as s}from"./request-WXopXHOE.js";const r=e=>s({url:"/music/recommend/personalized",method:"get",params:e}),o=e=>s({url:"/music/recommend/guess-you-like",method:"get",params:e}),m=e=>s({url:"/music/recommend/playlists",method:"get",params:e});export{o as a,r as b,m as g};
