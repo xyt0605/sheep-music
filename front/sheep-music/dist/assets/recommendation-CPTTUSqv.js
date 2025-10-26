@@ -1,0 +1,1 @@
+import{r as e}from"./request-76E38DvM.js";const s=s=>e({url:"/music/recommend/personalized",method:"get",params:s}),m=s=>e({url:"/music/recommend/guess-you-like",method:"get",params:s}),r=s=>e({url:"/music/recommend/playlists",method:"get",params:s});export{m as a,s as b,r as g};

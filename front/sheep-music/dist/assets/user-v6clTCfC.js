@@ -1,0 +1,1 @@
+import{r as t}from"./request-76E38DvM.js";const a=a=>t({url:"/auth/login",method:"post",data:a}),r=a=>t({url:"/auth/register",method:"post",data:a}),s=a=>t({url:"/user/update",method:"put",data:a}),u=a=>t({url:"/user/password",method:"put",data:a});export{u as a,a as l,r,s as u};

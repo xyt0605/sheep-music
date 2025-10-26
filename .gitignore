@@ -71,7 +71,7 @@ tmp/
 # NetBeans
 /nbproject/private/
 /nbbuild/
-/dist/
+# /dist/  # 注释掉，允许前端 dist 目录被提交
 /nbdist/
 /.nb-gradle/
 build/
