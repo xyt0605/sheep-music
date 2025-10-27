@@ -1099,41 +1099,19 @@ const handleAddSuccess = () => {
   transform: translateY(-10px);
 }
 
-/* ========== 响应式 ========== */
+/* ========== 响应式 - 全局样式已覆盖 ========== */
 @media (max-width: 768px) {
-  .search-container {
-    flex-direction: column;
-    gap: 10px;
+  .search-page {
+    padding: 0 0 20px;
   }
-
-  .search-type-selector {
-    width: 100%;
+  
+  .search-results {
+    padding: 0 10px;
   }
-
+  
+  /* 适配Segmented组件 */
   .search-type-selector :deep(.el-segmented) {
     width: 100%;
-  }
-
-  .hot-search-list {
-    grid-template-columns: 1fr;
-  }
-
-  .artist-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 15px;
-  }
-
-  .artist-avatar-wrapper {
-    width: 100px;
-    height: 100px;
-  }
-
-  .song-duration {
-    display: none;
-  }
-
-  .song-index {
-    font-size: 12px;
   }
 }
 </style>

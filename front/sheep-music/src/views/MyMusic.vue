@@ -1239,33 +1239,39 @@ export default {
   opacity: 1;
 }
 
+/* 响应式 - 全局样式已覆盖 */
 @media (max-width: 768px) {
+  .my-music {
+    padding: 15px 10px;
+  }
+  
   .song-item,
   .history-item {
     flex-wrap: wrap;
   }
   
-  .song-duration,
   .favorite-time,
   .play-info {
     width: auto;
+    font-size: 12px;
   }
   
   .play-count {
     display: none;
   }
   
-  .song-actions {
+  .playlist-actions {
     opacity: 1;
   }
   
-  .playlist-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  .playlist-header {
+    flex-direction: column;
+    align-items: flex-start !important;
     gap: 15px;
   }
   
-  .playlist-actions {
-    opacity: 1;
+  .playlist-header .el-button {
+    width: 100%;
   }
 }
 </style>

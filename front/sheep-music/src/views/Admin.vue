@@ -77,4 +77,15 @@ export default {
   color: #666;
   font-size: 14px;
 }
+
+/* 响应式 - 全局样式已覆盖 */
+@media (max-width: 768px) {
+  .admin-page {
+    padding: 15px 10px;
+  }
+  
+  .el-tabs {
+    font-size: 14px;
+  }
+}
 </style>

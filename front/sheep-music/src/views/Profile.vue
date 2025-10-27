@@ -507,4 +507,29 @@ export default {
 .avatar-actions {
   flex: 1;
 }
+
+/* 响应式 - 部分已由全局样式覆盖 */
+@media (max-width: 768px) {
+  .profile-page {
+    padding: 15px 10px;
+  }
+  
+  .avatar-edit {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .avatar-edit .el-avatar {
+    margin-bottom: 15px;
+  }
+  
+  .info-item .label {
+    width: 80px;
+    font-size: 13px;
+  }
+  
+  .info-item .value {
+    font-size: 13px;
+  }
+}
 </style>

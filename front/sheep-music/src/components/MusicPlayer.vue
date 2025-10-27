@@ -552,24 +552,32 @@ onMounted(() => {
   color: #999;
 }
 
-/* 响应式 */
+/* 响应式 - 全局样式已覆盖大部分 */
 @media (max-width: 768px) {
-  .player-main {
-    flex-wrap: wrap;
-  }
-  
-  .player-left {
-    min-width: auto;
-  }
-  
   .player-right {
     min-width: auto;
-    width: 100%;
-    justify-content: center;
   }
   
-  .volume-control {
-    display: none;
+  .playlist-content {
+    max-height: 50vh;
+  }
+  
+  .lyric-content {
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .playlist-item {
+    padding: 10px 8px;
+  }
+  
+  .playlist-item-name {
+    font-size: 13px;
+  }
+  
+  .playlist-item-artist {
+    font-size: 11px;
   }
 }
 </style>

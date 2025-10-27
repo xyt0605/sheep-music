@@ -17,7 +17,14 @@ export default defineConfig({
     sourcemap: false
   },
   server: {
-    port: 8001
+    port: 8001,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:9000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   }
 })
 

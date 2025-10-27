@@ -261,4 +261,25 @@ export default {
 .login-link a:hover {
   text-decoration: underline;
 }
+
+/* 响应式 - 全局样式已覆盖部分 */
+@media (max-width: 768px) {
+  .register-container {
+    padding: 15px;
+  }
+  
+  .register-box {
+    width: 100%;
+    max-width: 450px;
+    padding: 30px 20px;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .subtitle {
+    font-size: 13px;
+  }
+}
 </style>

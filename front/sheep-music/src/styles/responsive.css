@@ -309,3 +309,533 @@
   }
 }
 
+/* ============================================
+   页面级响应式样式
+   ============================================ */
+
+/* 页面头部自适应 */
+.page-header {
+  padding: 30px 20px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: 20px 15px;
+  }
+  
+  .page-header h2 {
+    font-size: 24px !important;
+  }
+  
+  .page-header .subtitle,
+  .page-header p {
+    font-size: 14px !important;
+  }
+}
+
+/* 推荐Banner响应式 */
+@media (max-width: 768px) {
+  .recommend-banner,
+  .banner-content {
+    padding: 20px !important;
+  }
+  
+  .banner-icon {
+    width: 60px !important;
+    height: 60px !important;
+    font-size: 36px !important;
+  }
+  
+  .banner-text h3 {
+    font-size: 18px !important;
+  }
+  
+  .banner-text p {
+    font-size: 13px !important;
+  }
+  
+  .banner-action {
+    display: none; /* 移动端隐藏按钮 */
+  }
+}
+
+@media (max-width: 480px) {
+  .banner-content {
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+  
+  .banner-icon {
+    margin: 0 auto !important;
+  }
+}
+
+/* 欢迎区域响应式 */
+@media (max-width: 768px) {
+  .welcome-section {
+    padding: 25px 20px !important;
+  }
+  
+  .welcome-section h2 {
+    font-size: 22px !important;
+  }
+  
+  .welcome-text {
+    font-size: 14px !important;
+  }
+}
+
+/* 歌曲列表响应式 */
+@media (max-width: 768px) {
+  .song-list {
+    padding: 5px !important;
+  }
+  
+  .song-item {
+    padding: 10px 8px !important;
+    gap: 10px !important;
+  }
+  
+  .song-index {
+    width: 24px !important;
+    font-size: 12px !important;
+  }
+  
+  .song-cover,
+  .song-cover-small {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  
+  .song-name {
+    font-size: 14px !important;
+  }
+  
+  .song-artist,
+  .song-artist-name {
+    font-size: 12px !important;
+  }
+  
+  .song-duration,
+  .song-play-count,
+  .song-time,
+  .song-stats {
+    display: none !important;
+  }
+  
+  .song-actions {
+    opacity: 1 !important;
+    gap: 6px !important;
+  }
+  
+  .song-actions .el-button {
+    padding: 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .song-item {
+    flex-wrap: wrap;
+  }
+  
+  .song-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+}
+
+/* 歌曲网格响应式 */
+@media (max-width: 1024px) {
+  .song-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+    gap: 15px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .song-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    gap: 12px !important;
+  }
+  
+  .song-card {
+    padding: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .song-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+/* 歌单网格响应式 */
+@media (max-width: 1024px) {
+  .playlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+    gap: 15px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .playlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+    gap: 12px !important;
+  }
+  
+  .playlist-card {
+    padding: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .playlist-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+/* 歌手网格响应式 */
+@media (max-width: 768px) {
+  .artist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    gap: 15px !important;
+  }
+  
+  .artist-avatar-wrapper {
+    width: 100px !important;
+    height: 100px !important;
+  }
+  
+  .artist-name {
+    font-size: 14px !important;
+  }
+  
+  .artist-region {
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .artist-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Section Header 响应式 */
+@media (max-width: 768px) {
+  .section-header {
+    flex-wrap: wrap;
+    gap: 10px !important;
+  }
+  
+  .section-header h3 {
+    font-size: 18px !important;
+  }
+  
+  .section-desc {
+    display: none !important;
+  }
+  
+  .section-icon {
+    font-size: 22px !important;
+  }
+}
+
+/* 统计栏响应式 */
+@media (max-width: 768px) {
+  .stats-bar {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px !important;
+    padding: 12px !important;
+  }
+  
+  .stats-item {
+    font-size: 13px !important;
+  }
+}
+
+/* Tab标签页响应式 */
+@media (max-width: 768px) {
+  .music-tabs,
+  .el-tabs {
+    padding: 10px !important;
+  }
+  
+  .tab-content {
+    padding-top: 15px !important;
+  }
+  
+  .el-tabs__nav-wrap {
+    padding: 0 !important;
+  }
+  
+  .el-tabs__item {
+    font-size: 14px !important;
+    padding: 0 15px !important;
+  }
+}
+
+/* 个人中心卡片响应式 */
+@media (max-width: 768px) {
+  .user-info-card .el-card {
+    margin: 0 !important;
+  }
+  
+  .user-basic-info {
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+  
+  .avatar-container {
+    margin: 0 auto 15px !important;
+  }
+  
+  .user-details {
+    text-align: center !important;
+  }
+  
+  .info-list {
+    flex-direction: column !important;
+  }
+  
+  .info-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    margin-bottom: 10px !important;
+  }
+  
+  .actions {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  
+  .actions .el-button {
+    width: 100% !important;
+  }
+}
+
+/* 音乐播放器响应式 */
+@media (max-width: 1024px) {
+  .music-player {
+    padding: 10px !important;
+  }
+  
+  .player-main {
+    gap: 15px !important;
+  }
+  
+  .player-center {
+    flex: 1 !important;
+  }
+  
+  .player-right {
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .music-player {
+    padding: 8px 10px !important;
+  }
+  
+  .player-main {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+  
+  .player-left {
+    flex: 1;
+    min-width: 0;
+    gap: 10px !important;
+  }
+  
+  .player-left .song-cover {
+    width: 45px !important;
+    height: 45px !important;
+  }
+  
+  .player-left .song-name {
+    font-size: 13px !important;
+  }
+  
+  .player-left .song-artist {
+    font-size: 11px !important;
+  }
+  
+  .player-center {
+    order: 3;
+    width: 100%;
+  }
+  
+  .player-controls {
+    margin-bottom: 8px !important;
+  }
+  
+  .player-progress {
+    gap: 8px !important;
+  }
+  
+  .time-text {
+    font-size: 11px !important;
+  }
+  
+  .player-right {
+    flex-shrink: 0;
+    gap: 6px !important;
+  }
+  
+  .volume-control {
+    display: none !important;
+  }
+  
+  .playlist-panel {
+    max-height: 60vh !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .player-controls .el-button {
+    padding: 8px !important;
+  }
+  
+  .player-right .el-button {
+    padding: 6px !important;
+  }
+}
+
+/* 空状态响应式 */
+@media (max-width: 768px) {
+  .empty-state,
+  .empty-hint {
+    padding: 40px 15px !important;
+  }
+  
+  .empty-icon {
+    font-size: 60px !important;
+  }
+  
+  .el-empty__description {
+    font-size: 14px !important;
+  }
+}
+
+/* 搜索页面特殊响应式 */
+@media (max-width: 768px) {
+  .search-header {
+    position: relative !important;
+    padding: 15px 0 !important;
+  }
+  
+  .search-container {
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding: 0 10px !important;
+  }
+  
+  .search-type-selector {
+    width: 100% !important;
+  }
+  
+  .initial-state {
+    padding: 0 10px !important;
+  }
+  
+  .hot-search-section,
+  .search-history-section {
+    padding: 15px !important;
+    margin: 0 !important;
+  }
+  
+  .hot-search-list {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* 管理页面响应式 */
+@media (max-width: 1024px) {
+  .admin-tabs {
+    padding: 15px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-tabs {
+    padding: 10px !important;
+  }
+  
+  .el-table {
+    font-size: 12px !important;
+  }
+  
+  .el-table th,
+  .el-table td {
+    padding: 10px 5px !important;
+  }
+  
+  /* 隐藏部分不重要的列 */
+  .el-table .mobile-hide-column {
+    display: none !important;
+  }
+}
+
+/* 登录注册页面响应式 */
+@media (max-width: 768px) {
+  .login-container,
+  .register-container {
+    padding: 20px 15px !important;
+  }
+  
+  .login-card,
+  .register-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+  
+  .auth-title {
+    font-size: 22px !important;
+  }
+  
+  .auth-subtitle {
+    font-size: 13px !important;
+  }
+}
+
+/* 歌词面板响应式 */
+@media (max-width: 768px) {
+  .lyric-panel {
+    padding: 15px !important;
+  }
+  
+  .lyric-item {
+    font-size: 14px !important;
+    padding: 8px 0 !important;
+  }
+  
+  .lyric-item.active {
+    font-size: 16px !important;
+  }
+}
+
+/* 播放列表面板响应式 */
+@media (max-width: 768px) {
+  .playlist-panel {
+    padding: 10px !important;
+  }
+  
+  .playlist-header {
+    padding: 10px !important;
+  }
+  
+  .playlist-item {
+    padding: 8px !important;
+  }
+}
+
+

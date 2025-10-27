@@ -75,6 +75,10 @@ services:
       TZ: Asia/Shanghai
     ports:
       - "80:80"
+      - "443/443" #HTTPS 端口
+    volumes:
+     #挂载 SSL 证书目录（只读）
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - backend
     networks:

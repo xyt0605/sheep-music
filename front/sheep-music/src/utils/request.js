@@ -2,9 +2,12 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
 // 根据环境自动选择 baseURL
-// 开发环境：/api（通过 vite 代理到本地后端）
-// 生产环境：从环境变量读取（Vercel 会注入）
-const baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
+// 开发环境：/api（通过代理到本地后端）
+// 生产环境：从环境变量读取
+// 兼容 Vite (import.meta.env) 和 Vue CLI (process.env)
+const baseURL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) 
+  || (typeof process !== 'undefined' && process.env?.VUE_APP_API_BASE_URL) 
+  || '/api'
 
 // 创建 axios 实例
 const request = axios.create({

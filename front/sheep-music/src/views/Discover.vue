@@ -804,25 +804,14 @@ const formatDuration = (seconds) => {
   text-align: center;
 }
 
-/* ========== 响应式 ========== */
+/* ========== 响应式 - 全局样式已覆盖 ========== */
 @media (max-width: 768px) {
-  .page-header h2 {
-    font-size: 24px;
+  .discover-page {
+    padding: 0 10px 30px;
   }
-
-  .song-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 15px;
-  }
-
-  .playlist-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px;
-  }
-
-  .song-stats,
-  .song-duration {
-    display: none;
+  
+  .recommendation-section {
+    margin-bottom: 30px;
   }
 }
 </style>

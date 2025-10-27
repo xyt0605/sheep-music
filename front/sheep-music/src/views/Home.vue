@@ -577,10 +577,14 @@ export default {
   padding: 40px 0;
 }
 
-/* 响应式 */
+/* 响应式 - 全局样式已覆盖，这里只保留页面特有的样式 */
 @media (max-width: 768px) {
-  .playlist-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  .home {
+    padding: 0 10px 20px;
+  }
+  
+  .content-section {
+    margin-bottom: 30px;
   }
 }
 </style>
