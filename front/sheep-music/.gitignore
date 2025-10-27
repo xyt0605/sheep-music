@@ -1,6 +1,6 @@
 .DS_Store
 node_modules
-/dist
+# /dist  # 注释掉，使 dist 目录被 Git 追踪以便部署
 
 
 # local env files
