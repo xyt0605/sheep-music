@@ -9,8 +9,8 @@
           <span class="logo-text">Sheep Music</span>
         </div>
         
-        <!-- 导航菜单 -->
-        <nav class="nav-menu">
+        <!-- 导航菜单（桌面端） -->
+        <nav class="nav-menu desktop-menu">
           <router-link 
             v-for="item in menuItems" 
             :key="item.path" 
@@ -22,6 +22,11 @@
             {{ item.name }}
           </router-link>
         </nav>
+        
+        <!-- 移动端菜单按钮 -->
+        <div class="mobile-menu-btn" @click="toggleMobileMenu">
+          <span class="menu-icon">☰</span>
+        </div>
         
         <!-- 右侧用户信息 -->
         <div class="user-section">
@@ -45,6 +50,29 @@
       </div>
     </header>
     
+    <!-- 移动端侧边栏菜单 -->
+    <transition name="slide">
+      <div v-if="mobileMenuOpen" class="mobile-menu-overlay" @click="toggleMobileMenu">
+        <nav class="mobile-menu" @click.stop>
+          <div class="mobile-menu-header">
+            <span class="menu-title">菜单</span>
+            <span class="close-btn" @click="toggleMobileMenu">✕</span>
+          </div>
+          <router-link 
+            v-for="item in menuItems" 
+            :key="item.path" 
+            :to="item.path"
+            class="mobile-nav-item"
+            active-class="active"
+            @click="toggleMobileMenu"
+          >
+            <span v-if="item.icon" class="menu-icon">{{ item.icon }}</span>
+            {{ item.name }}
+          </router-link>
+        </nav>
+      </div>
+    </transition>
+    
     <!-- 主内容区 -->
     <main class="app-main">
       <router-view />
@@ -56,7 +84,7 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store/user'
@@ -70,6 +98,7 @@ export default {
   setup() {
     const router = useRouter()
     const userStore = useUserStore()
+    const mobileMenuOpen = ref(false)
     
     // 根据角色动态生成菜单
     const menuItems = computed(() => {
@@ -93,6 +122,11 @@ export default {
       
       return baseMenu
     })
+    
+    // 切换移动端菜单
+    const toggleMobileMenu = () => {
+      mobileMenuOpen.value = !mobileMenuOpen.value
+    }
     
     // 回到首页
     const goHome = () => {
@@ -126,6 +160,8 @@ export default {
     return {
       userStore,
       menuItems,
+      mobileMenuOpen,
+      toggleMobileMenu,
       goHome,
       handleCommand
     }
@@ -264,14 +300,204 @@ export default {
   padding: 20px;
 }
 
-/* 响应式 */
-@media (max-width: 768px) {
+/* 移动端菜单按钮（默认隐藏） */
+.mobile-menu-btn {
+  display: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  padding: 5px 10px;
+  transition: opacity 0.3s;
+}
+
+.mobile-menu-btn:hover {
+  opacity: 0.8;
+}
+
+/* 移动端侧边栏菜单 */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.mobile-menu {
+  width: 280px;
+  max-width: 80%;
+  background: white;
+  height: 100%;
+  overflow-y: auto;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.menu-title {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.close-btn {
+  font-size: 28px;
+  cursor: pointer;
+  padding: 5px 10px;
+  transition: opacity 0.3s;
+}
+
+.close-btn:hover {
+  opacity: 0.7;
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 20px;
+  color: #333;
+  text-decoration: none;
+  font-size: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.3s;
+}
+
+.mobile-nav-item:hover {
+  background: #f5f5f5;
+}
+
+.mobile-nav-item.active {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  color: #667eea;
+  font-weight: bold;
+  border-left: 4px solid #667eea;
+}
+
+.mobile-nav-item .menu-icon {
+  font-size: 20px;
+}
+
+/* 移动端菜单动画 */
+.slide-enter-active,
+.slide-leave-active {
+  transition: opacity 0.3s;
+}
+
+.slide-enter-active .mobile-menu,
+.slide-leave-active .mobile-menu {
+  transition: transform 0.3s;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-from .mobile-menu,
+.slide-leave-to .mobile-menu {
+  transform: translateX(-100%);
+}
+
+/* 平板适配 (768px - 1024px) */
+@media (max-width: 1024px) {
+  .header-content {
+    padding: 0 15px;
+  }
+  
   .nav-menu {
+    gap: 20px;
+    margin-left: 30px;
+  }
+  
+  .nav-item {
+    font-size: 14px;
+  }
+  
+  .app-main {
+    padding: 15px;
+  }
+}
+
+/* 移动端适配 (< 768px) */
+@media (max-width: 768px) {
+  /* 隐藏桌面端导航菜单 */
+  .desktop-menu {
+    display: none !important;
+  }
+  
+  /* 显示移动端菜单按钮 */
+  .mobile-menu-btn {
+    display: block;
+  }
+  
+  /* Logo 文字隐藏 */
+  .logo-text {
     display: none;
   }
   
-  .logo-text {
+  .logo-icon {
+    font-size: 32px;
+  }
+  
+  /* 用户信息简化 */
+  .username {
     display: none;
+  }
+  
+  .admin-badge {
+    display: none;
+  }
+  
+  .user-info {
+    padding: 5px;
+  }
+  
+  /* 主内容区 */
+  .app-main {
+    padding: 10px;
+    margin-top: 60px;
+    margin-bottom: 80px;
+  }
+  
+  /* 顶部导航栏 */
+  .app-header {
+    height: 56px;
+  }
+  
+  .header-content {
+    padding: 0 10px;
+  }
+}
+
+/* 小屏手机适配 (< 480px) */
+@media (max-width: 480px) {
+  .app-header {
+    height: 50px;
+  }
+  
+  .logo-icon {
+    font-size: 28px;
+  }
+  
+  .app-main {
+    padding: 8px;
+    margin-top: 50px;
+    margin-bottom: 70px;
+  }
+  
+  .mobile-menu {
+    width: 260px;
   }
 }
 </style>

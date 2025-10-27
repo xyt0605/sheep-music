@@ -5,6 +5,7 @@ import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import router from './router'
+import '@/styles/responsive.css' // 导入响应式样式
 
 // 忽略 ResizeObserver 循环错误（这是 Element Plus 表格的已知问题，不影响功能）
 const resizeObserverErrorHandler = (e) => {
