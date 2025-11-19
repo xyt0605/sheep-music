@@ -1,0 +1,163 @@
+/* 主题变量定义 */
+:root {
+  /* 颜色变量 - 亮色主题 */
+  --color-primary: #667eea;
+  --color-primary-light: #7c8ff0;
+  --color-primary-dark: #5568d3;
+  
+  --color-secondary: #764ba2;
+  --color-accent: #f5576c;
+  
+  /* 背景色 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f7fa;
+  --bg-tertiary: #ecf0f5;
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  
+  /* 文字颜色 */
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --text-inverse: #ffffff;
+  
+  /* 边框颜色 */
+  --border-color: #e0e0e0;
+  --border-color-light: #f0f0f0;
+  
+  /* 阴影 */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.15);
+  
+  /* 卡片背景 */
+  --card-bg: #ffffff;
+  --card-hover-bg: #f8f9fa;
+  
+  /* 输入框 */
+  --input-bg: #ffffff;
+  --input-border: #dcdfe6;
+  
+  /* 渐变背景 */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-warm: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  
+  /* 过渡动画 */
+  --transition-fast: 0.2s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* 暗色主题 */
+:root.dark,
+[data-theme='dark'] {
+  /* 颜色变量 - 暗色主题 */
+  --color-primary: #7c8ff0;
+  --color-primary-light: #8fa0f3;
+  --color-primary-dark: #667eea;
+  
+  --color-secondary: #9370b9;
+  --color-accent: #ff6b81;
+  
+  /* 背景色 */
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #242424;
+  --bg-tertiary: #2e2e2e;
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  
+  /* 文字颜色 */
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-tertiary: #808080;
+  --text-inverse: #1a1a1a;
+  
+  /* 边框颜色 */
+  --border-color: #3a3a3a;
+  --border-color-light: #2e2e2e;
+  
+  /* 阴影 */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.6);
+  
+  /* 卡片背景 */
+  --card-bg: #242424;
+  --card-hover-bg: #2e2e2e;
+  
+  /* 输入框 */
+  --input-bg: #2e2e2e;
+  --input-border: #3a3a3a;
+  
+  /* 渐变背景 */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  --gradient-warm: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+}
+
+/* 平滑主题切换 */
+* {
+  transition: background-color var(--transition-base), 
+              color var(--transition-base), 
+              border-color var(--transition-base),
+              box-shadow var(--transition-base);
+}
+
+/* 全局背景 */
+body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Element Plus 暗色主题适配 */
+.dark .el-button {
+  --el-button-bg-color: var(--bg-tertiary);
+  --el-button-text-color: var(--text-primary);
+  --el-button-border-color: var(--border-color);
+}
+
+.dark .el-input {
+  --el-input-bg-color: var(--input-bg);
+  --el-input-text-color: var(--text-primary);
+  --el-input-border-color: var(--input-border);
+}
+
+.dark .el-card {
+  --el-card-bg-color: var(--card-bg);
+  --el-card-border-color: var(--border-color);
+}
+
+.dark .el-dialog {
+  --el-dialog-bg-color: var(--bg-primary);
+}
+
+.dark .el-drawer {
+  --el-drawer-bg-color: var(--bg-primary);
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* 选中文本颜色 */
+::selection {
+  background-color: var(--color-primary);
+  color: white;
+}
+

@@ -1,5 +1,6 @@
 <template>
   <div class="app-layout">
+    <div class="galaxy-bg"></div>
     <!-- 顶部导航栏 -->
     <header class="app-header">
       <div class="header-content">
@@ -20,6 +21,12 @@
           >
             <span v-if="item.icon" class="menu-icon">{{ item.icon }}</span>
             {{ item.name }}
+            <el-badge
+              v-if="item.badge && item.badge > 0"
+              :value="item.badge"
+              :max="99"
+              class="menu-badge"
+            />
           </router-link>
         </nav>
         
@@ -30,6 +37,20 @@
         
         <!-- 右侧用户信息 -->
         <div class="user-section">
+          <!-- 桌面歌词按钮 -->
+          <el-tooltip content="桌面歌词" placement="bottom">
+            <el-button 
+              :icon="desktopLyricVisible ? 'ChatLineSquare' : 'ChatDotSquare'"
+              circle 
+              @click="toggleDesktopLyric"
+              :type="desktopLyricVisible ? 'primary' : ''"
+              class="lyric-toggle-btn"
+            />
+          </el-tooltip>
+          
+          <!-- 主题切换按钮 -->
+          <ThemeToggle />
+          
           <el-dropdown @command="handleCommand">
             <div class="user-info">
               <el-avatar :src="userStore.userInfo?.avatar" size="default">
@@ -75,30 +96,47 @@
     
     <!-- 主内容区 -->
     <main class="app-main">
-      <router-view />
+      <router-view v-slot="{ Component, route }">
+        <transition name="fade-slide" mode="out-in">
+          <component :is="Component" :key="route.path" />
+        </transition>
+      </router-view>
     </main>
     
     <!-- 全局音乐播放器 -->
     <MusicPlayer />
+    
+    <!-- 桌面歌词 -->
+    <DesktopLyric ref="desktopLyricRef" />
   </div>
 </template>
 
 <script>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store/user'
+import { useSocialStore } from '@/store/social'
 import MusicPlayer from '@/components/MusicPlayer.vue'
+import ThemeToggle from '@/components/ThemeToggle.vue'
+import DesktopLyric from '@/components/DesktopLyric.vue'
+import wsClient from '@/ws/client'
+import { notifyInfo } from '@/utils/message'
 
 export default {
   name: 'Layout',
   components: {
-    MusicPlayer
+    MusicPlayer,
+    ThemeToggle,
+    DesktopLyric
   },
   setup() {
     const router = useRouter()
     const userStore = useUserStore()
+    const socialStore = useSocialStore()
     const mobileMenuOpen = ref(false)
+    const desktopLyricRef = ref(null)
+    const desktopLyricVisible = ref(false)
     
     // 根据角色动态生成菜单
     const menuItems = computed(() => {
@@ -106,9 +144,14 @@ export default {
         { name: '首页', path: '/home', icon: '🏠' },
         { name: '发现', path: '/discover', icon: '✨' },
         { name: '搜索', path: '/search', icon: '🔍' },
+        { name: '歌手', path: '/artists', icon: '🎤' },
         { name: '歌单广场', path: '/playlist', icon: '📃' },
         { name: '排行榜', path: '/rank', icon: '📊' },
-        { name: '我的音乐', path: '/my-music' }
+        { name: '我的音乐', path: '/my-music' },
+        { name: '好友', path: '/friends', icon: '👥', badge: socialStore.friendRequestCount },
+        { name: '聊天', path: '/chat', icon: '💬', badge: socialStore.unreadMessageCount },
+        { name: '动态', path: '/moments', icon: '📱' },
+        { name: '分享广场', path: '/share-square', icon: '🔗' }
       ]
       
       // 如果是管理员，添加管理后台
@@ -123,6 +166,70 @@ export default {
       return baseMenu
     })
     
+    // 初始化社交数据
+    onMounted(() => {
+      if (userStore.isLogin) {
+        // 异步初始化，不阻塞页面加载
+        socialStore.initSocialData().catch(error => {
+          console.error('初始化社交数据失败:', error)
+        })
+
+        // 初始化 WebSocket 连接与订阅
+        const token = localStorage.getItem('token')
+        const uid = userStore.userInfo?.id
+        if (uid && token) {
+          wsClient.connect({ userId: uid, token })
+
+          // 聊天消息到达：刷新未读数并提示（避免重复订阅，记录取消函数）
+          const offChat = wsClient.onChatMessage(async (msg) => {
+            try {
+              await socialStore.updateUnreadMessageCount()
+              // 已注释掉消息通知，避免显示不必要的提示
+              // const senderName = msg?.senderName || '好友'
+              // const content = msg?.content || ''
+              // notifyInfo('新消息', `${senderName}：${content}`)
+            } catch (e) {
+              // ignore
+            }
+          })
+
+          // 通知消息：刷新未读通知徽标（避免重复订阅，记录取消函数）
+          const offNotify = wsClient.onNotification(async (data) => {
+            if (data && data.type === 'notification_unread_count') {
+              socialStore.unreadNotificationCount = data.unreadCount || 0
+            } else {
+              await socialStore.updateUnreadNotificationCount().catch(() => {})
+            }
+          })
+
+          // 组件卸载时，移除订阅，防止重复弹窗
+          onUnmounted(() => {
+            try { offChat && offChat() } catch (_) {}
+            try { offNotify && offNotify() } catch (_) {}
+          })
+        }
+
+        // 定期更新未读数
+        const intervalId = setInterval(() => {
+          if (userStore.isLogin) {
+            socialStore.updateUnreadMessageCount().catch(error => {
+              console.error('更新未读消息数失败:', error)
+            })
+            socialStore.updateUnreadNotificationCount().catch(error => {
+              console.error('更新未读通知数失败:', error)
+            })
+          } else {
+            clearInterval(intervalId)
+          }
+        }, 30000) // 每30秒更新一次
+
+        // 组件卸载时清理定时器，避免重复创建
+        onUnmounted(() => {
+          try { clearInterval(intervalId) } catch (_) {}
+        })
+      }
+    })
+    
     // 切换移动端菜单
     const toggleMobileMenu = () => {
       mobileMenuOpen.value = !mobileMenuOpen.value
@@ -131,6 +238,14 @@ export default {
     // 回到首页
     const goHome = () => {
       router.push('/home')
+    }
+    
+    // 切换桌面歌词
+    const toggleDesktopLyric = () => {
+      if (desktopLyricRef.value) {
+        desktopLyricRef.value.toggle()
+        desktopLyricVisible.value = desktopLyricRef.value.visible
+      }
     }
     
     // 下拉菜单操作
@@ -149,6 +264,8 @@ export default {
             cancelButtonText: '取消',
             type: 'warning'
           }).then(() => {
+            // 断开 WebSocket 连接
+            try { wsClient.disconnect() } catch (e) {}
             userStore.logout()
             ElMessage.success('已退出登录')
             router.push('/login')
@@ -159,9 +276,13 @@ export default {
     
     return {
       userStore,
+      socialStore,
       menuItems,
       mobileMenuOpen,
+      desktopLyricRef,
+      desktopLyricVisible,
       toggleMobileMenu,
+      toggleDesktopLyric,
       goHome,
       handleCommand
     }
@@ -174,19 +295,47 @@ export default {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f5f5f5;
+  background-color: var(--bg-secondary);
+  background-image: radial-gradient(circle at 1% 1%, rgba(102,126,234,0.06) 0%, transparent 25%),
+                    radial-gradient(circle at 99% 99%, rgba(118,75,162,0.05) 0%, transparent 25%);
+  position: relative;
+  z-index: 1;
+}
+
+.app-layout::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  display: none;
+}
+
+.galaxy-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, #f7fafc 0%, #eef2f7 100%),
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 2px, transparent 2px, transparent 6px),
+    radial-gradient(400px 200px at 20% 30%, rgba(102,126,234,0.08), transparent 60%),
+    radial-gradient(500px 250px at 80% 20%, rgba(118,75,162,0.06), transparent 65%);
 }
 
 /* 顶部导航栏 */
 .app-header {
-  height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 64px;
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color-light);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.06);
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
+  transition: all var(--transition-base);
 }
 
 .header-content {
@@ -203,61 +352,143 @@ export default {
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: white;
-  font-size: 20px;
-  font-weight: bold;
+  gap: 12px;
+  color: var(--text-primary);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  font-size: 22px;
+  font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.3s;
+  transition: all var(--transition-base);
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .logo:hover {
-  opacity: 0.8;
+  transform: scale(1.05);
 }
 
 .logo-icon {
-  font-size: 28px;
+  font-size: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.3));
 }
 
 /* 导航菜单 */
 .nav-menu {
   display: flex;
-  gap: 30px;
+  gap: 6px;
   flex: 1;
-  margin-left: 50px;
+  margin-left: 24px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.nav-menu::-webkit-scrollbar {
+  height: 2px;
+}
+
+.nav-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nav-menu::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
 }
 
 .nav-item {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-secondary);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
   text-decoration: none;
-  font-size: 15px;
-  padding: 5px 10px;
-  border-radius: 4px;
-  transition: all 0.3s;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 10px;
+  transition: all var(--transition-base);
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  position: relative;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  transform: translateY(-2px);
 }
 
 .nav-item.active {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-weight: bold;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  border-radius: 2px;
 }
 
 .menu-icon {
   font-size: 16px;
+  opacity: 0.8;
+  display: none;
+}
+
+.nav-item:hover .menu-icon,
+.nav-item.active .menu-icon {
+  display: inline-block;
+  opacity: 1;
+}
+
+.menu-badge {
+  margin-left: 4px;
 }
 
 /* 用户区域 */
 .user-section {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.user-section :deep(.el-button.is-circle) {
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  transition: all var(--transition-base);
+}
+
+.user-section :deep(.el-button.is-circle:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  border-color: var(--color-primary);
+}
+
+.lyric-toggle-btn {
+  transition: all var(--transition-base);
+}
+
+.lyric-toggle-btn:hover {
+  transform: scale(1.05) translateY(-2px);
 }
 
 .user-info {
@@ -265,53 +496,67 @@ export default {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  padding: 5px 15px;
-  border-radius: 20px;
-  transition: background 0.3s;
+  padding: 6px 16px;
+  border-radius: 12px;
+  transition: all var(--transition-base);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
 }
 
 .user-info:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-tertiary);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
 }
 
 .username {
-  color: white;
+  color: var(--text-primary);
   font-size: 14px;
+  font-weight: 500;
 }
 
 .admin-badge {
-  background: #ffd700;
-  color: #333;
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-weight: bold;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+  letter-spacing: 0.5px;
 }
 
 /* 主内容区 */
 .app-main {
   flex: 1;
-  margin-top: 60px;
+  margin-top: 64px;
   margin-bottom: 100px;
   max-width: 1400px;
   width: 100%;
   margin-left: auto;
   margin-right: auto;
-  padding: 20px;
+  padding: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 /* 移动端菜单按钮（默认隐藏） */
 .mobile-menu-btn {
   display: none;
-  color: white;
+  color: var(--text-primary);
   font-size: 28px;
   cursor: pointer;
-  padding: 5px 10px;
-  transition: opacity 0.3s;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: all var(--transition-base);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
 }
 
 .mobile-menu-btn:hover {
-  opacity: 0.8;
+  background: var(--bg-tertiary);
+  transform: scale(1.05);
 }
 
 /* 移动端侧边栏菜单 */
@@ -321,71 +566,94 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
   z-index: 2000;
   display: flex;
   justify-content: flex-start;
 }
 
 .mobile-menu {
-  width: 280px;
-  max-width: 80%;
-  background: white;
+  width: 300px;
+  max-width: 85%;
+  background: var(--card-bg);
   height: 100%;
   overflow-y: auto;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+  border-right: 1px solid var(--border-color);
 }
 
 .mobile-menu-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .menu-title {
   font-size: 20px;
-  font-weight: bold;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .close-btn {
   font-size: 28px;
   cursor: pointer;
-  padding: 5px 10px;
-  transition: opacity 0.3s;
+  padding: 6px 12px;
+  transition: all var(--transition-base);
+  color: var(--text-secondary);
+  border-radius: 8px;
 }
 
 .close-btn:hover {
-  opacity: 0.7;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  transform: rotate(90deg);
 }
 
 .mobile-nav-item {
   display: flex;
   align-items: center;
   gap: 15px;
-  padding: 15px 20px;
-  color: #333;
+  padding: 16px 24px;
+  margin: 6px 12px;
+  color: var(--text-secondary);
   text-decoration: none;
   font-size: 16px;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background 0.3s;
+  border-radius: 12px;
+  transition: all var(--transition-base);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .mobile-nav-item:hover {
-  background: #f5f5f5;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  transform: translateX(4px);
 }
 
 .mobile-nav-item.active {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-  color: #667eea;
-  font-weight: bold;
-  border-left: 4px solid #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  color: var(--color-primary);
+  font-weight: 600;
+  border-left: 4px solid var(--color-primary);
+  padding-left: 20px;
 }
 
 .mobile-nav-item .menu-icon {
-  font-size: 20px;
+  font-size: 22px;
+  opacity: 0.8;
+}
+
+.mobile-nav-item:hover .menu-icon,
+.mobile-nav-item.active .menu-icon {
+  opacity: 1;
 }
 
 /* 移动端菜单动画 */
@@ -412,20 +680,30 @@ export default {
 /* 平板适配 (768px - 1024px) */
 @media (max-width: 1024px) {
   .header-content {
-    padding: 0 15px;
+    padding: 0 16px;
   }
   
   .nav-menu {
-    gap: 20px;
-    margin-left: 30px;
+    gap: 4px;
+    margin-left: 16px;
   }
   
   .nav-item {
     font-size: 14px;
+    padding: 8px 12px;
   }
   
   .app-main {
-    padding: 15px;
+    padding: 16px;
+  }
+  
+  .logo-text {
+    font-size: 18px;
+  }
+  
+  /* 移除图标，节省空间 */
+  .nav-item .menu-icon {
+    display: none;
   }
 }
 
@@ -447,7 +725,11 @@ export default {
   }
   
   .logo-icon {
-    font-size: 32px;
+    font-size: 28px;
+  }
+  
+  .logo {
+    padding: 6px 12px;
   }
   
   /* 用户信息简化 */
@@ -460,13 +742,24 @@ export default {
   }
   
   .user-info {
-    padding: 5px;
+    padding: 6px;
+    background: transparent;
+    border: none;
+  }
+  
+  .user-section {
+    gap: 8px;
+  }
+  
+  .user-section :deep(.el-button.is-circle) {
+    width: 36px;
+    height: 36px;
   }
   
   /* 主内容区 */
   .app-main {
-    padding: 10px;
-    margin-top: 60px;
+    padding: 12px;
+    margin-top: 64px;
     margin-bottom: 80px;
   }
   
@@ -476,7 +769,7 @@ export default {
   }
   
   .header-content {
-    padding: 0 10px;
+    padding: 0 12px;
   }
 }
 

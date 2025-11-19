@@ -33,6 +33,16 @@ export const usePlayerStore = defineStore('player', () => {
   const initAudio = (audioElement) => {
     audio.value = audioElement
     
+    // 优化加载策略，减少被中断的请求
+    audioElement.preload = 'metadata'
+    audioElement.crossOrigin = 'anonymous'
+
+    audioElement.addEventListener('error', () => {
+      try {
+        console.error('音频资源加载失败', audioElement?.error?.code, audioElement?.src)
+      } catch (e) {}
+    })
+
     // 监听时间更新
     audioElement.addEventListener('timeupdate', () => {
       currentTime.value = audioElement.currentTime
@@ -88,10 +98,28 @@ export const usePlayerStore = defineStore('player', () => {
         if (isSingleLoopReplay && audio.value.src.includes(song.url)) {
           audio.value.currentTime = 0
         } else {
-          audio.value.src = song.url
+          // 切换前暂停，避免并发拉取造成请求被中断
+          try { audio.value.pause() } catch (e) {}
+          const ossHost = 'https://sheepmusic.oss-cn-hangzhou.aliyuncs.com'
+          let src = song.url
+          try {
+            if (typeof song.url === 'string' && song.url.startsWith(ossHost)) {
+              const u = new URL(song.url)
+              src = `/oss${u.pathname}`
+            }
+          } catch (e) {}
+          audio.value.src = src
+          // 显式触发加载，降低立即 play 导致的中断
+          try { audio.value.load() } catch (e) {}
         }
         
-        await audio.value.play()
+        // 等待可以播放再开始
+        try {
+          await audio.value.play()
+        } catch (e) {
+          // 某些浏览器需要用户交互后才能自动播放
+          console.warn('音频播放受限或中断，将在用户交互后恢复：', e?.message || e)
+        }
         isPlaying.value = true
         
         // 调用后端 API 增加播放次数

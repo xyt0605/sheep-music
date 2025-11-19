@@ -283,8 +283,8 @@ const artistResults = ref([])
 const totalArtists = ref(0)
 const allArtists = ref([]) // 缓存所有歌手
 
-const defaultCover = 'https://via.placeholder.com/60?text=Music'
-const defaultAvatar = 'https://via.placeholder.com/200?text=Artist'
+  const defaultCover = '/default-cover.svg'
+  const defaultAvatar = '/default-artist.svg'
 
 // 热门搜索（从后端获取）
 const hotSearches = ref([])

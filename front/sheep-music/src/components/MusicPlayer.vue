@@ -1,7 +1,7 @@
 <template>
   <div class="music-player" v-show="playerStore.showPlayer">
     <!-- 隐藏的 audio 元素 -->
-    <audio ref="audioRef"></audio>
+    <audio ref="audioRef" preload="metadata" crossorigin="anonymous"></audio>
     
     <!-- 播放器主体 -->
     <div class="player-main">
@@ -112,6 +112,30 @@
         >
           <el-icon><List /></el-icon>
         </el-button>
+
+        <!-- 歌曲评论入口 -->
+        <el-tooltip content="歌曲评论" placement="top">
+          <el-button
+            circle
+            size="small"
+            :disabled="!playerStore.currentSong?.id"
+            @click="showCommentsDialog = true"
+          >
+            <el-icon><ChatLineRound /></el-icon>
+          </el-button>
+        </el-tooltip>
+        
+        <!-- 分享按钮 -->
+        <el-tooltip content="分享歌曲" placement="top">
+          <el-button
+            circle
+            size="small"
+            :disabled="!playerStore.currentSong?.id"
+            @click="handleShareSong"
+          >
+            <el-icon><Share /></el-icon>
+          </el-button>
+        </el-tooltip>
       </div>
     </div>
     
@@ -172,6 +196,31 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 歌曲评论对话框 -->
+    <el-dialog
+      v-model="showCommentsDialog"
+      title="歌曲评论"
+      width="600px"
+    >
+      <CommentList
+        v-if="playerStore.currentSong?.id"
+        :key="playerStore.currentSong.id"
+        :song-id="playerStore.currentSong.id"
+        :show-rating="false"
+      />
+      <template #footer>
+        <el-button @click="showCommentsDialog = false">关闭</el-button>
+      </template>
+    </el-dialog>
+    
+    <!-- 分享弹窗 -->
+    <ShareDialog
+      v-model="showShareDialog"
+      type="song"
+      :share-data="shareData"
+      @success="handleShareSuccess"
+    />
   </div>
 </template>
 
@@ -189,14 +238,26 @@ import {
   Close,
   Refresh,
   Promotion,
-  RefreshLeft
+  RefreshLeft,
+  ChatLineRound,
+  Share
 } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/store/user'
+import CommentList from '@/components/Social/CommentList.vue'
+import ShareDialog from '@/components/ShareDialog.vue'
 
 const playerStore = usePlayerStore()
+const userStore = useUserStore()
+const router = useRouter()
 const audioRef = ref(null)
 const lyricContentRef = ref(null)
 const showPlaylistDialog = ref(false)
-const defaultCover = 'https://via.placeholder.com/60?text=Music'
+const showCommentsDialog = ref(false)
+const showShareDialog = ref(false)
+const shareData = ref({})
+const defaultCover = '/default-cover.svg'
 
 // 进度条值（0-100）
 const sliderValue = computed({
@@ -315,6 +376,34 @@ watch(currentLyricIndex, async (newIndex) => {
 // 切换歌词显示
 const toggleLyric = () => {
   playerStore.toggleLyric()
+}
+
+// 分享歌曲
+const handleShareSong = () => {
+  if (!userStore.isLogin) {
+    ElMessage.warning('请先登录')
+    router.push('/login')
+    return
+  }
+  
+  const song = playerStore.currentSong
+  if (!song || !song.id) {
+    ElMessage.error('歌曲信息无效')
+    return
+  }
+  
+  shareData.value = {
+    id: song.id,
+    name: song.title || song.name,
+    cover: song.cover,
+    subtitle: getArtistsName(song)
+  }
+  showShareDialog.value = true
+}
+
+// 分享成功回调
+const handleShareSuccess = () => {
+  ElMessage.success('分享成功，已发布到分享广场')
 }
 
 // 初始化

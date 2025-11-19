@@ -58,6 +58,9 @@
             <el-button v-if="isOwner" size="large" @click="goToEdit">
               <el-icon><Edit /></el-icon> 编辑
             </el-button>
+            <el-button v-if="isOwner" size="large" type="primary" plain @click="sharePlaylistClick">
+              <el-icon><Share /></el-icon> 分享到广场
+            </el-button>
           </div>
         </div>
       </div>
@@ -114,6 +117,13 @@
                 title="添加到其他歌单"
               />
               <el-button 
+                icon="Share" 
+                circle 
+                size="small" 
+                @click="shareSongClick(item.song)"
+                title="分享歌曲"
+              />
+              <el-button 
                 v-if="isOwner"
                 icon="Delete" 
                 circle 
@@ -131,6 +141,43 @@
           </el-empty>
         </div>
       </div>
+
+      <!-- 评论区 -->
+      <div v-if="songs.length > 0" class="comments-section">
+        <div class="section-header comment-header">
+          <div class="comment-title">
+            <h3>评论区</h3>
+            <p class="comment-subtitle">请选择歌曲查看评论并参与讨论</p>
+          </div>
+          <el-select
+            v-model="commentSongId"
+            placeholder="选择评论的歌曲"
+            size="small"
+            class="comment-selector"
+            filterable
+            :teleported="false"
+          >
+            <el-option
+              v-for="item in songs"
+              :key="item.song?.id"
+              :label="item.song?.title || '未知歌曲'"
+              :value="item.song?.id"
+              :disabled="!item.song?.id"
+            />
+          </el-select>
+        </div>
+
+        <div v-if="commentSong">
+          <div class="comment-song-info">
+            <img :src="commentSong.cover || defaultCover" class="comment-song-cover" />
+            <div class="comment-song-text">
+              <h4>{{ commentSong.title }}</h4>
+              <p>{{ formatArtists(commentSong.artists) }}</p>
+            </div>
+          </div>
+          <CommentList :song-id="commentSong.id" :show-rating="true" />
+        </div>
+      </div>
     </div>
     
     <div v-else class="error-state">
@@ -145,25 +192,37 @@
       :song-id="selectedSongId"
       @success="handleAddSuccess"
     />
+
+    <!-- 分享弹窗 -->
+    <ShareDialog
+      v-model="shareDialogVisible"
+      :type="shareType"
+      :share-data="shareData"
+      @success="handleShareSuccess"
+    />
   </div>
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePlayerStore } from '@/store/player'
 import { useUserStore } from '@/store/user'
 import { getPlaylistDetail, getPlaylistSongs, removeSongFromPlaylist, incrementPlayCount } from '@/api/playlist'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Loading, User, List, Headset, CaretRight, Refresh, Edit, Plus, Delete } from '@element-plus/icons-vue'
+import { Loading, User, List, Headset, CaretRight, Refresh, Edit, Plus, Delete, Star, Share } from '@element-plus/icons-vue'
 import PlaylistCover from '@/components/PlaylistCover.vue'
 import PlaylistSelector from '@/components/PlaylistSelector.vue'
+import CommentList from '@/components/Social/CommentList.vue'
+import ShareDialog from '@/components/ShareDialog.vue'
 
 export default {
   name: 'PlaylistDetail',
   components: {
     PlaylistCover,
     PlaylistSelector,
+    CommentList,
+    ShareDialog,
     Loading,
     User,
     List,
@@ -172,39 +231,54 @@ export default {
     Refresh,
     Edit,
     Plus,
-    Delete
+    Delete,
+    Star,
+    Share
   },
   setup() {
     const router = useRouter()
     const route = useRoute()
     const playerStore = usePlayerStore()
     const userStore = useUserStore()
-    
+
     const loading = ref(false)
     const playlist = ref(null)
     const songs = ref([])
-    const defaultCover = 'https://via.placeholder.com/200?text=Music'
-    
+    const defaultCover = '/default-cover.svg'
+
     // 歌单选择器
     const playlistSelectorVisible = ref(false)
     const selectedSongId = ref(null)
     
+    // 分享相关
+    const shareDialogVisible = ref(false)
+    const shareType = ref('playlist')
+    const shareData = ref({})
+
+    // 评论区选中的歌曲
+    const commentSongId = ref(null)
+    const commentSong = computed(() => {
+      if (!commentSongId.value) return null
+      const target = songs.value.find(item => item.song?.id === commentSongId.value)
+      return target?.song || null
+    })
+
     // 是否是歌单创建者
     const isOwner = computed(() => {
       return playlist.value && userStore.userInfo && playlist.value.userId === userStore.userInfo.id
     })
-    
+
     // 加载歌单详情
     const loadPlaylistDetail = async () => {
       loading.value = true
       try {
         const playlistId = route.params.id
         const res = await getPlaylistDetail(playlistId)
-        
+
         if (res.code === 200) {
           playlist.value = res.data
           await loadSongs(playlistId)
-          
+
           // 增加播放次数
           incrementPlayCount(playlistId).catch(() => {})
         }
@@ -215,54 +289,67 @@ export default {
         loading.value = false
       }
     }
-    
+
     // 加载歌单歌曲
     const loadSongs = async (playlistId) => {
       try {
         const res = await getPlaylistSongs(playlistId, { page: 0, size: 500 })
         if (res.code === 200) {
           songs.value = res.data.content || []
+
+          if (!commentSongId.value) {
+            const firstSong = songs.value.find(item => item.song?.id)
+            commentSongId.value = firstSong?.song?.id || null
+          }
         }
       } catch (error) {
         console.error('加载歌曲列表失败:', error)
       }
     }
-    
+
     // 播放全部
     const playAll = (random = false) => {
       if (songs.value.length === 0) {
         ElMessage.warning('歌单没有歌曲')
         return
       }
-      
+
       const songList = songs.value.map(item => item.song).filter(s => s)
-      
+
+      if (songList.length === 0) {
+        ElMessage.warning('歌单没有可播放的歌曲')
+        return
+      }
+
       if (random) {
-        // 随机播放
         const shuffled = [...songList].sort(() => Math.random() - 0.5)
         playerStore.play(shuffled[0], shuffled)
+        commentSongId.value = shuffled[0]?.id || null
       } else {
-        // 顺序播放
         playerStore.play(songList[0], songList)
+        commentSongId.value = songList[0]?.id || null
       }
-      
+
       ElMessage.success(random ? '开始随机播放' : '开始播放全部')
     }
-    
+
     // 播放单曲
     const playSong = (song, index) => {
       if (!song) return
       const songList = songs.value.map(item => item.song).filter(s => s)
       playerStore.play(song, songList)
+      if (song.id) {
+        commentSongId.value = song.id
+      }
     }
-    
+
     // 添加到播放列表
     const addToPlaylist = (song) => {
       if (!song) return
       playerStore.addToPlaylist(song)
       ElMessage.success(`已添加到播放列表: ${song.title}`)
     }
-    
+
     // 从歌单移除歌曲
     const removeSong = async (songId) => {
       try {
@@ -275,11 +362,10 @@ export default {
             type: 'warning'
           }
         )
-        
+
         const res = await removeSongFromPlaylist(playlist.value.id, songId)
         if (res.code === 200) {
           ElMessage.success('移除成功')
-          // 重新加载歌单详情（包含最新的封面和歌曲数量）
           await loadPlaylistDetail()
         }
       } catch (error) {
@@ -288,19 +374,19 @@ export default {
         }
       }
     }
-    
+
     // 跳转到编辑
     const goToEdit = () => {
-      router.push(`/my-music?tab=playlists`)
+      router.push('/my-music?tab=playlists')
     }
-    
+
     // 跳转到歌手详情
     const goToArtist = (artistId) => {
       if (artistId) {
         router.push(`/artist/${artistId}`)
       }
     }
-    
+
     // 格式化时长
     const formatDuration = (seconds) => {
       if (!seconds) return '--:--'
@@ -308,14 +394,14 @@ export default {
       const secs = seconds % 60
       return `${mins}:${secs.toString().padStart(2, '0')}`
     }
-    
+
     // 格式化日期
     const formatDate = (dateStr) => {
       if (!dateStr) return ''
       const date = new Date(dateStr)
       return date.toLocaleDateString('zh-CN')
     }
-    
+
     // 格式化数量
     const formatCount = (count) => {
       if (!count) return 0
@@ -324,7 +410,12 @@ export default {
       }
       return count
     }
-    
+
+    const formatArtists = (artists = []) => {
+      if (!artists || artists.length === 0) return '未知歌手'
+      return artists.map(artist => artist.name).join(' / ')
+    }
+
     // 显示添加到歌单对话框
     const showAddToPlaylistDialog = (songId) => {
       if (!songId) return
@@ -336,16 +427,74 @@ export default {
       selectedSongId.value = songId
       playlistSelectorVisible.value = true
     }
-    
+
     // 添加成功回调
     const handleAddSuccess = () => {
-      // 可以在这里做一些额外的处理
+      // 预留扩展
     }
-    
+
+    watch(songs, (newSongs) => {
+      if (!newSongs || newSongs.length === 0) {
+        commentSongId.value = null
+        return
+      }
+
+      if (!newSongs.some(item => item.song?.id === commentSongId.value)) {
+        const firstSong = newSongs.find(item => item.song?.id)
+        commentSongId.value = firstSong?.song?.id || null
+      }
+    })
+
     onMounted(() => {
       loadPlaylistDetail()
     })
+
+    // 分享歌单
+    const sharePlaylistClick = () => {
+      if (!userStore.isLogin) {
+        ElMessage.warning('请先登录')
+        router.push('/login')
+        return
+      }
+      if (!playlist.value) return
+      
+      shareType.value = 'playlist'
+      shareData.value = {
+        id: playlist.value.id,
+        name: playlist.value.name,
+        cover: playlist.value.cover,
+        subtitle: `${playlist.value.songCount || 0} 首歌曲`
+      }
+      shareDialogVisible.value = true
+    }
     
+    // 分享歌曲
+    const shareSongClick = (song) => {
+      if (!userStore.isLogin) {
+        ElMessage.warning('请先登录')
+        router.push('/login')
+        return
+      }
+      if (!song || !song.id) {
+        ElMessage.error('歌曲信息无效')
+        return
+      }
+      
+      shareType.value = 'song'
+      shareData.value = {
+        id: song.id,
+        name: song.title || song.name,
+        cover: song.cover,
+        subtitle: formatArtists(song.artists)
+      }
+      shareDialogVisible.value = true
+    }
+    
+    // 分享成功回调
+    const handleShareSuccess = () => {
+      ElMessage.success('分享成功，已发布到分享广场')
+    }
+
     return {
       loading,
       playlist,
@@ -361,11 +510,20 @@ export default {
       formatDuration,
       formatDate,
       formatCount,
+      formatArtists,
       router,
       playlistSelectorVisible,
       selectedSongId,
       showAddToPlaylistDialog,
-      handleAddSuccess
+      handleAddSuccess,
+      commentSongId,
+      commentSong,
+      shareDialogVisible,
+      shareType,
+      shareData,
+      sharePlaylistClick,
+      shareSongClick,
+      handleShareSuccess
     }
   }
 }
@@ -485,6 +643,64 @@ export default {
   padding: 30px;
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.comments-section {
+  margin-top: 30px;
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.comment-header {
+  align-items: flex-start;
+}
+
+.comment-title h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.comment-subtitle {
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+}
+
+.comment-selector {
+  min-width: 220px;
+}
+
+.comment-song-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: #f9fafc;
+  border-radius: 12px;
+}
+
+.comment-song-cover {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.comment-song-text h4 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  color: #333;
+}
+
+.comment-song-text p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
 }
 
 .section-header {

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect x="0" y="0" width="200" height="200" rx="16" fill="#7E57C2"/>
+  <g fill="#ffffff" opacity="0.92">
+    <circle cx="100" cy="78" r="32"/>
+    <path d="M40 160c6-28 32-46 60-46s54 18 60 46H40z"/>
+  </g>
+  <text x="100" y="180" font-size="20" text-anchor="middle" fill="#ffffff" opacity="0.85">Artist</text>
+</svg>

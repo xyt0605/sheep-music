@@ -1,7 +1,8 @@
 <template>
   <div class="home">
     <!-- 欢迎区域 -->
-    <div class="welcome-section">
+    <div v-if="showWelcome" class="welcome-section">
+      <div class="section-close" title="隐藏此区域" @click.stop="hideWelcome">✕</div>
       <h2>你好，{{ userStore.userInfo?.nickname || '音乐爱好者' }}</h2>
       <p class="welcome-text">
         欢迎来到 Sheep Music，开始你的音乐之旅
@@ -9,7 +10,7 @@
     </div>
     
     <!-- 个性化推荐入口 -->
-    <div class="recommend-banner" @click="goToDiscover">
+    <div v-if="showBanner" class="recommend-banner" @click="goToDiscover">
       <div class="banner-content">
         <div class="banner-icon">
           <el-icon><MagicStick /></el-icon>
@@ -19,11 +20,12 @@
           <p>基于你的喜好，为你推荐精选歌曲和歌单</p>
         </div>
         <div class="banner-action">
-          <el-button type="primary" round>
+          <GalaxyButton size="md" variant="secondary" @click="goToDiscover">
             立即发现
             <el-icon class="ml-5"><ArrowRight /></el-icon>
-          </el-button>
+          </GalaxyButton>
         </div>
+        <div class="section-close" title="隐藏此区域" @click.stop="hideBanner">✕</div>
       </div>
     </div>
     
@@ -33,43 +35,61 @@
         <h3>🔥 热门歌曲</h3>
         <el-link type="primary" @click="goToRank('hot')">查看更多 ›</el-link>
       </div>
-      <div class="song-list">
-        <div 
-          v-for="(song, index) in hotSongs" 
-          :key="song.id" 
-          class="song-item"
-          @click="handlePlaySong(song)"
+      <!-- 加载动画 -->
+      <div v-if="hotSongsLoading" class="loader-wrap">
+        <GalaxyLoader size="lg" />
+      </div>
+      
+      <div v-else-if="hotSongs.length > 0" class="carousel-container">
+        <el-carousel 
+          :interval="5000" 
+          arrow="always" 
+          height="400px"
+          indicator-position="outside"
         >
-          <div class="song-index" :class="{ 'top-three': index < 3 }">{{ index + 1 }}</div>
-          <img :src="song.cover || defaultCover" class="song-cover">
-          <div class="song-info">
-            <div class="song-name">{{ song.title }}</div>
-            <div class="song-artist">
-              <template v-for="(artist, idx) in song.artists || []" :key="artist.id">
-                <span class="clickable" @click.stop="goToArtist(artist.id)">{{ artist.name }}</span>
-                <span v-if="idx < (song.artists?.length || 0) - 1"> / </span>
-              </template>
-              <span v-if="!song.artists || song.artists.length === 0">未知歌手</span>
+          <el-carousel-item v-for="(chunk, chunkIndex) in hotSongsChunks" :key="chunkIndex">
+            <div class="song-list">
+              <div 
+                v-for="(song, index) in chunk" 
+                :key="song.id" 
+                class="song-item"
+                @click="handlePlaySong(song)"
+              >
+                <div class="song-index" :class="{ 'top-three': (chunkIndex * 5 + index) < 3 }">
+                  {{ chunkIndex * 5 + index + 1 }}
+                </div>
+                <img :src="song.cover || defaultCover" class="song-cover">
+                <div class="song-info">
+                  <div class="song-name">{{ song.title }}</div>
+                  <div class="song-artist">
+                    <template v-for="(artist, idx) in song.artists || []" :key="artist.id">
+                      <span class="clickable" @click.stop="goToArtist(artist.id)">{{ artist.name }}</span>
+                      <span v-if="idx < (song.artists?.length || 0) - 1"> / </span>
+                    </template>
+                    <span v-if="!song.artists || song.artists.length === 0">未知歌手</span>
+                  </div>
+                </div>
+                <div class="song-play-count">
+                  <el-icon><Headset /></el-icon>
+                  {{ formatPlayCount(song.playCount) }}
+                </div>
+                <div class="song-actions">
+                  <el-button icon="CaretRight" circle size="small" @click.stop="handlePlaySong(song)" title="播放" />
+                  <el-button icon="Plus" circle size="small" @click.stop="handleAddToPlaylist(song)" title="添加到播放列表" />
+                  <el-button icon="FolderAdd" circle size="small" @click.stop="showAddToPlaylistDialog(song.id)" title="添加到歌单" />
+                  <el-button 
+                    :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'" 
+                    circle 
+                    size="small" 
+                    :type="favoriteSongs[song.id] ? 'danger' : ''"
+                    @click.stop="handleToggleFavorite(song.id)" 
+                    title="收藏"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="song-play-count">
-            <el-icon><Headset /></el-icon>
-            {{ formatPlayCount(song.playCount) }}
-          </div>
-          <div class="song-actions">
-            <el-button icon="CaretRight" circle size="small" @click.stop="handlePlaySong(song)" title="播放" />
-            <el-button icon="Plus" circle size="small" @click.stop="handleAddToPlaylist(song)" title="添加到播放列表" />
-            <el-button icon="FolderAdd" circle size="small" @click.stop="showAddToPlaylistDialog(song.id)" title="添加到歌单" />
-            <el-button 
-              :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'" 
-              circle 
-              size="small" 
-              :type="favoriteSongs[song.id] ? 'danger' : ''"
-              @click.stop="handleToggleFavorite(song.id)" 
-              title="收藏"
-            />
-          </div>
-        </div>
+          </el-carousel-item>
+        </el-carousel>
       </div>
       <div v-if="hotSongs.length === 0" class="empty-state">
         <el-empty description="暂无热门歌曲" />
@@ -82,40 +102,56 @@
         <h3>🎵 新歌速递</h3>
         <el-link type="primary" @click="goToRank('new')">查看更多 ›</el-link>
       </div>
-      <div class="song-list">
-        <div 
-          v-for="(song, index) in newSongs" 
-          :key="song.id" 
-          class="song-item"
-          @click="handlePlaySong(song)"
+      <!-- 加载动画 -->
+      <div v-if="newSongsLoading" class="loader-wrap">
+        <GalaxyLoader size="lg" />
+      </div>
+      
+      <div v-else-if="newSongs.length > 0" class="carousel-container">
+        <el-carousel 
+          :interval="5000" 
+          arrow="always" 
+          height="400px"
+          indicator-position="outside"
         >
-          <div class="song-index">{{ index + 1 }}</div>
-          <img :src="song.cover || defaultCover" class="song-cover">
-          <div class="song-info">
-            <div class="song-name">{{ song.title }}</div>
-            <div class="song-artist">
-              <template v-for="(artist, idx) in song.artists || []" :key="artist.id">
-                <span class="clickable" @click.stop="goToArtist(artist.id)">{{ artist.name }}</span>
-                <span v-if="idx < (song.artists?.length || 0) - 1"> / </span>
-              </template>
-              <span v-if="!song.artists || song.artists.length === 0">未知歌手</span>
+          <el-carousel-item v-for="(chunk, chunkIndex) in newSongsChunks" :key="chunkIndex">
+            <div class="song-list">
+              <div 
+                v-for="(song, index) in chunk" 
+                :key="song.id" 
+                class="song-item"
+                @click="handlePlaySong(song)"
+              >
+                <div class="song-index">{{ chunkIndex * 5 + index + 1 }}</div>
+                <img :src="song.cover || defaultCover" class="song-cover">
+                <div class="song-info">
+                  <div class="song-name">{{ song.title }}</div>
+                  <div class="song-artist">
+                    <template v-for="(artist, idx) in song.artists || []" :key="artist.id">
+                      <span class="clickable" @click.stop="goToArtist(artist.id)">{{ artist.name }}</span>
+                      <span v-if="idx < (song.artists?.length || 0) - 1"> / </span>
+                    </template>
+                    <span v-if="!song.artists || song.artists.length === 0">未知歌手</span>
+                  </div>
+                </div>
+                <div class="song-time">{{ formatDuration(song.duration) }}</div>
+                <div class="song-actions">
+                  <el-button icon="CaretRight" circle size="small" @click.stop="handlePlaySong(song)" title="播放" />
+                  <el-button icon="Plus" circle size="small" @click.stop="handleAddToPlaylist(song)" title="添加到播放列表" />
+                  <el-button icon="FolderAdd" circle size="small" @click.stop="showAddToPlaylistDialog(song.id)" title="添加到歌单" />
+                  <el-button 
+                    :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'" 
+                    circle 
+                    size="small" 
+                    :type="favoriteSongs[song.id] ? 'danger' : ''"
+                    @click.stop="handleToggleFavorite(song.id)" 
+                    title="收藏"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="song-time">{{ formatDuration(song.duration) }}</div>
-          <div class="song-actions">
-            <el-button icon="CaretRight" circle size="small" @click.stop="handlePlaySong(song)" title="播放" />
-            <el-button icon="Plus" circle size="small" @click.stop="handleAddToPlaylist(song)" title="添加到播放列表" />
-            <el-button icon="FolderAdd" circle size="small" @click.stop="showAddToPlaylistDialog(song.id)" title="添加到歌单" />
-            <el-button 
-              :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'" 
-              circle 
-              size="small" 
-              :type="favoriteSongs[song.id] ? 'danger' : ''"
-              @click.stop="handleToggleFavorite(song.id)" 
-              title="收藏"
-            />
-          </div>
-        </div>
+          </el-carousel-item>
+        </el-carousel>
       </div>
       <div v-if="newSongs.length === 0" class="empty-state">
         <el-empty description="暂无最新歌曲" />
@@ -132,7 +168,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { usePlayerStore } from '@/store/player'
@@ -141,6 +177,9 @@ import { toggleFavorite, batchCheckFavorites } from '@/api/favorite'
 import { ElMessage } from 'element-plus'
 import { Headset, MagicStick, ArrowRight } from '@element-plus/icons-vue'
 import PlaylistSelector from '@/components/PlaylistSelector.vue'
+import GalaxyButton from '@/components/GalaxyButton.vue'
+import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import GalaxyLoader from '@/components/GalaxyLoader.vue'
 
 export default {
   name: 'Home',
@@ -148,7 +187,10 @@ export default {
     Headset,
     MagicStick,
     ArrowRight,
-    PlaylistSelector
+    PlaylistSelector,
+    SkeletonLoader,
+    GalaxyButton,
+    GalaxyLoader
   },
   setup() {
     const router = useRouter()
@@ -156,15 +198,31 @@ export default {
     const playerStore = usePlayerStore()
     const hotSongs = ref([])
     const newSongs = ref([])
-    const defaultCover = 'https://via.placeholder.com/60?text=Music'
+    const hotSongsLoading = ref(false)
+    const newSongsLoading = ref(false)
+    const defaultCover = '/default-cover.svg'
     const favoriteSongs = ref({}) // 收藏状态 { songId: true/false }
     
     // 歌单选择器
     const playlistSelectorVisible = ref(false)
     const selectedSongId = ref(null)
+    const showWelcome = ref(true)
+    const showBanner = ref(true)
+
+    const prefKey = (name) => `${userStore.userInfo?.id || 'guest'}:${name}`
+
+    const hideWelcome = () => {
+      showWelcome.value = false
+      try { sessionStorage.setItem(prefKey('hide_welcome_section'), '1') } catch (e) {}
+    }
+    const hideBanner = () => {
+      showBanner.value = false
+      try { sessionStorage.setItem(prefKey('hide_recommend_banner'), '1') } catch (e) {}
+    }
     
     // 加载热门歌曲
     const loadHotSongs = async () => {
+      hotSongsLoading.value = true
       try {
         const res = await getHotSongs({ page: 0, size: 10 })
         if (res.code === 200) {
@@ -172,11 +230,14 @@ export default {
         }
       } catch (error) {
         console.error('加载热门歌曲失败:', error)
+      } finally {
+        hotSongsLoading.value = false
       }
     }
     
     // 加载最新歌曲
     const loadNewSongs = async () => {
+      newSongsLoading.value = true
       try {
         const res = await getNewSongs({ page: 0, size: 10 })
         if (res.code === 200) {
@@ -184,6 +245,8 @@ export default {
         }
       } catch (error) {
         console.error('加载最新歌曲失败:', error)
+      } finally {
+        newSongsLoading.value = false
       }
     }
     
@@ -287,16 +350,72 @@ export default {
       // 可以在这里做一些额外的处理
     }
     
+    // 将歌曲数组分组，每组5首
+    const chunkArray = (array, size = 5) => {
+      const chunks = []
+      for (let i = 0; i < array.length; i += size) {
+        chunks.push(array.slice(i, i + size))
+      }
+      return chunks
+    }
+    
+    // 热门歌曲分组
+    const hotSongsChunks = computed(() => {
+      return chunkArray(hotSongs.value, 5)
+    })
+    
+    // 新歌速递分组
+    const newSongsChunks = computed(() => {
+      return chunkArray(newSongs.value, 5)
+    })
+    
     onMounted(async () => {
+      try {
+        showWelcome.value = sessionStorage.getItem(prefKey('hide_welcome_section')) !== '1'
+        showBanner.value = sessionStorage.getItem(prefKey('hide_recommend_banner')) !== '1'
+      } catch (e) {}
       await loadHotSongs()
       await loadNewSongs()
       await loadFavoriteStatus()
+    })
+
+    // 当登录用户变化时，按用户读取偏好；退出登录则恢复默认显示
+    watch(() => userStore.userInfo?.id, () => {
+      try {
+        showWelcome.value = true
+        showBanner.value = true
+      } catch (e) {
+        showWelcome.value = true
+        showBanner.value = true
+      }
+    })
+
+    // 登录状态变化：退出时清理会话偏好，登录后默认显示
+    watch(() => userStore.isLogin, (logged) => {
+      if (!logged) {
+        try {
+          const keys = []
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const k = sessionStorage.key(i)
+            if (k && (k.endsWith(':hide_welcome_section') || k.endsWith(':hide_recommend_banner'))) {
+              keys.push(k)
+            }
+          }
+          keys.forEach(k => sessionStorage.removeItem(k))
+        } catch (_) {}
+      }
+      showWelcome.value = true
+      showBanner.value = true
     })
     
     return {
       userStore,
       hotSongs,
       newSongs,
+      hotSongsLoading,
+      newSongsLoading,
+      hotSongsChunks,
+      newSongsChunks,
       defaultCover,
       favoriteSongs,
       handlePlaySong,
@@ -310,7 +429,11 @@ export default {
       formatDuration,
       goToArtist,
       goToRank,
-      goToDiscover
+      goToDiscover,
+      showWelcome,
+      showBanner,
+      hideWelcome,
+      hideBanner
     }
   }
 }
@@ -323,11 +446,12 @@ export default {
 
 /* 欢迎区域 */
 .welcome-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 40px;
+  background: linear-gradient(135deg, #0b1325 0%, #182235 100%);
+  padding: 18px 20px;
   border-radius: 12px;
-  color: white;
-  margin-bottom: 30px;
+  color: #e5e7eb;
+  margin-bottom: 16px;
+  position: relative;
 }
 
 .welcome-section h2 {
@@ -342,13 +466,13 @@ export default {
 
 /* 推荐Banner */
 .recommend-banner {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  border-radius: 16px;
-  padding: 30px;
-  margin-bottom: 30px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 4px 20px rgba(245, 87, 108, 0.3);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.25);
 }
 
 .recommend-banner:hover {
@@ -357,18 +481,20 @@ export default {
 }
 
 .banner-content {
-  display: flex;
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
+  position: relative;
 }
 
 .banner-icon {
-  font-size: 50px;
+  font-size: 24px;
   color: white;
-  background: rgba(255, 255, 255, 0.2);
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -381,13 +507,13 @@ export default {
 }
 
 .banner-text h3 {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .banner-text p {
-  font-size: 14px;
+  font-size: 12px;
   opacity: 0.9;
   margin: 0;
 }
@@ -414,7 +540,7 @@ export default {
 
 .section-header h3 {
   font-size: 22px;
-  color: #333;
+  color: var(--text-primary);
   font-weight: bold;
 }
 
@@ -488,11 +614,60 @@ export default {
   margin-top: 5px;
 }
 
+/* 轮播容器 */
+.carousel-container {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+}
+
+.loader-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+}
+
+.carousel-container :deep(.el-carousel__container) {
+  height: 400px !important;
+}
+
+.carousel-container :deep(.el-carousel__arrow) {
+  background-color: rgba(102, 126, 234, 0.8);
+  width: 40px;
+  height: 40px;
+}
+
+.carousel-container :deep(.el-carousel__arrow:hover) {
+  background-color: rgba(102, 126, 234, 1);
+}
+
+.carousel-container :deep(.el-carousel__indicator) {
+  padding: 8px 6px;
+}
+
+.carousel-container :deep(.el-carousel__indicator .el-carousel__button) {
+  width: 30px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: #dcdfe6;
+}
+
+.carousel-container :deep(.el-carousel__indicator.is-active .el-carousel__button) {
+  background-color: #667eea;
+}
+
 /* 歌曲列表 */
 .song-list {
-  background: white;
+  background: transparent;
   border-radius: 8px;
   padding: 10px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .song-item {
@@ -500,19 +675,22 @@ export default {
   align-items: center;
   padding: 10px;
   border-radius: 8px;
-  transition: background 0.3s;
+  transition: all var(--transition-base);
   gap: 15px;
+  cursor: pointer;
 }
 
 .song-item:hover {
-  background: #f5f5f5;
+  background: var(--card-hover-bg);
+  transform: translateX(3px);
 }
 
 .song-index {
   width: 30px;
   text-align: center;
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 14px;
+  font-weight: 600;
 }
 
 .song-cover {
@@ -528,28 +706,30 @@ export default {
 
 .song-name {
   font-size: 15px;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 5px;
+  font-weight: 500;
 }
 
 .song-artist {
   font-size: 13px;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
-.song-artist.clickable {
+.song-artist .clickable {
   cursor: pointer;
-  transition: color 0.3s;
+  transition: color var(--transition-fast);
 }
 
-.song-artist.clickable:hover {
-  color: #409eff;
+.song-artist .clickable:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 .song-play-count,
 .song-time {
   font-size: 13px;
-  color: #999;
+  color: var(--text-tertiary);
   display: flex;
   align-items: center;
   gap: 5px;

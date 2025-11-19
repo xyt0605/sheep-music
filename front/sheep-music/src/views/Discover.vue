@@ -260,8 +260,8 @@ const favoriteSongs = ref({})
 const playlistSelectorVisible = ref(false)
 const selectedSongId = ref(null)
 
-const defaultCover = 'https://via.placeholder.com/200?text=Music'
-const defaultPlaylistCover = 'https://via.placeholder.com/200?text=Playlist'
+  const defaultCover = '/default-cover.svg'
+  const defaultPlaylistCover = '/default-playlist.svg'
 
 // ========== 初始化 ==========
 onMounted(() => {

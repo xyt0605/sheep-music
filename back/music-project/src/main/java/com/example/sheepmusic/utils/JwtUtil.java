@@ -105,5 +105,29 @@ public class JwtUtil {
         Date expiration = claims.getExpiration();
         return expiration.before(new Date());
     }
+    
+    /**
+     * 从HttpServletRequest中获取用户ID（实例方法）
+     */
+    public Long getUserIdFromRequest(javax.servlet.http.HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            return getUserIdFromToken(token);
+        }
+        return null;
+    }
+    
+    /**
+     * 从HttpServletRequest中获取用户名（实例方法）
+     */
+    public String getUsernameFromRequest(javax.servlet.http.HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            return getUsernameFromToken(token);
+        }
+        return null;
+    }
 }
 

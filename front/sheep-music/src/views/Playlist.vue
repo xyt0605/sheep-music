@@ -202,7 +202,7 @@ export default {
     const hotPageSize = ref(20)
     const hotTotal = ref(0)
     
-    const defaultCover = 'https://via.placeholder.com/200?text=Playlist'
+  const defaultCover = '/default-playlist.svg'
     
     // 判断是否登录
     const isLogin = computed(() => userStore.isLogin)

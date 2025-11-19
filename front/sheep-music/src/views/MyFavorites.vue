@@ -119,7 +119,7 @@ export default {
     const playerStore = usePlayerStore()
     const favorites = ref([])
     const loading = ref(false)
-    const defaultCover = 'https://via.placeholder.com/60?text=Music'
+  const defaultCover = '/default-cover.svg'
     
     const pagination = reactive({
       page: 1,

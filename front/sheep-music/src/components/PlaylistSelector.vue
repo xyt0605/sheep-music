@@ -107,7 +107,7 @@ export default {
     const visible = ref(false)
     const loading = ref(false)
     const playlists = ref([])
-    const defaultCover = 'https://via.placeholder.com/60?text=Playlist'
+  const defaultCover = '/default-playlist.svg'
     
     const createDialogVisible = ref(false)
     const createForm = ref({

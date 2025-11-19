@@ -83,5 +83,18 @@ public class ArtistService {
     public List<Artist> getAllArtists() {
         return artistRepository.findAll();
     }
+    
+    /**
+     * 按歌曲数量排序获取歌手列表
+     * @param pageable 分页参数
+     * @param order 排序方式：asc-升序，desc-降序
+     */
+    public Page<Artist> getArtistsBySongCount(Pageable pageable, String order) {
+        if ("asc".equalsIgnoreCase(order)) {
+            return artistRepository.findAllOrderBySongCountAsc(pageable);
+        } else {
+            return artistRepository.findAllOrderBySongCountDesc(pageable);
+        }
+    }
 }
 

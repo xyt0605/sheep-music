@@ -412,7 +412,7 @@ export default {
     const loading = ref(false)
     const favoriteCount = ref(0)
     const historyCount = ref(0)  // 播放历史数量
-    const defaultCover = 'https://via.placeholder.com/60?text=Music'
+    const defaultCover = '/default-cover.svg'
     
     const favoritePagination = reactive({
       page: 1,
@@ -431,7 +431,7 @@ export default {
     const playlistPage = ref(1)
     const playlistPageSize = ref(12)
     const playlistTotal = ref(0)
-    const defaultPlaylistCover = 'https://via.placeholder.com/200?text=Playlist'
+    const defaultPlaylistCover = '/default-playlist.svg'
     const playlistDialogVisible = ref(false)
     const playlistDialogTitle = ref('创建歌单')
     const playlistForm = reactive({

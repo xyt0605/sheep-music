@@ -11,10 +11,14 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
+    "@stomp/stompjs": "^7.0.0",
     "axios": "^1.12.2",
     "core-js": "^3.8.3",
     "element-plus": "^2.11.4",
+    "emoji-mart-vue-fast": "^15.0.5",
+    "emoji-picker-element": "^1.27.0",
     "pinia": "^3.0.3",
+    "sockjs-client": "^1.6.1",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3"
   },

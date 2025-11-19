@@ -14,69 +14,67 @@
       >
         <!-- 用户名输入框 -->
         <el-form-item prop="username">
-          <el-input
+          <GalaxyFormInput
             v-model="registerForm.username"
-            placeholder="请输入用户名（3-20个字符）"
-            prefix-icon="User"
-            size="large"
+            label="用户名"
+            name="reg-username"
+            autocomplete="off"
           />
         </el-form-item>
         
         <!-- 密码输入框 -->
         <el-form-item prop="password">
-          <el-input
+          <GalaxyFormInput
             v-model="registerForm.password"
             type="password"
-            placeholder="请输入密码（6-20个字符）"
-            prefix-icon="Lock"
-            size="large"
-            show-password
+            label="密码"
+            name="reg-password"
+            autocomplete="new-password"
           />
         </el-form-item>
         
         <!-- 确认密码输入框 -->
         <el-form-item prop="confirmPassword">
-          <el-input
+          <GalaxyFormInput
             v-model="registerForm.confirmPassword"
             type="password"
-            placeholder="请再次输入密码"
-            prefix-icon="Lock"
-            size="large"
-            show-password
+            label="确认密码"
+            name="reg-confirm"
+            autocomplete="new-password"
           />
         </el-form-item>
         
         <!-- 昵称输入框（可选） -->
         <el-form-item prop="nickname">
-          <el-input
+          <GalaxyFormInput
             v-model="registerForm.nickname"
-            placeholder="请输入昵称（可选）"
-            prefix-icon="Avatar"
-            size="large"
+            label="昵称（可选）"
+            name="reg-nickname"
+            autocomplete="off"
           />
         </el-form-item>
         
         <!-- 邮箱输入框（可选） -->
         <el-form-item prop="email">
-          <el-input
+          <GalaxyFormInput
             v-model="registerForm.email"
-            placeholder="请输入邮箱（可选）"
-            prefix-icon="Message"
-            size="large"
+            label="邮箱（可选）"
+            name="reg-email"
+            autocomplete="email"
           />
         </el-form-item>
         
         <!-- 注册按钮 -->
         <el-form-item>
-          <el-button
-            type="primary"
-            size="large"
+          <GalaxyButton
             :loading="loading"
-            @click="handleRegister"
+            size="lg"
+            variant="primary"
             class="register-button"
+            @click="handleRegister"
           >
             {{ loading ? '注册中...' : '注册' }}
-          </el-button>
+          </GalaxyButton>
         </el-form-item>
         
         <!-- 登录链接 -->
@@ -94,9 +92,15 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { register } from '@/api/user'
+import GalaxyFormInput from '@/components/GalaxyFormInput.vue'
+import GalaxyButton from '@/components/GalaxyButton.vue'
 
 export default {
   name: 'Register',
+  components: {
+    GalaxyFormInput,
+    GalaxyButton
+  },
   setup() {
     const router = useRouter()
     const registerFormRef = ref(null)
@@ -210,52 +214,59 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: radial-gradient(900px 450px at 80% 30%, rgba(245,87,108,0.25), transparent 65%),
+              radial-gradient(700px 350px at 0% 0%, rgba(102,126,234,0.25), transparent 60%),
+              linear-gradient(135deg, #0f172a 0%, #1f2937 100%);
 }
 
 .register-box {
-  width: 450px;
-  padding: 40px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  width: 460px;
+  padding: 46px 42px;
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border-color-light);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-xl);
 }
 
 .title {
   text-align: center;
-  font-size: 28px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 10px;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
 }
 
 .subtitle {
   text-align: center;
-  color: #999;
-  margin-bottom: 30px;
-  font-size: 14px;
+  color: var(--text-tertiary);
+  margin-bottom: 26px;
+  font-size: 15px;
 }
 
 .register-form {
-  margin-top: 20px;
+  margin-top: 18px;
+  display: grid;
+  gap: 6px;
 }
 
 .register-button {
   width: 100%;
-  margin-top: 10px;
+  margin-top: 6px;
 }
 
 .login-link {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 18px;
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .login-link a {
-  color: #667eea;
+  color: var(--color-primary);
   text-decoration: none;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .login-link a:hover {
@@ -270,8 +281,8 @@ export default {
   
   .register-box {
     width: 100%;
-    max-width: 450px;
-    padding: 30px 20px;
+    max-width: 460px;
+    padding: 28px 18px;
   }
   
   .title {

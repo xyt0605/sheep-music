@@ -57,6 +57,12 @@
 
 ### 部署步骤
 
+#### ⚠️ 重要提醒
+
+**如果修改了前端代码，必须先构建 dist 目录！**
+
+本项目使用简化版 Dockerfile，直接复制本地构建的 `dist` 目录。详见 [构建和推送指南.md](构建和推送指南.md)
+
 #### 1. 克隆项目
 
 ```bash
@@ -71,16 +77,19 @@ cp env.template .env
 # 编辑 .env 文件，修改数据库密码等配置
 ```
 
-#### 3. 本地构建前端
+#### 3. 构建前端（如果修改了前端代码）
 
 ```bash
 cd front/sheep-music
 
-# Linux/Mac
-bash build.sh
+# 安装依赖（首次）
+npm install --legacy-peer-deps
 
-# Windows
-build.bat
+# 构建生产版本
+npm run build
+
+# 返回项目根目录
+cd ../..
 ```
 
 #### 4. 部署到服务器
@@ -102,8 +111,20 @@ docker compose up -d --build
 
 ## 📖 详细文档
 
-- [完整部署指南](DEPLOYMENT_GUIDE.md) - 包含详细的部署步骤和故障排查
-- [Docker 部署指南](DOCKER_DEPLOYMENT_GUIDE.md) - Docker 相关说明
+### 🚨 必读文档
+- [⚠️部署前必读.txt](⚠️部署前必读.txt) - **重要提醒**：构建说明
+- [构建和推送指南.md](构建和推送指南.md) - 前端构建详细说明
+
+### 部署相关
+- [一键部署命令.md](一键部署命令.md) - 一键复制粘贴的命令（最快）
+- [快速部署指令](QUICK_DEPLOY.md) - 快速部署命令参考
+- [详细部署步骤](DEPLOYMENT_STEPS.md) - 完整的部署流程说明
+- [部署检查清单](DEPLOYMENT_CHECKLIST.md) - 部署前检查项
+- [部署说明](部署说明.txt) - 简明部署指南
+
+### 其他文档
+- [完整部署指南](DEPLOYMENT_GUIDE.md) - 包含详细的部署步骤和故障排查（如果存在）
+- [Docker 部署指南](DOCKER_DEPLOYMENT_GUIDE.md) - Docker 相关说明（如果存在）
 
 ---
 

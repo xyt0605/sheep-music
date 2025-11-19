@@ -167,8 +167,8 @@ const loading = ref(true)
 const artist = ref(null)
 const songList = ref([])
 const favoriteSongs = ref({}) // 收藏状态 { songId: true/false }
-const defaultAvatar = 'https://via.placeholder.com/200?text=Artist'
-const defaultCover = 'https://via.placeholder.com/60?text=Music'
+  const defaultAvatar = '/default-artist.svg'
+  const defaultCover = '/default-cover.svg'
 
 // 歌单选择器
 const playlistSelectorVisible = ref(false)

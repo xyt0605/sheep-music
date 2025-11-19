@@ -66,13 +66,23 @@ export const getArtist = (id) => {
 // ========== 用户端 API ==========
 
 /**
- * 获取歌手列表（用户端）
+ * 获取歌手列表（用户端，分页）
  */
 export const getArtists = (params) => {
   return request({
-    url: '/music/artists',
+    url: '/api/artists',
     method: 'get',
     params
+  })
+}
+
+/**
+ * 获取所有歌手（用户端，不分页）
+ */
+export const getAllArtistsPublic = () => {
+  return request({
+    url: '/api/artists/all',
+    method: 'get'
   })
 }
 
@@ -81,8 +91,19 @@ export const getArtists = (params) => {
  */
 export const getArtistDetail = (id) => {
   return request({
-    url: `/music/artist/${id}`,
+    url: `/api/artists/${id}`,
     method: 'get'
+  })
+}
+
+/**
+ * 搜索歌手（用户端）
+ */
+export const searchArtists = (keyword) => {
+  return request({
+    url: '/api/artists/search',
+    method: 'get',
+    params: { keyword }
   })
 }
 

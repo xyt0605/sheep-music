@@ -137,7 +137,7 @@ export default {
     const activeTab = ref('hot')
     const loading = ref(false)
     const songs = ref([])
-    const defaultCover = 'https://via.placeholder.com/60?text=Music'
+  const defaultCover = '/default-cover.svg'
     const favoriteSongs = ref({}) // 收藏状态
     
     const pagination = reactive({

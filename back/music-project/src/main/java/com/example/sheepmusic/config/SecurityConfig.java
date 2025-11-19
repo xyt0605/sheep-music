@@ -52,6 +52,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/doc.html", "/swagger-resources/**", "/webjars/**", "/v2/api-docs", "/swagger-ui.html").permitAll()
             // 放行静态资源
             .antMatchers("/static/**", "/").permitAll()
+            // 放行WebSocket端点
+            .antMatchers("/ws/**", "/ws-chat/**", "/api/ws/**", "/api/ws-chat/**").permitAll()
             // 放行热门搜索接口（公开接口）
             .antMatchers(org.springframework.http.HttpMethod.GET, "/api/user/search-history/hot").permitAll()
             // 管理员接口（只有管理员可访问）

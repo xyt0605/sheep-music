@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import Layout from '@/layouts/Layout.vue'
 import { useUserStore } from '@/store/user'
 import { ElMessage } from 'element-plus'
 
@@ -30,7 +31,7 @@ const routes = [
   // 主布局（包含导航栏和播放器）
   {
     path: '/',
-    component: () => import('@/layouts/Layout.vue'),
+    component: Layout,
     meta: { requiresAuth: true },
     children: [
       // 首页
@@ -54,6 +55,14 @@ const routes = [
         path: '/rank',
         name: 'Rank',
         component: () => import('@/views/Rank.vue'),
+        meta: { requiresAuth: true }
+      },
+      
+      // 全部歌手
+      {
+        path: '/artists',
+        name: 'Artists',
+        component: () => import('@/views/Artists.vue'),
         meta: { requiresAuth: true }
       },
       
@@ -114,6 +123,32 @@ const routes = [
           requiresAuth: true,
           requiresAdmin: true  // 需要管理员权限
         }
+      },
+      
+      // 社交功能
+      {
+        path: '/friends',
+        name: 'Friends',
+        component: () => import('@/views/Social/Friends.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/chat/:friendId?',
+        name: 'Chat',
+        component: () => import('@/views/Social/Chat.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/share-square',
+        name: 'ShareSquare',
+        component: () => import('@/views/Social/ShareSquare.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/moments',
+        name: 'Moments',
+        component: () => import('@/views/Social/Moments.vue'),
+        meta: { requiresAuth: true }
       }
     ]
   }

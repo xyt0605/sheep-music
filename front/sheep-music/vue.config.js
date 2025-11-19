@@ -25,6 +25,7 @@ module.exports = defineConfig({
       '/api': {
         target: 'http://localhost:9000', // 后端服务器地址
         changeOrigin: true,
+        ws: true,
         pathRewrite: {
           '^/api': '' // 将 /api 替换为空
         }

@@ -161,5 +161,29 @@ public class MusicController {
             return Result.error(e.getMessage());
         }
     }
+    
+    /**
+     * 获取歌曲歌词
+     */
+    @ApiOperation("获取歌曲歌词")
+    @GetMapping("/song/{id}/lyric")
+    public Result<String> getSongLyric(@PathVariable Long id) {
+        try {
+            Song song = songService.getSong(id);
+            if (song == null) {
+                return Result.error("歌曲不存在");
+            }
+            
+            String lyric = song.getLyric();
+            if (lyric == null || lyric.isEmpty()) {
+                // 返回空字符串表示纯音乐
+                return Result.success("该歌曲暂无歌词", "");
+            }
+            
+            return Result.success("查询成功", lyric);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
 }
 

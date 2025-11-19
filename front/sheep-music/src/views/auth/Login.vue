@@ -19,46 +19,39 @@
         
         <!-- 用户名输入框 -->
         <el-form-item prop="username">
-          <el-input
+          <GalaxyFormInput
             v-model="loginForm.username"
-            placeholder="请输入用户名"
-            prefix-icon="User"
-            size="large"
-            autocomplete="off"
+            label="用户名"
             name="username"
-            readonly
-            @focus="handleUsernameFocus"
+            autocomplete="off"
+            @blur="noop"
           />
         </el-form-item>
 
         <!-- 密码输入框 -->
         <el-form-item prop="password">
-          <el-input
+          <GalaxyFormInput
             v-model="loginForm.password"
             type="password"
-            placeholder="请输入密码"
-            prefix-icon="Lock"
-            size="large"
-            show-password
-            autocomplete="new-password"
+            label="密码"
             name="password"
-            readonly
-            @focus="handlePasswordFocus"
+            autocomplete="new-password"
+            @blur="noop"
             @keyup.enter="handleLogin"
           />
         </el-form-item>
 
         <!-- 登录按钮 -->
         <el-form-item>
-          <el-button
-            type="primary"
-            size="large"
+          <GalaxyButton
             :loading="loading"
-            @click="handleLogin"
+            size="lg"
+            variant="primary"
             class="login-button"
+            @click="handleLogin"
           >
             {{ loading ? '登录中...' : '登录' }}
-          </el-button>
+          </GalaxyButton>
         </el-form-item>
 
         <!-- 注册链接 -->
@@ -76,11 +69,17 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/user'
+import GalaxyFormInput from '@/components/GalaxyFormInput.vue'
+import GalaxyButton from '@/components/GalaxyButton.vue'
 import { login } from '@/api/user'
 
 export default {
   // eslint-disable-next-line vue/multi-word-component-names
   name: 'Login',
+  components: {
+    GalaxyFormInput,
+    GalaxyButton
+  },
   setup () {
     const router = useRouter()
     const userStore = useUserStore()
@@ -138,6 +137,8 @@ export default {
       event.target.removeAttribute('readonly')
     }
 
+    const noop = () => {}
+
     // 登录处理
     const handleLogin = async () => {
       // 1. 表单验证
@@ -192,7 +193,8 @@ export default {
       loading,
       handleLogin,
       handleUsernameFocus,
-      handlePasswordFocus
+      handlePasswordFocus,
+      noop
     }
   }
 }
@@ -204,52 +206,59 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: radial-gradient(800px 400px at 20% 20%, rgba(118,75,162,0.25), transparent 60%),
+              radial-gradient(600px 300px at 80% 0%, rgba(102,126,234,0.25), transparent 60%),
+              linear-gradient(135deg, #0f172a 0%, #1f2937 100%);
 }
 
 .login-box {
-  width: 400px;
-  padding: 40px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  width: 420px;
+  padding: 44px 40px;
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border-color-light);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-xl);
 }
 
 .title {
   text-align: center;
-  font-size: 28px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 10px;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
 }
 
 .subtitle {
   text-align: center;
-  color: #999;
-  margin-bottom: 30px;
-  font-size: 14px;
+  color: var(--text-tertiary);
+  margin-bottom: 26px;
+  font-size: 15px;
 }
 
 .login-form {
-  margin-top: 20px;
+  margin-top: 18px;
+  display: grid;
+  gap: 6px;
 }
 
 .login-button {
   width: 100%;
-  margin-top: 10px;
+  margin-top: 6px;
 }
 
 .register-link {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 18px;
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .register-link a {
-  color: #667eea;
+  color: var(--color-primary);
   text-decoration: none;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .register-link a:hover {
@@ -264,8 +273,8 @@ export default {
   
   .login-box {
     width: 100%;
-    max-width: 400px;
-    padding: 30px 20px;
+    max-width: 420px;
+    padding: 28px 18px;
   }
   
   .title {

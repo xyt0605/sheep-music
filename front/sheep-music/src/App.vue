@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <router-view/>
+    <router-view />
   </div>
 </template>
 
@@ -11,6 +11,8 @@ export default {
 </script>
 
 <style>
+@import '@/styles/animations.css';
+
 * {
   margin: 0;
   padding: 0;
@@ -22,6 +24,6 @@ export default {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--bg-secondary);
 }
 </style>
