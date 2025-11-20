@@ -40,7 +40,9 @@ EXPOSE 8080
 
 # 安装 wget 用于健康检查（Alpine 需要手动安装）
 USER root
-RUN apk add --no-cache wget
+# 使用阿里云镜像源加速
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
+    apk add --no-cache wget
 
 # 健康检查（端口改为9000）
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
