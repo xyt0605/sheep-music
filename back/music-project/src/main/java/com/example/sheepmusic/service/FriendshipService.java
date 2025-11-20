@@ -47,32 +47,45 @@ public class FriendshipService {
             throw new RuntimeException("已经是好友关系");
         }
         
-        // 检查是否已发送请求
-        Optional<Friendship> existing = friendshipRepository.findByUserIdAndFriendId(userId, friendId);
-        if (existing.isPresent()) {
-            Friendship f = existing.get();
-            if ("pending".equals(f.getStatus())) {
-                throw new RuntimeException("已发送好友请求，请等待对方确认");
-            }
-        }
-        
         // 获取发起者信息
         User requester = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("用户不存在"));
         
-        Friendship friendship = new Friendship();
-        friendship.setUserId(userId);
-        friendship.setFriendId(friendId);
-        friendship.setStatus("pending");
-        friendship.setRemark(remark);
+        // 检查是否已发送请求
+        Optional<Friendship> existing = friendshipRepository.findByUserIdAndFriendId(userId, friendId);
+        Friendship friendship;
         
-        // 冗余好友信息（接收者）
-        friendship.setFriendName(friend.getNickname());
-        friendship.setFriendAvatar(friend.getAvatar());
-        
-        // 冗余发起者信息（用于好友请求列表显示）
-        friendship.setUserName(requester.getNickname());
-        friendship.setUserAvatar(requester.getAvatar());
+        if (existing.isPresent()) {
+            friendship = existing.get();
+            if ("pending".equals(friendship.getStatus())) {
+                throw new RuntimeException("已发送好友请求，请等待对方确认");
+            }
+            // 如果之前被拒绝，重新设置为 pending 状态
+            if ("rejected".equals(friendship.getStatus())) {
+                friendship.setStatus("pending");
+                friendship.setRemark(remark);
+                // 更新冗余信息
+                friendship.setFriendName(friend.getNickname());
+                friendship.setFriendAvatar(friend.getAvatar());
+                friendship.setUserName(requester.getNickname());
+                friendship.setUserAvatar(requester.getAvatar());
+            }
+        } else {
+            // 创建新的好友请求
+            friendship = new Friendship();
+            friendship.setUserId(userId);
+            friendship.setFriendId(friendId);
+            friendship.setStatus("pending");
+            friendship.setRemark(remark);
+            
+            // 冗余好友信息（接收者）
+            friendship.setFriendName(friend.getNickname());
+            friendship.setFriendAvatar(friend.getAvatar());
+            
+            // 冗余发起者信息（用于好友请求列表显示）
+            friendship.setUserName(requester.getNickname());
+            friendship.setUserAvatar(requester.getAvatar());
+        }
         
         Friendship saved = friendshipRepository.save(friendship);
         
