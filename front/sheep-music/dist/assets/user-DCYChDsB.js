@@ -1,0 +1,1 @@
+import{U as t}from"./index-CxmcMKp9.js";const s=r=>t({url:"/auth/login",method:"post",data:r}),u=r=>t({url:"/auth/register",method:"post",data:r}),o=r=>t({url:"/user/update",method:"put",data:r}),a=r=>t({url:"/user/password",method:"put",data:r});export{a,s as l,u as r,o as u};
