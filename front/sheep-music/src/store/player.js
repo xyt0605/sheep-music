@@ -100,8 +100,16 @@ export const usePlayerStore = defineStore('player', () => {
         } else {
           // 切换前暂停，避免并发拉取造成请求被中断
           try { audio.value.pause() } catch (e) {}
-          // 直接使用 OSS URL，不做转换
-          audio.value.src = song.url
+          // 通过 Nginx 代理访问 OSS，解决 CORS 问题
+          const ossHost = 'https://sheepmusic.oss-cn-hangzhou.aliyuncs.com'
+          let src = song.url
+          try {
+            if (typeof song.url === 'string' && song.url.startsWith(ossHost)) {
+              const u = new URL(song.url)
+              src = `/oss-proxy${u.pathname}`
+            }
+          } catch (e) {}
+          audio.value.src = src
           // 显式触发加载，降低立即 play 导致的中断
           try { audio.value.load() } catch (e) {}
         }
