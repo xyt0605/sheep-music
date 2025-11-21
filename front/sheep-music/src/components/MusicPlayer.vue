@@ -327,22 +327,9 @@ const sliderValue = computed({
 // 音量值（0-100）
 const volumeValue = ref(playerStore.volume * 100)
 
-// 处理 OSS URL 为本地代理路径
+// 直接返回原始 URL（OSS 已配置 CORS）
 const processImageUrl = (url) => {
-  if (!url) return url
-  
-  const ossHost = 'https://sheepmusic.oss-cn-hangzhou.aliyuncs.com'
-  
-  if (url.startsWith(ossHost)) {
-    try {
-      // 生产环境也使用代理避免CORS问题
-      return url.replace(ossHost, '/oss')
-    } catch (e) {
-      console.warn('URL处理失败:', e)
-    }
-  }
-  
-  return url
+  return url || ''
 }
 
 // 处理进度条拖动

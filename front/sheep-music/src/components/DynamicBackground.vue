@@ -34,22 +34,9 @@ const backgroundStyle = computed(() => ({
   background: `linear-gradient(${gradientAngle}deg, ${dominantColors.value[0]}, ${dominantColors.value[1]})`,
 }))
 
-// 处理 OSS URL 为本地代理路径
+// 直接返回原始 URL（OSS 已配置 CORS）
 const processImageUrl = (url) => {
-  if (!url) return url
-  
-  const ossHost = 'https://sheepmusic.oss-cn-hangzhou.aliyuncs.com'
-  
-  if (url.startsWith(ossHost)) {
-    try {
-      // 生产环境也使用代理避免CORS问题
-      return url.replace(ossHost, '/oss')
-    } catch (e) {
-      console.warn('URL处理失败:', e)
-    }
-  }
-  
-  return url
+  return url || ''
 }
 
 // 简单的颜色提取方法（使用 Canvas API）

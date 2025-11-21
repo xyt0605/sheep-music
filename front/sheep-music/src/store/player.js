@@ -101,20 +101,8 @@ export const usePlayerStore = defineStore('player', () => {
           // 切换前暂停，避免并发拉取造成请求被中断
           try { audio.value.pause() } catch (e) {}
           
-          // 智能处理 OSS URL
-          const ossHost = 'https://sheepmusic.oss-cn-hangzhou.aliyuncs.com'
-          let src = song.url
-          
-          try {
-            if (src && src.startsWith(ossHost)) {
-              // 生产环境也使用代理避免CORS问题
-              src = src.replace(ossHost, '/oss')
-            }
-          } catch (e) {
-            console.warn('URL 处理失败，使用原始 URL:', e)
-          }
-          
-          audio.value.src = src
+          // 直接使用 OSS URL（需要在 OSS 控制台配置 CORS）
+          audio.value.src = song.url
           // 显式触发加载，降低立即 play 导致的中断
           try { audio.value.load() } catch (e) {}
         }
