@@ -1,11 +1,20 @@
 <template>
   <div class="comment-list">
     <div class="comment-header">
-      <h3>评论 ({{ total }})</h3>
-      <el-radio-group v-model="sortType" size="small" @change="handleSortChange">
-        <el-radio-button value="latest">最新</el-radio-button>
-        <el-radio-button value="hot">最热</el-radio-button>
-      </el-radio-group>
+      <h3>评论 <span class="count">({{ total }})</span></h3>
+      <div class="sort-tabs">
+        <span 
+          class="sort-item" 
+          :class="{ active: sortType === 'hot' }"
+          @click="changeSort('hot')"
+        >最热</span>
+        <span class="divider">|</span>
+        <span 
+          class="sort-item" 
+          :class="{ active: sortType === 'latest' }"
+          @click="changeSort('latest')"
+        >最新</span>
+      </div>
     </div>
     
     <!-- 发表评论 -->
@@ -17,23 +26,25 @@
     />
     
     <!-- 评论列表 -->
-    <div v-loading="loading" class="comments">
+    <div v-loading="loading" class="comments-wrapper">
       <div v-if="comments.length === 0 && !loading" class="empty-state">
-        <el-empty description="暂无评论，快来发表第一条评论吧~" />
+        <el-empty description="暂无评论，快来发表第一条评论吧~" :image-size="120" />
       </div>
       
-      <CommentItem
-        v-for="comment in comments"
-        :key="comment.id"
-        :comment="comment"
-        @like="handleLike"
-        @delete="handleDelete"
-        @reply-success="handleReplySuccess"
-      />
+      <div class="comments-container" v-else>
+        <CommentItem
+          v-for="comment in comments"
+          :key="comment.id"
+          :comment="comment"
+          @like="handleLike"
+          @delete="handleDelete"
+          @reply-success="handleReplySuccess"
+        />
+      </div>
     </div>
     
     <!-- 加载更多 -->
-    <div v-if="hasMore" class="load-more">
+    <div v-if="hasMore && comments.length > 0" class="load-more">
       <el-button
         text
         :loading="loading"
@@ -64,11 +75,18 @@ const props = defineProps({
 
 const comments = ref([])
 const loading = ref(false)
-const sortType = ref('latest')
+const sortType = ref('hot') // 默认最热
 const page = ref(0)
 const size = ref(20)
 const total = ref(0)
 const hasMore = ref(true)
+
+// 切换排序
+const changeSort = (type) => {
+  if (sortType.value === type) return
+  sortType.value = type
+  loadComments(true)
+}
 
 // 加载评论
 const loadComments = async (reset = false) => {
@@ -112,20 +130,12 @@ const loadMore = () => {
   loadComments()
 }
 
-// 排序改变
-const handleSortChange = () => {
-  loadComments(true)
-}
-
-// 评论成功（去重保护）
+// 评论成功
 const handleCommentSuccess = (comment) => {
   if (!comment) return
-  const exists = comments.value.find(c => c.id === comment.id)
-  if (exists) {
-    // 已存在则更新内容与时间，避免重复展示
-    exists.content = comment.content
-    exists.createTime = comment.createTime || exists.createTime
-  } else {
+  // 去重检查
+  const exists = comments.value.some(c => c.id === comment.id)
+  if (!exists) {
     comments.value.unshift(comment)
     total.value++
   }
@@ -133,10 +143,7 @@ const handleCommentSuccess = (comment) => {
 
 // 点赞
 const handleLike = (commentId, liked) => {
-  const comment = comments.value.find(c => c.id === commentId)
-  if (comment) {
-    // 点赞状态已在CommentItem中更新
-  }
+  // 状态已在 Item 内更新
 }
 
 // 删除评论
@@ -154,47 +161,82 @@ onMounted(() => {
   loadComments(true)
 })
 
-// 监听歌曲切换，重置并重新加载该歌曲的评论
 watch(() => props.songId, (newId, oldId) => {
   if (!newId || newId === oldId) return
-  page.value = 0
-  comments.value = []
-  total.value = 0
-  hasMore.value = true
   loadComments(true)
 })
 </script>
 
 <style scoped>
 .comment-list {
-  padding: 20px 0;
+  padding: 8px 4px;
 }
 
 .comment-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .comment-header h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary, #333);
+  color: #303133;
 }
 
-.comments {
+.count {
+  font-size: 14px;
+  color: #909399;
+  font-weight: normal;
+  margin-left: 4px;
+}
+
+.sort-tabs {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #909399;
+}
+
+.sort-item {
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: all 0.2s;
+}
+
+.sort-item:hover {
+  color: #606266;
+}
+
+.sort-item.active {
+  color: #303133;
+  font-weight: 600;
+}
+
+.divider {
+  margin: 0 4px;
+  color: #e4e7ed;
+  font-size: 12px;
+}
+
+.comments-wrapper {
   min-height: 200px;
 }
 
 .empty-state {
-  padding: 40px 0;
+  padding: 60px 0;
+  display: flex;
+  justify-content: center;
 }
 
 .load-more {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 30px;
+  margin-bottom: 20px;
 }
 </style>
+
+
 

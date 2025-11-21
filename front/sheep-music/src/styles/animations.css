@@ -211,3 +211,87 @@
 .delay-4 { animation-delay: 0.4s; }
 .delay-5 { animation-delay: 0.5s; }
 
+/* ===== 路由切换动画 ===== */
+
+/* 滑动切换 */
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1);
+}
+
+.slide-enter-from {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.slide-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+/* 缩放淡入淡出 */
+.zoom-fade-enter-active,
+.zoom-fade-leave-active {
+  transition: all 0.4s ease;
+}
+
+.zoom-fade-enter-from {
+  opacity: 0;
+  transform: scale(1.1);
+}
+
+.zoom-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+/* 3D 翻转 */
+.flip-enter-active,
+.flip-leave-active {
+  transition: all 0.5s ease;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.flip-enter-from {
+  transform: rotateY(90deg);
+  opacity: 0;
+}
+
+.flip-leave-to {
+  transform: rotateY(-90deg);
+  opacity: 0;
+}
+
+/* 玻璃拟态效果 */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* 霓虹发光效果 */
+.neon-glow {
+  text-shadow: 
+    0 0 10px currentColor,
+    0 0 20px currentColor,
+    0 0 30px currentColor,
+    0 0 40px currentColor;
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+

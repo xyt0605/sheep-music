@@ -100,15 +100,28 @@ export const usePlayerStore = defineStore('player', () => {
         } else {
           // 切换前暂停，避免并发拉取造成请求被中断
           try { audio.value.pause() } catch (e) {}
-          // 通过 Nginx 代理访问 OSS，解决 CORS 问题
+          
+          // 智能处理 OSS URL
           const ossHost = 'https://sheepmusic.oss-cn-hangzhou.aliyuncs.com'
           let src = song.url
+          
           try {
             if (typeof song.url === 'string' && song.url.startsWith(ossHost)) {
               const u = new URL(song.url)
-              src = `/oss-proxy${u.pathname}`
+              
+              // 判断环境：开发环境使用 /oss 代理，生产环境使用 /oss-proxy
+              if (import.meta.env.DEV) {
+                // 本地开发环境：使用 Vite 代理
+                src = `/oss${u.pathname}`
+              } else {
+                // 生产环境：使用 Nginx 代理
+                src = `/oss-proxy${u.pathname}`
+              }
             }
-          } catch (e) {}
+          } catch (e) {
+            console.warn('URL 处理失败，使用原始 URL:', e)
+          }
+          
           audio.value.src = src
           // 显式触发加载，降低立即 play 导致的中断
           try { audio.value.load() } catch (e) {}

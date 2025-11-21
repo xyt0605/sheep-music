@@ -1,5 +1,4 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import Layout from '@/layouts/Layout.vue'
 import { useUserStore } from '@/store/user'
 import { ElMessage } from 'element-plus'
 
@@ -31,7 +30,7 @@ const routes = [
   // 主布局（包含导航栏和播放器）
   {
     path: '/',
-    component: Layout,
+    component: () => import('@/layouts/Layout.vue'),
     meta: { requiresAuth: true },
     children: [
       // 首页
@@ -114,6 +113,32 @@ const routes = [
         meta: { requiresAuth: true }
       },
       
+      // === 社交功能路由 ===
+      {
+        path: '/friends',
+        name: 'Friends',
+        component: () => import('@/views/Social/Friends.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/chat/:id?',
+        name: 'Chat',
+        component: () => import('@/views/Social/Chat.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/moments',
+        name: 'Moments',
+        component: () => import('@/views/Social/Moments.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/share-square',
+        name: 'ShareSquare',
+        component: () => import('@/views/Social/ShareSquare.vue'),
+        meta: { requiresAuth: true }
+      },
+      
       // 管理后台（只有管理员可访问）
       {
         path: '/admin',
@@ -123,32 +148,6 @@ const routes = [
           requiresAuth: true,
           requiresAdmin: true  // 需要管理员权限
         }
-      },
-      
-      // 社交功能
-      {
-        path: '/friends',
-        name: 'Friends',
-        component: () => import('@/views/Social/Friends.vue'),
-        meta: { requiresAuth: true }
-      },
-      {
-        path: '/chat/:friendId?',
-        name: 'Chat',
-        component: () => import('@/views/Social/Chat.vue'),
-        meta: { requiresAuth: true }
-      },
-      {
-        path: '/share-square',
-        name: 'ShareSquare',
-        component: () => import('@/views/Social/ShareSquare.vue'),
-        meta: { requiresAuth: true }
-      },
-      {
-        path: '/moments',
-        name: 'Moments',
-        component: () => import('@/views/Social/Moments.vue'),
-        meta: { requiresAuth: true }
       }
     ]
   }

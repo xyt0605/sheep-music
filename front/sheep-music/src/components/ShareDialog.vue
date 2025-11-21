@@ -4,6 +4,7 @@
     :title="dialogTitle" 
     width="520px"
     @close="handleClose"
+    append-to-body
   >
     <el-form :model="form" label-width="80px">
       <el-form-item label="分享内容">

@@ -25,6 +25,7 @@
               v-if="item.badge && item.badge > 0"
               :value="item.badge"
               :max="99"
+              :is-dot="false"
               class="menu-badge"
             />
           </router-link>
@@ -89,6 +90,12 @@
           >
             <span v-if="item.icon" class="menu-icon">{{ item.icon }}</span>
             {{ item.name }}
+            <el-badge
+              v-if="item.badge && item.badge > 0"
+              :value="item.badge"
+              :max="99"
+              class="mobile-menu-badge"
+            />
           </router-link>
         </nav>
       </div>
@@ -103,9 +110,6 @@
       </router-view>
     </main>
     
-    <!-- 全局音乐播放器 -->
-    <MusicPlayer />
-    
     <!-- 桌面歌词 -->
     <DesktopLyric ref="desktopLyricRef" />
   </div>
@@ -117,7 +121,6 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store/user'
 import { useSocialStore } from '@/store/social'
-import MusicPlayer from '@/components/MusicPlayer.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import DesktopLyric from '@/components/DesktopLyric.vue'
 import wsClient from '@/ws/client'
@@ -126,7 +129,6 @@ import { notifyInfo } from '@/utils/message'
 export default {
   name: 'Layout',
   components: {
-    MusicPlayer,
     ThemeToggle,
     DesktopLyric
   },
@@ -137,6 +139,64 @@ export default {
     const mobileMenuOpen = ref(false)
     const desktopLyricRef = ref(null)
     const desktopLyricVisible = ref(false)
+    
+    // 消息提示音
+    const playNotificationSound = () => {
+      try {
+        // 使用 Web Audio API 生成简单的提示音
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        const oscillator = audioContext.createOscillator()
+        const gainNode = audioContext.createGain()
+        
+        oscillator.connect(gainNode)
+        gainNode.connect(audioContext.destination)
+        
+        oscillator.frequency.value = 800 // 频率
+        oscillator.type = 'sine' // 波形
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2)
+        
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.2)
+      } catch (error) {
+        console.warn('播放提示音失败:', error)
+      }
+    }
+    
+    // 显示桌面通知
+    const showDesktopNotification = (title, body, icon) => {
+      // 检查浏览器是否支持通知
+      if (!('Notification' in window)) {
+        return
+      }
+      
+      // 检查权限
+      if (Notification.permission === 'granted') {
+        new Notification(title, {
+          body,
+          icon: icon || '/logo.png',
+          badge: '/logo.png',
+          tag: 'chat-message', // 相同tag的通知会替换旧的
+          requireInteraction: false,
+          silent: true // 静音，因为我们有自己的提示音
+        })
+      } else if (Notification.permission !== 'denied') {
+        // 请求权限
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification(title, {
+              body,
+              icon: icon || '/logo.png',
+              badge: '/logo.png',
+              tag: 'chat-message',
+              requireInteraction: false,
+              silent: true
+            })
+          }
+        })
+      }
+    }
     
     // 根据角色动态生成菜单
     const menuItems = computed(() => {
@@ -180,16 +240,49 @@ export default {
         if (uid && token) {
           wsClient.connect({ userId: uid, token })
 
-          // 聊天消息到达：刷新未读数并提示（避免重复订阅，记录取消函数）
+          // 聊天消息到达：智能处理未读数和通知
           const offChat = wsClient.onChatMessage(async (msg) => {
             try {
-              await socialStore.updateUnreadMessageCount()
-              // 已注释掉消息通知，避免显示不必要的提示
-              // const senderName = msg?.senderName || '好友'
-              // const content = msg?.content || ''
-              // notifyInfo('新消息', `${senderName}：${content}`)
+              if (!msg) return
+              
+              // 判断是否在当前聊天窗口
+              const currentRoute = router.currentRoute.value
+              const isInChatPage = currentRoute.name === 'Chat'
+              const currentChatFriendId = currentRoute.params.friendId
+              const isCurrentChat = isInChatPage && 
+                (msg.senderId == currentChatFriendId || msg.receiverId == currentChatFriendId)
+              
+              // 如果不在当前聊天窗口，才更新未读数和显示通知
+              if (!isCurrentChat) {
+                // 更新未读消息数
+                await socialStore.updateUnreadMessageCount()
+                
+                // 显示消息通知（仅当消息是发给自己的）
+                if (msg.receiverId === userStore.userInfo?.id) {
+                  const senderName = msg.senderName || '好友'
+                  let content = msg.content || ''
+                  
+                  // 根据消息类型显示不同内容
+                  if (msg.type === 'song') {
+                    content = '[分享了一首歌曲]'
+                  } else if (msg.type === 'playlist') {
+                    content = '[分享了一个歌单]'
+                  } else if (content.length > 20) {
+                    content = content.substring(0, 20) + '...'
+                  }
+                  
+                  // 显示应用内通知
+                  notifyInfo('新消息', `${senderName}：${content}`)
+                  
+                  // 显示桌面通知
+                  showDesktopNotification('新消息', `${senderName}：${content}`, msg.senderAvatar)
+                  
+                  // 播放提示音
+                  playNotificationSound()
+                }
+              }
             } catch (e) {
-              // ignore
+              console.error('处理聊天消息失败:', e)
             }
           })
 
@@ -408,13 +501,12 @@ export default {
 
 .nav-item {
   color: var(--text-secondary);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
-  padding: 6px 12px;
-  border-radius: 10px;
-  transition: all var(--transition-base);
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -424,27 +516,20 @@ export default {
 }
 
 .nav-item:hover {
-  background: var(--bg-tertiary);
+  background: rgba(0,0,0,0.03);
   color: var(--text-primary);
-  transform: translateY(-2px);
+  transform: translateY(0);
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  background: var(--primary-light, #ecf5ff);
   color: var(--color-primary);
   font-weight: 600;
+  box-shadow: none;
 }
 
 .nav-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
-  border-radius: 2px;
+  display: none;
 }
 
 .menu-icon {
@@ -460,7 +545,38 @@ export default {
 }
 
 .menu-badge {
-  margin-left: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.menu-badge :deep(.el-badge__content) {
+  background-color: #f56c6c;
+  border: none;
+  font-size: 12px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 6px;
+  min-width: 18px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(245, 108, 108, 0.4);
+}
+
+.nav-item:hover .menu-badge :deep(.el-badge__content) {
+  background-color: #f78989;
+}
+
+.nav-item.active .menu-badge :deep(.el-badge__content) {
+  background-color: #ff4d4f;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 /* 用户区域 */
@@ -471,16 +587,16 @@ export default {
 }
 
 .user-section :deep(.el-button.is-circle) {
-  border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
-  transition: all var(--transition-base);
+  border: 1px solid transparent;
+  background: transparent;
+  transition: all 0.2s ease;
 }
 
 .user-section :deep(.el-button.is-circle:hover) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-  border-color: var(--color-primary);
+  transform: none;
+  box-shadow: none;
+  background: rgba(0,0,0,0.03);
+  color: var(--primary-color);
 }
 
 .lyric-toggle-btn {
@@ -488,7 +604,7 @@ export default {
 }
 
 .lyric-toggle-btn:hover {
-  transform: scale(1.05) translateY(-2px);
+  transform: none;
 }
 
 .user-info {
@@ -496,18 +612,18 @@ export default {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  padding: 6px 16px;
-  border-radius: 12px;
-  transition: all var(--transition-base);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: 20px;
+  transition: all 0.2s;
+  background: transparent;
+  border: 1px solid transparent;
 }
 
 .user-info:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--color-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  background: rgba(0,0,0,0.03);
+  border-color: transparent;
+  transform: none;
+  box-shadow: none;
 }
 
 .username {
@@ -531,7 +647,7 @@ export default {
 .app-main {
   flex: 1;
   margin-top: 64px;
-  margin-bottom: 100px;
+  margin-bottom: 130px; /* 增加到底部的距离，为悬浮播放器留出空间 */
   max-width: 1400px;
   width: 100%;
   margin-left: auto;
@@ -656,6 +772,24 @@ export default {
   opacity: 1;
 }
 
+.mobile-menu-badge {
+  margin-left: auto;
+}
+
+.mobile-menu-badge :deep(.el-badge__content) {
+  background-color: #f56c6c;
+  border: none;
+  font-size: 12px;
+  height: 20px;
+  line-height: 20px;
+  padding: 0 6px;
+  min-width: 20px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(245, 108, 108, 0.4);
+  position: static;
+  transform: none;
+}
+
 /* 移动端菜单动画 */
 .slide-enter-active,
 .slide-leave-active {
@@ -760,7 +894,7 @@ export default {
   .app-main {
     padding: 12px;
     margin-top: 64px;
-    margin-bottom: 80px;
+    margin-bottom: 100px;
   }
   
   /* 顶部导航栏 */
@@ -786,7 +920,7 @@ export default {
   .app-main {
     padding: 8px;
     margin-top: 50px;
-    margin-bottom: 70px;
+    margin-bottom: 90px;
   }
   
   .mobile-menu {

@@ -30,7 +30,12 @@
           :class="{ active: currentFriendId === conv.friendId }"
           @click="selectConversation(conv)"
         >
-          <el-badge :value="conv.unreadCount" :hidden="!conv.unreadCount">
+          <el-badge 
+            :value="conv.unreadCount" 
+            :hidden="!conv.unreadCount"
+            :max="99"
+            class="conversation-badge"
+          >
             <el-avatar :src="conv.friendAvatar" :size="45">
               <el-icon><User /></el-icon>
             </el-avatar>
@@ -38,7 +43,7 @@
           
           <div class="conv-info">
             <div class="conv-name">{{ conv.friendName }}</div>
-            <div class="conv-message">{{ conv.lastMessage || '暂无消息' }}</div>
+            <div class="conv-message">{{ formatConversationMessage(conv) }}</div>
           </div>
           
           <div class="conv-time">
@@ -260,6 +265,40 @@ const filteredConversations = computed(() => {
   )
 })
 
+// 格式化会话消息显示
+const formatConversationMessage = (conv) => {
+  if (!conv.lastMessage) return '暂无消息'
+  
+  let msg = conv.lastMessage
+  
+  // 如果已经是友好格式（后端已处理），直接返回
+  if (msg === '[分享了歌曲]' || msg === '[分享了歌单]') {
+    return msg
+  }
+  
+  // 兼容旧数据：尝试判断是否是 JSON 格式的分享消息
+  if (msg.startsWith('{') || msg.startsWith('[')) {
+    try {
+      const data = JSON.parse(msg)
+      // 判断是歌曲分享还是歌单分享
+      if (data.id && data.title) {
+        return '[分享了歌曲]'
+      } else if (data.id && data.name) {
+        return '[分享了歌单]'
+      }
+    } catch (e) {
+      // 解析失败，继续正常显示
+    }
+  }
+  
+  // 普通文本消息，如果太长则截断
+  if (msg.length > 30) {
+    return msg.substring(0, 30) + '...'
+  }
+  
+  return msg
+}
+
 // 格式化时间
 const formatTime = (time) => {
   if (!time) return ''
@@ -318,37 +357,10 @@ const refreshConversations = () => {
 }
 
 // 选择会话
-const selectConversation = async (conv) => {
-  currentFriendId.value = conv.friendId
-  router.push(`/chat/${conv.friendId}`)
-  
-  // 加载好友信息
-  try {
-    const friendsRes = await getFriendList()
-    if (friendsRes.code === 200) {
-      const friend = friendsRes.data.find(f => f.friendId === conv.friendId)
-      if (friend) {
-        currentFriend.value = friend.friend || {
-          id: conv.friendId,
-          nickname: conv.friendName,
-          avatar: conv.friendAvatar
-        }
-      }
-    }
-  } catch (error) {
-    console.error('加载好友信息失败:', error)
-  }
-  
-  // 加载聊天记录
-  await loadChatHistory(conv.friendId)
-  
-  // 标记已读
-  try {
-    await markAllAsReadFrom(conv.friendId)
-    await socialStore.updateUnreadMessageCount()
-    await loadConversations()
-  } catch (error) {
-    console.error('标记已读失败:', error)
+const selectConversation = (conv) => {
+  // 仅进行路由跳转，数据加载交给 watch 处理
+  if (Number(route.params.id) !== conv.friendId) {
+    router.push(`/chat/${conv.friendId}`)
   }
 }
 
@@ -666,55 +678,97 @@ const scrollToBottom = () => {
 }
 
 // 监听路由变化
-watch(() => route.params.friendId, async (friendId) => {
-  if (friendId) {
-    currentFriendId.value = Number(friendId)
-    const conv = conversations.value.find(c => c.friendId === Number(friendId))
+watch(() => route.params.id, async (id) => {
+  if (id) {
+    const fid = Number(id)
+    
+    // 1. 立即更新当前ID
+    currentFriendId.value = fid
+    
+    // 2. 尝试从当前会话列表中立即获取好友信息（实现无缝切换头部）
+    const conv = conversations.value.find(c => c.friendId === fid)
     if (conv) {
-      await selectConversation(conv)
-    } else {
-      // 回退：未在会话列表中找到，直接按friendId加载
+      currentFriend.value = {
+        id: fid,
+        nickname: conv.friendName,
+        avatar: conv.friendAvatar
+      }
+    }
+    
+    // 3. 加载聊天记录
+    await loadChatHistory(fid, true)
+    
+    // 4. 标记已读等副作用
+    try {
+      await markAllAsReadFrom(fid)
+      await socialStore.updateUnreadMessageCount()
+      // 如果列表里没有这个会话（比如新聊天），或者需要更新未读数，则刷新列表
+      if (!conv || conv.unreadCount > 0) {
+        await loadConversations()
+      }
+    } catch (_) {}
+    
+    // 5. 如果刚才没在列表里找到好友信息（比如通过URL直接访问），现在尝试获取详情
+    if (!currentFriend.value || currentFriend.value.id !== fid) {
       try {
         const friendsRes = await getFriendList()
         if (friendsRes.code === 200) {
-          const friend = friendsRes.data.find(f => f.friendId === Number(friendId))
+          const friend = friendsRes.data.find(f => f.friendId === fid)
           if (friend) {
             currentFriend.value = friend.friend || {
-              id: Number(friendId),
+              id: fid,
               nickname: friend.friendName,
               avatar: friend.friendAvatar
             }
           }
         }
       } catch (e) {}
-      await loadChatHistory(Number(friendId))
-      try {
-        await markAllAsReadFrom(Number(friendId))
-        await socialStore.updateUnreadMessageCount()
-      } catch (_) {}
-      await loadConversations()
     }
+  } else {
+    // 没有ID时才置空
+    currentFriendId.value = null
+    currentFriend.value = null
+    messages.value = []
   }
 }, { immediate: true })
 
 onMounted(async () => {
+  // 先加载会话列表，这样 watch 里的同步查找才能命中
   await loadConversations()
   
-  // 如果有friendId参数，选择对应会话
-  if (route.params.friendId) {
-    const friendId = Number(route.params.friendId)
-    const conv = conversations.value.find(c => c.friendId === friendId)
+  // 如果有参数但还没加载出好友信息（因为watch先于onMounted执行，当时conversations可能为空）
+  if (route.params.id && !currentFriend.value) {
+    const fid = Number(route.params.id)
+    const conv = conversations.value.find(c => c.friendId === fid)
     if (conv) {
-      await selectConversation(conv)
+      currentFriend.value = {
+        id: fid,
+        nickname: conv.friendName,
+        avatar: conv.friendAvatar
+      }
     }
   }
-
+  // 订阅聊天消息 - 用于更新会话列表
+  const offChatForConversations = wsClient.onChatMessage(async (msg) => {
+    try {
+      if (!msg) return
+      
+      // 无论是否在当前聊天窗口，都更新会话列表
+      // 这样会话列表的最后消息和时间会实时更新
+      await loadConversations()
+    } catch (error) {
+      console.error('更新会话列表失败:', error)
+    }
+  })
+  
   // 订阅聊天消息，匹配当前会话则追加显示
   const offChat = wsClient.onChatMessage(async (msg) => {
     try {
       if (!msg || !currentFriendId.value) return
       const fid = currentFriendId.value
-      if (msg.senderId === fid || msg.receiverId === fid) {
+      const isCurrentChat = msg.senderId === fid || msg.receiverId === fid
+      
+      if (isCurrentChat) {
         // 解析分享数据
         if ((msg.type === 'song' || msg.type === 'playlist') && msg.content && !msg.shareData) {
           try {
@@ -746,8 +800,23 @@ onMounted(async () => {
             messages.value.push(msg)
           }
         } else {
+          // 收到对方的消息
           messages.value.push(msg)
+          
+          // 立即标记为已读（因为用户正在查看此聊天窗口）
+          if (msg.id && msg.senderId === fid) {
+            try {
+              await markAllAsReadFrom(fid)
+              // 通知 social store 更新未读数
+              await socialStore.updateUnreadMessageCount()
+              // 更新会话列表
+              await loadConversations()
+            } catch (error) {
+              console.error('标记已读失败:', error)
+            }
+          }
         }
+        
         await nextTick()
         scrollToBottom()
       }
@@ -757,6 +826,7 @@ onMounted(async () => {
   // 组件卸载时移除订阅
   onUnmounted(() => {
     if (typeof offChat === 'function') offChat()
+    if (typeof offChatForConversations === 'function') offChatForConversations()
   })
 })
 </script>
@@ -822,6 +892,21 @@ onMounted(async () => {
 
 .conversation-item.active {
   background: var(--color-primary-light, #ecf5ff);
+}
+
+.conversation-badge :deep(.el-badge__content) {
+  background-color: #f56c6c;
+  border: 2px solid #fff;
+  font-size: 12px;
+  height: 20px;
+  line-height: 16px;
+  padding: 0 6px;
+  min-width: 20px;
+}
+
+.conversation-badge :deep(.el-badge__content.is-fixed) {
+  top: 2px;
+  right: 8px;
 }
 
 .conv-info {
@@ -1037,4 +1122,6 @@ onMounted(async () => {
   height: 100%;
 }
 </style>
+
+
 
