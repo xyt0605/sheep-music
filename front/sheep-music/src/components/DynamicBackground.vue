@@ -42,13 +42,10 @@ const processImageUrl = (url) => {
   
   if (url.startsWith(ossHost)) {
     try {
-      const u = new URL(url)
-      // 开发环境使用 /oss 代理
-      if (import.meta.env.DEV) {
-        return `/oss${u.pathname}`
-      }
+      // 生产环境也使用代理避免CORS问题
+      return url.replace(ossHost, '/oss')
     } catch (e) {
-      console.warn('URL 处理失败:', e)
+      console.warn('URL处理失败:', e)
     }
   }
   

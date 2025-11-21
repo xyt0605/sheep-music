@@ -66,9 +66,17 @@ public class ChatService {
         
         ChatMessage savedMessage = chatMessageRepository.save(message);
 
+        // 生成会话显示文本
+        String displayContent = content;
+        if ("song".equals(type)) {
+            displayContent = "[分享了歌曲]";
+        } else if ("playlist".equals(type)) {
+            displayContent = "[分享了歌单]";
+        }
+
         // 更新会话信息
         conversationService.updateConversationOnNewMessage(
-            receiverId, senderId, content, savedMessage.getCreateTime());
+            receiverId, senderId, displayContent, savedMessage.getCreateTime());
 
         // 通过WebSocket推送消息给接收者与发送者（用于多端同步）
         try {

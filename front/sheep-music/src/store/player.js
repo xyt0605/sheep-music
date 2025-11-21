@@ -106,17 +106,9 @@ export const usePlayerStore = defineStore('player', () => {
           let src = song.url
           
           try {
-            if (typeof song.url === 'string' && song.url.startsWith(ossHost)) {
-              const u = new URL(song.url)
-              
-              // 判断环境：开发环境使用 /oss 代理，生产环境使用 /oss-proxy
-              if (import.meta.env.DEV) {
-                // 本地开发环境：使用 Vite 代理
-                src = `/oss${u.pathname}`
-              } else {
-                // 生产环境：使用 Nginx 代理
-                src = `/oss-proxy${u.pathname}`
-              }
+            if (src && src.startsWith(ossHost)) {
+              // 生产环境也使用代理避免CORS问题
+              src = src.replace(ossHost, '/oss')
             }
           } catch (e) {
             console.warn('URL 处理失败，使用原始 URL:', e)
@@ -312,4 +304,3 @@ export const usePlayerStore = defineStore('player', () => {
     togglePlayMode
   }
 })
-
