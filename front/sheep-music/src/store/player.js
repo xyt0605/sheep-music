@@ -267,6 +267,25 @@ export const usePlayerStore = defineStore('player', () => {
     playMode.value = modes[nextModeIndex]
   }
   
+  // 清空播放器（退出登录时使用）
+  const clearPlayer = () => {
+    // 停止播放
+    if (audio.value) {
+      audio.value.pause()
+      audio.value.src = ''
+    }
+    
+    // 重置所有状态
+    currentSong.value = null
+    playlist.value = []
+    currentIndex.value = -1
+    isPlaying.value = false
+    currentTime.value = 0
+    duration.value = 0
+    showPlayer.value = false
+    showLyric.value = false
+  }
+  
   return {
     // 状态
     currentSong,
@@ -298,6 +317,7 @@ export const usePlayerStore = defineStore('player', () => {
     removeFromPlaylist,
     toggleLyric,
     setPlayMode,
-    togglePlayMode
+    togglePlayMode,
+    clearPlayer
   }
 })

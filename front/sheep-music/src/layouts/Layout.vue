@@ -120,6 +120,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store/user'
+import { usePlayerStore } from '@/store/player'
 import { useSocialStore } from '@/store/social'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import DesktopLyric from '@/components/DesktopLyric.vue'
@@ -135,6 +136,7 @@ export default {
   setup() {
     const router = useRouter()
     const userStore = useUserStore()
+    const playerStore = usePlayerStore()
     const socialStore = useSocialStore()
     const mobileMenuOpen = ref(false)
     const desktopLyricRef = ref(null)
@@ -359,6 +361,9 @@ export default {
           }).then(() => {
             // 断开 WebSocket 连接
             try { wsClient.disconnect() } catch (e) {}
+            // 清空播放器状态
+            playerStore.clearPlayer()
+            // 退出登录
             userStore.logout()
             ElMessage.success('已退出登录')
             router.push('/login')
