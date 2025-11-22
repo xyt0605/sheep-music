@@ -34,7 +34,7 @@
             <div class="song-meta">
               <h2 class="song-name">{{ currentSong?.title || '暂无播放' }}</h2>
               <p class="artist-name">{{ getArtistsName(currentSong) }}</p>
-              <p class="album-name">{{ currentSong?.album || '未知专辑' }}</p>
+              <p class="album-name">{{ currentSong?.albumName || '未知专辑' }}</p>
             </div>
           </div>
           
@@ -629,7 +629,7 @@ watch(() => currentSong.value?.id, (newId) => {
 }
 
 .lyric-placeholder {
-  height: 50vh;
+  height: calc(50vh - 60px);
 }
 
 .lyric-line {
@@ -652,10 +652,8 @@ watch(() => currentSong.value?.id, (newId) => {
 .lyric-line.active .lyric-text {
   font-size: 32px;
   font-weight: bold;
-  background: linear-gradient(90deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .lyric-line.passed {
