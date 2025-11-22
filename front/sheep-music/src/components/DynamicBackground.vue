@@ -40,7 +40,8 @@ const processImageUrl = (url) => {
   
   const ossHost = 'https://sheepmusic.oss-cn-hangzhou.aliyuncs.com'
   if (url.startsWith(ossHost)) {
-    return url.replace(ossHost, '/api/oss')
+    const ossPath = url.substring(ossHost.length)
+    return '/api/oss' + (ossPath.startsWith('/') ? ossPath : '/' + ossPath)
   }
   
   return url

@@ -105,8 +105,10 @@ export const usePlayerStore = defineStore('player', () => {
           let src = song.url
           const ossHost = 'https://sheepmusic.oss-cn-hangzhou.aliyuncs.com'
           if (src && src.startsWith(ossHost)) {
-            // 将 OSS 完整 URL 替换为相对路径代理
-            src = src.replace(ossHost, '/api/oss')
+            // 提取 OSS URL 的路径部分
+            const ossPath = src.substring(ossHost.length)
+            // 确保路径以 / 开头
+            src = '/api/oss' + (ossPath.startsWith('/') ? ossPath : '/' + ossPath)
           }
           
           audio.value.src = src
