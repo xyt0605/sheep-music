@@ -3,10 +3,27 @@
   <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,user-scalable=yes">
     <link rel="icon" href="/favicon.ico">
     <title>Sheep Music - 在线音乐播放器</title>
-    <script type="module" crossorigin src="/assets/index-BnXTIBkP.js"></script>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sheep Music">
+    <link rel="apple-touch-icon" href="/icon-192x192.png">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="msapplication-TileColor" content="#667eea">
+    
+    <!-- Description -->
+    <meta name="description" content="Sheep Music - 优雅的在线音乐播放平台，发现好音乐">
+    <meta name="keywords" content="音乐,在线播放器,Sheep Music,歌单,推荐">
+    <script type="module" crossorigin src="/assets/index-2EFfUh0C.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-Dmtcioii.css">
   </head>
   <body>
@@ -14,6 +31,21 @@
       <strong>We're sorry but Sheep Music doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
     <div id="app"></div>
+    
+    <!-- Register Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('SW registered:', registration)
+            })
+            .catch(error => {
+              console.log('SW registration failed:', error)
+            })
+        })
+      }
+    </script>
   </body>
 </html>
 
