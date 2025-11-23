@@ -1,0 +1,449 @@
+/* 
+ * 移动端尺寸修复样式
+ * 解决手机端显示不正常的问题
+ */
+
+/* ============================================
+   1. 基础尺寸修复
+   ============================================ */
+
+/* 防止横向滚动 */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+#app {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* 移动端字体大小优化 */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+  
+  body {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+}
+
+/* ============================================
+   2. 播放器移动端优化
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* 播放器容器 */
+  .music-player {
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* 播放器主体 */
+  .player-main {
+    padding: 12px 16px !important;
+    min-height: 70px !important;
+  }
+  
+  /* 歌曲信息文字 */
+  .song-info .song-title {
+    font-size: 14px !important;
+    max-width: 150px !important;
+  }
+  
+  .song-info .song-artist {
+    font-size: 12px !important;
+  }
+  
+  /* 播放控制按钮 */
+  .player-actions button {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 16px !important;
+  }
+  
+  /* 主播放按钮加大 */
+  .play-button {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 20px !important;
+  }
+  
+  /* 隐藏移动端不必要的按钮 */
+  .player-actions .desktop-only {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   3. 全屏歌词移动端优化
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* 歌词页面布局 */
+  .fullscreen-lyric .lyric-main {
+    flex-direction: column !important;
+    padding: 20px 16px !important;
+  }
+  
+  /* 专辑封面区域 */
+  .fullscreen-lyric .album-section {
+    width: 100% !important;
+    max-width: none !important;
+    margin-bottom: 30px !important;
+  }
+  
+  /* 专辑封面大小 */
+  .fullscreen-lyric .album-cover {
+    width: 200px !important;
+    height: 200px !important;
+  }
+  
+  /* 歌词区域 */
+  .fullscreen-lyric .lyric-section {
+    width: 100% !important;
+    max-width: none !important;
+  }
+  
+  /* 歌词文字大小 */
+  .lyric-text {
+    font-size: 18px !important;
+  }
+  
+  .lyric-line.active .lyric-text {
+    font-size: 24px !important;
+  }
+  
+  /* 底部控制栏 */
+  .fullscreen-lyric .lyric-footer {
+    padding: 20px 16px 30px !important;
+  }
+}
+
+/* ============================================
+   4. 页面内容区域优化
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* 主内容区 */
+  .app-main {
+    padding: 0 !important;
+    margin-bottom: 90px !important; /* 为底部播放器留空间 */
+  }
+  
+  /* 页面容器 */
+  .page-container {
+    padding: 15px !important;
+  }
+  
+  /* 卡片间距 */
+  .card, .el-card {
+    margin-bottom: 12px !important;
+  }
+}
+
+/* ============================================
+   5. 导航栏移动端优化
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* 顶部导航栏 */
+  .app-header {
+    height: 56px !important;
+    padding: 0 12px !important;
+  }
+  
+  /* Logo 大小 */
+  .logo {
+    font-size: 18px !important;
+    padding: 6px 12px !important;
+  }
+  
+  .logo-icon {
+    font-size: 24px !important;
+  }
+  
+  /* Logo 文字在小屏幕隐藏 */
+  .logo-text {
+    display: inline !important;
+  }
+  
+  /* 用户头像 */
+  .user-avatar {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  /* 桌面歌词按钮 */
+  .lyric-toggle-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+
+/* 超小屏幕 */
+@media (max-width: 480px) {
+  .logo-text {
+    display: none !important; /* 超小屏幕隐藏文字 */
+  }
+}
+
+/* ============================================
+   6. 歌曲列表移动端优化
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* 歌曲列表项 */
+  .song-item {
+    padding: 10px !important;
+    flex-wrap: nowrap !important;
+  }
+  
+  /* 歌曲封面 */
+  .song-cover {
+    width: 50px !important;
+    height: 50px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* 歌曲信息 */
+  .song-info {
+    flex: 1 !important;
+    min-width: 0 !important;
+    margin: 0 10px !important;
+  }
+  
+  .song-title {
+    font-size: 14px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  
+  .song-artist {
+    font-size: 12px !important;
+  }
+  
+  /* 操作按钮 */
+  .song-actions {
+    flex-shrink: 0 !important;
+  }
+  
+  .song-actions button {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+  }
+}
+
+/* ============================================
+   7. 对话框/弹窗移动端优化
+   ============================================ */
+
+@media (max-width: 768px) {
+  .el-dialog {
+    width: 95% !important;
+    max-width: 95% !important;
+    margin: 5vh auto !important;
+  }
+  
+  .el-dialog__header {
+    padding: 15px !important;
+  }
+  
+  .el-dialog__body {
+    padding: 15px !important;
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+  }
+  
+  .el-dialog__footer {
+    padding: 12px 15px !important;
+  }
+}
+
+/* ============================================
+   8. 输入框/表单移动端优化
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* 输入框 */
+  .el-input__inner,
+  .el-textarea__inner {
+    font-size: 16px !important; /* 防止 iOS 自动缩放 */
+  }
+  
+  /* 搜索框 */
+  .search-input {
+    width: 100% !important;
+  }
+  
+  /* 表单项 */
+  .el-form-item {
+    margin-bottom: 18px !important;
+  }
+  
+  .el-form-item__label {
+    padding: 0 0 8px 0 !important;
+  }
+}
+
+/* ============================================
+   9. 网格布局移动端优化
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* 歌曲网格 */
+  .song-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+  
+  /* 歌单网格 */
+  .playlist-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+  
+  /* 歌手网格 */
+  .artist-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 超小屏幕单列显示 */
+  .song-grid,
+  .playlist-grid,
+  .artist-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+/* ============================================
+   10. 触摸优化
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* 增大点击区域 */
+  button,
+  a.button,
+  .clickable {
+    min-height: 44px !important; /* iOS 推荐最小触摸尺寸 */
+    min-width: 44px !important;
+  }
+  
+  /* 禁用长按选择（避免误操作） */
+  .no-select,
+  .song-item,
+  .playlist-item {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  
+  /* 优化滚动 */
+  .scrollable {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* ============================================
+   11. 横屏适配
+   ============================================ */
+
+@media (orientation: landscape) and (max-height: 500px) {
+  /* 全屏歌词横屏优化 */
+  .fullscreen-lyric .lyric-main {
+    flex-direction: row !important;
+  }
+  
+  .fullscreen-lyric .album-section {
+    width: 40% !important;
+    margin-bottom: 0 !important;
+  }
+  
+  .fullscreen-lyric .lyric-section {
+    width: 60% !important;
+  }
+  
+  /* 顶部栏缩小 */
+  .app-header {
+    height: 48px !important;
+  }
+  
+  /* 播放器高度缩小 */
+  .music-player .player-main {
+    min-height: 60px !important;
+    padding: 8px 16px !important;
+  }
+}
+
+/* ============================================
+   12. 安全区域适配（iPhone 刘海屏）
+   ============================================ */
+
+@supports (padding: max(0px)) {
+  @media (max-width: 768px) {
+    .app-header {
+      padding-left: max(12px, env(safe-area-inset-left)) !important;
+      padding-right: max(12px, env(safe-area-inset-right)) !important;
+      padding-top: env(safe-area-inset-top) !important;
+    }
+    
+    .music-player {
+      padding-left: max(16px, env(safe-area-inset-left)) !important;
+      padding-right: max(16px, env(safe-area-inset-right)) !important;
+      padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+    }
+    
+    .mobile-menu {
+      padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
+    }
+  }
+}
+
+/* ============================================
+   13. 性能优化
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* 减少动画复杂度 */
+  * {
+    will-change: auto !important;
+  }
+  
+  /* 简化阴影 */
+  .card,
+  .el-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* 优化模糊效果 */
+  .backdrop-blur {
+    backdrop-filter: none !important;
+    background: var(--card-bg) !important;
+  }
+}
+
+/* ============================================
+   14. 调试辅助（开发时使用）
+   ============================================ */
+
+/* 取消注释以显示元素边界，方便调试
+@media (max-width: 768px) {
+  * {
+    outline: 1px solid rgba(255, 0, 0, 0.1) !important;
+  }
+}
+*/

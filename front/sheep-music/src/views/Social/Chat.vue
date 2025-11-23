@@ -81,7 +81,7 @@
           >
             <el-avatar
               v-if="message.senderId !== userStore.userInfo?.id"
-              :src="message.senderAvatar"
+              :src="currentFriend?.avatar"
               :size="35"
             >
               <el-icon><User /></el-icon>
@@ -335,6 +335,51 @@ const formatMessageTime = (time) => {
   })
 }
 
+// 更新会话列表中的好友信息（同步最新头像和昵称）
+const updateFriendInfoInConversations = async () => {
+  try {
+    const friendsRes = await getFriendList()
+    if (friendsRes.code === 200 && friendsRes.data) {
+      const friendMap = new Map()
+      friendsRes.data.forEach(f => {
+        if (f.friend) {
+          friendMap.set(f.friendId, {
+            avatar: f.friend.avatar,
+            nickname: f.friend.nickname || f.friend.username
+          })
+        }
+      })
+      
+      // 更新会话列表中的好友信息
+      conversations.value = conversations.value.map(conv => {
+        const friendInfo = friendMap.get(conv.friendId)
+        if (friendInfo) {
+          return {
+            ...conv,
+            friendAvatar: friendInfo.avatar,
+            friendName: friendInfo.nickname
+          }
+        }
+        return conv
+      })
+      
+      // 如果当前正在聊天，也更新当前好友信息
+      if (currentFriendId.value) {
+        const friendInfo = friendMap.get(currentFriendId.value)
+        if (friendInfo && currentFriend.value) {
+          currentFriend.value = {
+            ...currentFriend.value,
+            avatar: friendInfo.avatar,
+            nickname: friendInfo.nickname
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('更新好友信息失败:', error)
+  }
+}
+
 // 加载会话列表
 const loadConversations = async () => {
   loading.value = true
@@ -342,6 +387,8 @@ const loadConversations = async () => {
     const res = await getConversations()
     if (res.code === 200) {
       conversations.value = res.data || []
+      // 加载完会话列表后，立即同步最新的好友信息
+      await updateFriendInfoInConversations()
     }
   } catch (error) {
     console.error('加载会话列表失败:', error)
@@ -693,6 +740,24 @@ watch(() => route.params.id, async (id) => {
         nickname: conv.friendName,
         avatar: conv.friendAvatar
       }
+    }
+    
+    // 2.1 异步获取最新的好友信息
+    try {
+      const friendsRes = await getFriendList()
+      if (friendsRes.code === 200) {
+        const friend = friendsRes.data.find(f => f.friendId === fid)
+        if (friend && friend.friend) {
+          currentFriend.value = {
+            id: fid,
+            nickname: friend.friend.nickname || friend.friend.username,
+            avatar: friend.friend.avatar,
+            username: friend.friend.username
+          }
+        }
+      }
+    } catch (e) {
+      console.error('获取最新好友信息失败:', e)
     }
     
     // 3. 加载聊天记录
