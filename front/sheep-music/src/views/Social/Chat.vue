@@ -818,17 +818,18 @@ onMounted(async () => {
       }
     }
   }
-  // 订阅聊天消息 - 用于更新会话列表
+  // 订阅聊天消息 - 用于更新会话列表和未读数
   const offChatForConversations = wsClient.onChatMessage(async (msg) => {
     try {
       if (!msg) return
       
       // 添加小延迟，给网络传输时间
-      // 后端已在事务提交后才推送消息，所以不需要太长延迟
       await new Promise(resolve => setTimeout(resolve, 200))
       
-      // 无论是否在当前聊天窗口，都更新会话列表（静默更新，不显示loading）
-      // 这样会话列表的最后消息和时间会实时更新
+      // 始终更新会话列表（静默更新，不显示loading）
+      // 这会获取每个会话的最新 unreadCount
+      // 当前会话的未读数会被 offChat 中的 markAllAsReadFrom 清零
+      // 其他会话的未读数会正确显示
       await loadConversations(true)
       
       // 如果消息涉及到当前正在聊天的好友，更新其信息
@@ -858,7 +859,7 @@ onMounted(async () => {
     }
   })
   
-  // 订阅聊天消息，匹配当前会话则追加显示
+  // 订阅聊天消息 - 处理当前会话的消息显示和已读标记
   const offChat = wsClient.onChatMessage(async (msg) => {
     try {
       if (!msg) return
@@ -869,6 +870,7 @@ onMounted(async () => {
       const fid = currentFriendId.value
       const isCurrentChat = msg.senderId === fid || msg.receiverId === fid
       
+      // 只处理当前会话的消息
       if (isCurrentChat) {
         // 解析分享数据
         if ((msg.type === 'song' || msg.type === 'playlist') && msg.content && !msg.shareData) {
@@ -905,13 +907,14 @@ onMounted(async () => {
           messages.value.push(msg)
           
           // 立即标记为已读（因为用户正在查看此聊天窗口）
+          // 只有收到对方的消息才需要标记已读
           if (msg.id && msg.senderId === fid) {
             try {
               await markAllAsReadFrom(fid)
               // 通知 social store 更新未读数
               await socialStore.updateUnreadMessageCount()
-              // 更新会话列表
-              await loadConversations()
+              // 更新会话列表（静默更新，清除当前会话的未读数）
+              await loadConversations(true)
             } catch (error) {
               console.error('标记已读失败:', error)
             }
