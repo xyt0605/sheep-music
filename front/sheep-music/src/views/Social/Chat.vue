@@ -390,7 +390,7 @@ const loadConversations = async (silent = false) => {
     const res = await getConversations()
     if (res.code === 200) {
       conversations.value = res.data || []
-      // 加载完会话列表后，立即同步最新的好友信息
+      // 加载完会话列表后，同步最新的好友信息
       await updateFriendInfoInConversations()
     }
   } catch (error) {
@@ -818,18 +818,16 @@ onMounted(async () => {
       }
     }
   }
-  // 订阅聊天消息 - 用于更新会话列表和未读数
+  // 订阅聊天消息 - 用于更新会话列表
   const offChatForConversations = wsClient.onChatMessage(async (msg) => {
     try {
       if (!msg) return
       
-      // 添加小延迟，给网络传输时间
-      await new Promise(resolve => setTimeout(resolve, 200))
+      // 等待后端数据库更新
+      await new Promise(resolve => setTimeout(resolve, 500))
       
-      // 始终更新会话列表（静默更新，不显示loading）
-      // 这会获取每个会话的最新 unreadCount
-      // 当前会话的未读数会被 offChat 中的 markAllAsReadFrom 清零
-      // 其他会话的未读数会正确显示
+      // 始终更新会话列表（静默更新）
+      // 导航栏的未读数由 Layout.vue 统一处理
       await loadConversations(true)
       
       // 如果消息涉及到当前正在聊天的好友，更新其信息
@@ -911,7 +909,7 @@ onMounted(async () => {
           if (msg.id && msg.senderId === fid) {
             try {
               await markAllAsReadFrom(fid)
-              // 通知 social store 更新未读数
+              // 更新导航栏的未读数
               await socialStore.updateUnreadMessageCount()
               // 更新会话列表（静默更新，清除当前会话的未读数）
               await loadConversations(true)

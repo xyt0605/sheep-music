@@ -255,14 +255,13 @@ export default {
                 (msg.senderId == currentChatFriendId || msg.receiverId == currentChatFriendId)
               
               // 添加小延迟，给网络传输时间
-              // 后端已在事务提交后才推送消息，所以不需要太长延迟
               await new Promise(resolve => setTimeout(resolve, 200))
               
-              // 始终更新未读消息数（导航栏的红点）
-              await socialStore.updateUnreadMessageCount()
-              
-              // 如果不在当前聊天窗口，才显示通知
+              // 如果不在当前聊天窗口，才更新未读数和显示通知
+              // 如果在当前聊天窗口，Chat.vue会处理标记已读和更新未读数
               if (!isCurrentChat) {
+                // 更新未读消息数（导航栏的红点）
+                await socialStore.updateUnreadMessageCount()
                 
                 // 显示消息通知（仅当消息是发给自己的）
                 if (msg.receiverId === userStore.userInfo?.id) {
