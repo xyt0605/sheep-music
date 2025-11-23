@@ -65,6 +65,22 @@ public class ConversationService {
     }
     
     /**
+     * 更新发送者的会话（发送消息时，仅更新最后一条消息，不增加未读数）
+     */
+    @Transactional
+    public void updateSenderConversation(Long userId, Long friendId, 
+                                         String message, LocalDateTime time) {
+        Conversation conversation = conversationRepository
+            .findByUserIdAndFriendId(userId, friendId)
+            .orElse(createOrUpdateConversation(userId, friendId));
+        
+        conversation.setLastMessageContent(message);
+        conversation.setLastMessageTime(time);
+        // 不增加 unreadCount，因为发送者自己发的消息不需要未读提示
+        conversationRepository.save(conversation);
+    }
+    
+    /**
      * 清空未读数
      */
     @Transactional

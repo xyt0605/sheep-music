@@ -818,9 +818,36 @@ onMounted(async () => {
     try {
       if (!msg) return
       
+      // 添加小延迟，确保后端完成数据库更新
+      // 这样可以获取到正确的 unreadCount
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
       // 无论是否在当前聊天窗口，都更新会话列表
       // 这样会话列表的最后消息和时间会实时更新
       await loadConversations()
+      
+      // 如果消息涉及到当前正在聊天的好友，更新其信息
+      if (currentFriendId.value) {
+        const fid = currentFriendId.value
+        if (msg.senderId === fid || msg.receiverId === fid) {
+          // 异步获取最新的好友信息
+          try {
+            const friendsRes = await getFriendList()
+            if (friendsRes.code === 200) {
+              const friend = friendsRes.data.find(f => f.friendId === fid)
+              if (friend && friend.friend && currentFriend.value) {
+                currentFriend.value = {
+                  ...currentFriend.value,
+                  nickname: friend.friend.nickname || friend.friend.username,
+                  avatar: friend.friend.avatar
+                }
+              }
+            }
+          } catch (e) {
+            console.error('更新当前好友信息失败:', e)
+          }
+        }
+      }
     } catch (error) {
       console.error('更新会话列表失败:', error)
     }
@@ -829,7 +856,11 @@ onMounted(async () => {
   // 订阅聊天消息，匹配当前会话则追加显示
   const offChat = wsClient.onChatMessage(async (msg) => {
     try {
-      if (!msg || !currentFriendId.value) return
+      if (!msg) return
+      
+      // 只有当用户正在查看具体的聊天窗口时，才处理消息
+      if (!currentFriendId.value) return
+      
       const fid = currentFriendId.value
       const isCurrentChat = msg.senderId === fid || msg.receiverId === fid
       

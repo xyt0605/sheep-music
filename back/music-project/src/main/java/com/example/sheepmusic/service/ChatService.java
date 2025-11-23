@@ -74,9 +74,12 @@ public class ChatService {
             displayContent = "[分享了歌单]";
         }
 
-        // 更新会话信息
+        // 更新接收者的会话信息（增加未读数）
         conversationService.updateConversationOnNewMessage(
             receiverId, senderId, displayContent, savedMessage.getCreateTime());
+        
+        // 更新发送者的会话信息（仅更新最后一条消息，不增加未读数）
+        conversationService.updateSenderConversation(senderId, receiverId, displayContent, savedMessage.getCreateTime());
 
         // 通过WebSocket推送消息给接收者与发送者（用于多端同步）
         try {
