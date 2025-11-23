@@ -818,9 +818,9 @@ onMounted(async () => {
     try {
       if (!msg) return
       
-      // 添加小延迟，确保后端完成数据库更新
+      // 添加延迟，确保后端完成数据库更新
       // 这样可以获取到正确的 unreadCount
-      await new Promise(resolve => setTimeout(resolve, 300))
+      await new Promise(resolve => setTimeout(resolve, 500))
       
       // 无论是否在当前聊天窗口，都更新会话列表
       // 这样会话列表的最后消息和时间会实时更新

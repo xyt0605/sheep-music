@@ -99,8 +99,18 @@ public class ConversationService {
             ConversationVO vo = new ConversationVO();
             vo.setId(conv.getId());
             vo.setFriendId(conv.getFriendId());
-            vo.setFriendName(conv.getFriendName());
-            vo.setFriendAvatar(conv.getFriendAvatar());
+            
+            // 从 User 表获取最新的好友信息（确保昵称和头像是最新的）
+            User friend = userRepository.findById(conv.getFriendId()).orElse(null);
+            if (friend != null) {
+                vo.setFriendName(friend.getNickname());
+                vo.setFriendAvatar(friend.getAvatar());
+            } else {
+                // 如果用户不存在（已删除等），使用缓存的信息
+                vo.setFriendName(conv.getFriendName());
+                vo.setFriendAvatar(conv.getFriendAvatar());
+            }
+            
             vo.setLastMessage(conv.getLastMessageContent());
             vo.setLastMessageTime(conv.getLastMessageTime());
             vo.setUnreadCount(conv.getUnreadCount());

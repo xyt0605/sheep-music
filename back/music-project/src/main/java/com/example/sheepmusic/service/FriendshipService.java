@@ -185,15 +185,15 @@ public class FriendshipService {
      */
     public List<Friendship> getFriendList(Long userId) {
         List<Friendship> friendships = friendshipRepository.findByUserIdAndStatus(userId, "accepted");
-        // 确保冗余字段已填充
+        // 强制从 User 表获取最新的好友信息（确保昵称和头像是最新的）
         for (Friendship friendship : friendships) {
-            if (friendship.getFriendName() == null || friendship.getFriendAvatar() == null) {
-                User friend = userRepository.findById(friendship.getFriendId()).orElse(null);
-                if (friend != null) {
-                    friendship.setFriendName(friend.getNickname());
-                    friendship.setFriendAvatar(friend.getAvatar());
-                    friendshipRepository.save(friendship);
-                }
+            User friend = userRepository.findById(friendship.getFriendId()).orElse(null);
+            if (friend != null) {
+                // 总是更新为最新的用户信息
+                friendship.setFriendName(friend.getNickname());
+                friendship.setFriendAvatar(friend.getAvatar());
+                // 注意：不保存到数据库，只在内存中更新，避免频繁写库
+                // 这样可以确保每次调用都返回最新数据，同时不影响性能
             }
         }
         return friendships;

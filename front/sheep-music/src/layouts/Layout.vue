@@ -249,15 +249,19 @@ export default {
               
               // 判断是否在当前聊天窗口
               const currentRoute = router.currentRoute.value
-              const isInChatPage = currentRoute.name === 'Chat'
-              const currentChatFriendId = currentRoute.params.friendId
-              const isCurrentChat = isInChatPage && 
+              const isInChatPage = currentRoute.path && currentRoute.path.startsWith('/chat')
+              const currentChatFriendId = currentRoute.params.id  // 修复：参数名是 id 而不是 friendId
+              const isCurrentChat = isInChatPage && currentChatFriendId &&
                 (msg.senderId == currentChatFriendId || msg.receiverId == currentChatFriendId)
               
-              // 如果不在当前聊天窗口，才更新未读数和显示通知
+              // 添加延迟，确保后端数据库已更新
+              await new Promise(resolve => setTimeout(resolve, 500))
+              
+              // 始终更新未读消息数（导航栏的红点）
+              await socialStore.updateUnreadMessageCount()
+              
+              // 如果不在当前聊天窗口，才显示通知
               if (!isCurrentChat) {
-                // 更新未读消息数
-                await socialStore.updateUnreadMessageCount()
                 
                 // 显示消息通知（仅当消息是发给自己的）
                 if (msg.receiverId === userStore.userInfo?.id) {
