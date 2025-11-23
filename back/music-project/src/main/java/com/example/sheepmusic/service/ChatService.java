@@ -82,12 +82,23 @@ public class ChatService {
         conversationService.updateSenderConversation(senderId, receiverId, displayContent, savedMessage.getCreateTime());
 
         // 通过WebSocket推送消息给接收者与发送者（用于多端同步）
-        try {
-            String receiverTopic = "/topic/user." + receiverId + ".chat";
-            String senderTopic = "/topic/user." + senderId + ".chat";
-            messagingTemplate.convertAndSend(receiverTopic, savedMessage);
-            messagingTemplate.convertAndSend(senderTopic, savedMessage);
-        } catch (Exception ignored) {}
+        // 使用 TransactionSynchronizationManager 确保在事务提交后推送
+        org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+            new org.springframework.transaction.support.TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        String receiverTopic = "/topic/user." + receiverId + ".chat";
+                        String senderTopic = "/topic/user." + senderId + ".chat";
+                        messagingTemplate.convertAndSend(receiverTopic, savedMessage);
+                        messagingTemplate.convertAndSend(senderTopic, savedMessage);
+                    } catch (Exception e) {
+                        // 记录错误但不影响主流程
+                        System.err.println("WebSocket消息推送失败: " + e.getMessage());
+                    }
+                }
+            }
+        );
 
         return savedMessage;
     }

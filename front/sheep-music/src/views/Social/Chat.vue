@@ -381,8 +381,11 @@ const updateFriendInfoInConversations = async () => {
 }
 
 // 加载会话列表
-const loadConversations = async () => {
-  loading.value = true
+// silent: 是否静默加载（不显示loading动画）
+const loadConversations = async (silent = false) => {
+  if (!silent) {
+    loading.value = true
+  }
   try {
     const res = await getConversations()
     if (res.code === 200) {
@@ -393,7 +396,9 @@ const loadConversations = async () => {
   } catch (error) {
     console.error('加载会话列表失败:', error)
   } finally {
-    loading.value = false
+    if (!silent) {
+      loading.value = false
+    }
   }
 }
 
@@ -818,13 +823,13 @@ onMounted(async () => {
     try {
       if (!msg) return
       
-      // 添加延迟，确保后端完成数据库更新
-      // 这样可以获取到正确的 unreadCount
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // 添加小延迟，给网络传输时间
+      // 后端已在事务提交后才推送消息，所以不需要太长延迟
+      await new Promise(resolve => setTimeout(resolve, 200))
       
-      // 无论是否在当前聊天窗口，都更新会话列表
+      // 无论是否在当前聊天窗口，都更新会话列表（静默更新，不显示loading）
       // 这样会话列表的最后消息和时间会实时更新
-      await loadConversations()
+      await loadConversations(true)
       
       // 如果消息涉及到当前正在聊天的好友，更新其信息
       if (currentFriendId.value) {
