@@ -2,7 +2,9 @@
   <div class="artists-page">
     <div class="page-header">
       <h2>🎤 全部歌手</h2>
-      <p class="subtitle">发现你喜欢的音乐人</p>
+      <p class="subtitle">
+        发现你喜欢的音乐人
+      </p>
     </div>
     
     <!-- 搜索栏 -->
@@ -11,8 +13,8 @@
         v-model="searchKeyword"
         placeholder="搜索歌手名称..."
         clearable
-        @input="handleSearch"
         size="large"
+        @input="handleSearch"
       >
         <template #prefix>
           <el-icon><Search /></el-icon>
@@ -23,21 +25,42 @@
     <!-- 排序选项 -->
     <div class="sort-bar">
       <span class="sort-label">排序：</span>
-      <el-radio-group v-model="sortType" @change="handleSortChange" size="small">
-        <el-radio-button value="songCount">歌曲数量</el-radio-button>
-        <el-radio-button value="createTime">最新</el-radio-button>
-        <el-radio-button value="name">名称</el-radio-button>
+      <el-radio-group
+        v-model="sortType"
+        size="small"
+        @change="handleSortChange"
+      >
+        <el-radio-button value="songCount">
+          歌曲数量
+        </el-radio-button>
+        <el-radio-button value="createTime">
+          最新
+        </el-radio-button>
+        <el-radio-button value="name">
+          名称
+        </el-radio-button>
       </el-radio-group>
     </div>
     
     <!-- 加载状态 -->
-    <div v-if="loading" class="loading-container">
-      <el-icon class="is-loading" :size="40"><Loading /></el-icon>
+    <div
+      v-if="loading"
+      class="loading-container"
+    >
+      <el-icon
+        class="is-loading"
+        :size="40"
+      >
+        <Loading />
+      </el-icon>
       <p>加载中...</p>
     </div>
     
     <!-- 歌手网格 -->
-    <div v-else-if="artists.length > 0" class="artists-grid">
+    <div
+      v-else-if="artists.length > 0"
+      class="artists-grid"
+    >
       <div 
         v-for="artist in artists" 
         :key="artist.id"
@@ -50,15 +73,27 @@
             :size="150"
             class="artist-avatar"
           >
-            <el-icon :size="60"><UserFilled /></el-icon>
+            <el-icon :size="60">
+              <UserFilled />
+            </el-icon>
           </el-avatar>
           <div class="artist-overlay">
-            <el-icon class="play-icon"><CaretRight /></el-icon>
+            <el-icon class="play-icon">
+              <CaretRight />
+            </el-icon>
           </div>
         </div>
         <div class="artist-info">
-          <h3 class="artist-name" :title="artist.name">{{ artist.name }}</h3>
-          <p class="artist-description" :title="artist.description">
+          <h3
+            class="artist-name"
+            :title="artist.name"
+          >
+            {{ artist.name }}
+          </h3>
+          <p
+            class="artist-description"
+            :title="artist.description"
+          >
             {{ artist.description || '暂无简介' }}
           </p>
         </div>
@@ -66,16 +101,24 @@
     </div>
     
     <!-- 空状态 -->
-    <div v-else class="empty-state">
+    <div
+      v-else
+      class="empty-state"
+    >
       <el-empty :description="searchKeyword ? '未找到相关歌手' : '暂无歌手'">
         <template #image>
-          <el-icon style="font-size: 80px; color: #ddd;"><User /></el-icon>
+          <el-icon style="font-size: 80px; color: #ddd;">
+            <User />
+          </el-icon>
         </template>
       </el-empty>
     </div>
     
     <!-- 分页 -->
-    <div v-if="total > pageSize" class="pagination">
+    <div
+      v-if="total > pageSize"
+      class="pagination"
+    >
       <el-pagination
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"

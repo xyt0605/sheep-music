@@ -3,13 +3,22 @@
     <!-- 页面头部 -->
     <div class="page-header">
       <h2>🎵 我的音乐</h2>
-      <p class="subtitle">我的收藏、播放历史和歌单管理</p>
+      <p class="subtitle">
+        我的收藏、播放历史和歌单管理
+      </p>
     </div>
     
     <!-- Tab 标签页 -->
-    <el-tabs v-model="activeTab" class="music-tabs" @tab-click="handleTabClick">
+    <el-tabs
+      v-model="activeTab"
+      class="music-tabs"
+      @tab-click="handleTabClick"
+    >
       <!-- 我的收藏 -->
-      <el-tab-pane label="💖 我的收藏" name="favorites">
+      <el-tab-pane
+        label="💖 我的收藏"
+        name="favorites"
+      >
         <div class="tab-content">
           <!-- 收藏统计 -->
           <div class="stats-bar">
@@ -33,61 +42,86 @@
                 class="song-cover"
               >
               <div class="song-info">
-                <div class="song-name">{{ favorite.song?.title }}</div>
+                <div class="song-name">
+                  {{ favorite.song?.title }}
+                </div>
                 <div class="song-artist">
-                  <template v-for="(artist, idx) in favorite.song?.artists || []" :key="artist.id">
-                    <span class="clickable" @click.stop="goToArtist(artist.id)">{{ artist.name }}</span>
+                  <template
+                    v-for="(artist, idx) in favorite.song?.artists || []"
+                    :key="artist.id"
+                  >
+                    <span
+                      class="clickable"
+                      @click.stop="goToArtist(artist.id)"
+                    >{{ artist.name }}</span>
                     <span v-if="idx < (favorite.song?.artists?.length || 0) - 1"> / </span>
                   </template>
                   <span v-if="!favorite.song?.artists || favorite.song.artists.length === 0">未知歌手</span>
                 </div>
               </div>
-              <div class="song-duration">{{ formatDuration(favorite.song?.duration) }}</div>
-              <div class="favorite-time">{{ formatDate(favorite.createTime) }}</div>
+              <div class="song-duration">
+                {{ formatDuration(favorite.song?.duration) }}
+              </div>
+              <div class="favorite-time">
+                {{ formatDate(favorite.createTime) }}
+              </div>
               <div class="song-actions">
                 <el-button 
                   icon="CaretRight" 
                   circle 
                   size="small" 
-                  @click.stop="handlePlaySong(favorite.song)" 
-                  title="播放"
+                  title="播放" 
+                  @click.stop="handlePlaySong(favorite.song)"
                 />
                 <el-button 
                   icon="Plus" 
                   circle 
                   size="small" 
-                  @click.stop="handleAddToPlaylist(favorite.song)" 
-                  title="添加到播放列表"
+                  title="添加到播放列表" 
+                  @click.stop="handleAddToPlaylist(favorite.song)"
                 />
                 <el-button 
                   icon="FolderAdd" 
                   circle 
                   size="small" 
-                  @click.stop="showAddToPlaylistDialog(favorite.song.id)" 
-                  title="添加到歌单"
+                  title="添加到歌单" 
+                  @click.stop="showAddToPlaylistDialog(favorite.song.id)"
                 />
                 <el-button 
                   icon="Delete" 
                   circle 
                   size="small" 
                   type="danger"
-                  @click.stop="handleRemoveFavorite(favorite.song.id)" 
-                  title="取消收藏"
+                  title="取消收藏" 
+                  @click.stop="handleRemoveFavorite(favorite.song.id)"
                 />
               </div>
             </div>
           </div>
           
           <!-- 空状态 -->
-          <div v-if="favorites.length === 0 && !loading" class="empty-state">
+          <div
+            v-if="favorites.length === 0 && !loading"
+            class="empty-state"
+          >
             <el-empty description="还没有收藏歌曲">
-              <el-button type="primary" @click="$router.push('/home')">去首页逛逛</el-button>
+              <el-button
+                type="primary"
+                @click="$router.push('/home')"
+              >
+                去首页逛逛
+              </el-button>
             </el-empty>
           </div>
           
           <!-- 加载状态 -->
-          <div v-if="loading" class="loading-state">
-            <el-icon class="is-loading"><Loading /></el-icon>
+          <div
+            v-if="loading"
+            class="loading-state"
+          >
+            <el-icon class="is-loading">
+              <Loading />
+            </el-icon>
             <p>加载中...</p>
           </div>
           
@@ -99,15 +133,18 @@
             :total="favoritePagination.total"
             :page-sizes="[10, 20, 50]"
             layout="total, sizes, prev, pager, next"
+            class="pagination"
             @size-change="loadFavorites"
             @current-change="loadFavorites"
-            class="pagination"
           />
         </div>
       </el-tab-pane>
       
       <!-- 播放历史 -->
-      <el-tab-pane label="🕒 播放历史" name="history">
+      <el-tab-pane
+        label="🕒 播放历史"
+        name="history"
+      >
         <div class="tab-content">
           <!-- 统计栏 -->
           <div class="stats-bar">
@@ -139,18 +176,31 @@
                 class="song-cover"
               >
               <div class="song-info">
-                <div class="song-name">{{ item.song?.title }}</div>
+                <div class="song-name">
+                  {{ item.song?.title }}
+                </div>
                 <div class="song-artist">
-                  <template v-for="(artist, idx) in item.song?.artists || []" :key="artist.id">
-                    <span class="clickable" @click.stop="goToArtist(artist.id)">{{ artist.name }}</span>
+                  <template
+                    v-for="(artist, idx) in item.song?.artists || []"
+                    :key="artist.id"
+                  >
+                    <span
+                      class="clickable"
+                      @click.stop="goToArtist(artist.id)"
+                    >{{ artist.name }}</span>
                     <span v-if="idx < (item.song?.artists?.length || 0) - 1"> / </span>
                   </template>
                   <span v-if="!item.song?.artists || item.song.artists.length === 0">未知歌手</span>
                 </div>
               </div>
               <div class="play-info">
-                <div class="play-time">{{ formatDateTime(item.playTime) }}</div>
-                <div v-if="item.playCount && item.playCount > 1" class="play-count">
+                <div class="play-time">
+                  {{ formatDateTime(item.playTime) }}
+                </div>
+                <div
+                  v-if="item.playCount && item.playCount > 1"
+                  class="play-count"
+                >
                   播放 {{ item.playCount }} 次
                 </div>
               </div>
@@ -159,47 +209,60 @@
                   icon="CaretRight" 
                   circle 
                   size="small" 
-                  @click.stop="handlePlaySong(item.song)" 
-                  title="播放"
+                  title="播放" 
+                  @click.stop="handlePlaySong(item.song)"
                 />
                 <el-button 
                   icon="Plus" 
                   circle 
                   size="small" 
-                  @click.stop="handleAddToPlaylist(item.song)" 
-                  title="添加到播放列表"
+                  title="添加到播放列表" 
+                  @click.stop="handleAddToPlaylist(item.song)"
                 />
                 <el-button 
                   icon="FolderAdd" 
                   circle 
                   size="small" 
-                  @click.stop="showAddToPlaylistDialog(item.song.id)" 
-                  title="添加到歌单"
+                  title="添加到歌单" 
+                  @click.stop="showAddToPlaylistDialog(item.song.id)"
                 />
                 <el-button 
                   icon="Delete" 
                   circle 
                   size="small" 
                   type="danger"
-                  @click.stop="handleDeleteHistory(item.id)" 
-                  title="删除记录"
+                  title="删除记录" 
+                  @click.stop="handleDeleteHistory(item.id)"
                 />
               </div>
             </div>
           </div>
           
           <!-- 空状态 -->
-          <div v-if="playHistory.length === 0 && !loading" class="empty-state">
+          <div
+            v-if="playHistory.length === 0 && !loading"
+            class="empty-state"
+          >
             <el-empty description="还没有播放记录">
-              <el-button type="primary" @click="$router.push('/home')">去首页听歌</el-button>
+              <el-button
+                type="primary"
+                @click="$router.push('/home')"
+              >
+                去首页听歌
+              </el-button>
             </el-empty>
           </div>
           
           <!-- 加载状态 -->
-          <div v-if="loading" class="loading-state">
-            <el-icon class="is-loading"><Loading /></el-icon>
+          <div
+            v-if="loading"
+            class="loading-state"
+          >
+            <el-icon class="is-loading">
+              <Loading />
+            </el-icon>
             <p>加载中...</p>
-    </div>
+          </div>
     
           <!-- 分页 -->
           <el-pagination
@@ -209,29 +272,40 @@
             :total="historyPagination.total"
             :page-sizes="[10, 20, 50]"
             layout="total, sizes, prev, pager, next"
+            class="pagination"
             @size-change="loadPlayHistory"
             @current-change="loadPlayHistory"
-            class="pagination"
           />
         </div>
       </el-tab-pane>
       
       <!-- 我的歌单 -->
-      <el-tab-pane label="📁 我的歌单" name="playlists">
+      <el-tab-pane
+        label="📁 我的歌单"
+        name="playlists"
+      >
         <div class="tab-content">
           <!-- 头部操作区 -->
           <div class="playlist-header">
             <div class="header-info">
               <h3>我的歌单</h3>
-              <p class="count-info">共 {{ playlistTotal }} 个歌单</p>
+              <p class="count-info">
+                共 {{ playlistTotal }} 个歌单
+              </p>
             </div>
-            <el-button type="primary" @click="showCreatePlaylistDialog">
+            <el-button
+              type="primary"
+              @click="showCreatePlaylistDialog"
+            >
               <el-icon><Plus /></el-icon> 创建歌单
             </el-button>
           </div>
 
           <!-- 歌单网格 -->
-          <div v-if="playlists.length > 0" class="playlist-grid">
+          <div
+            v-if="playlists.length > 0"
+            class="playlist-grid"
+          >
             <div 
               v-for="playlist in playlists" 
               :key="playlist.id"
@@ -246,21 +320,51 @@
                   class="playlist-cover"
                 />
                 <div class="playlist-overlay">
-                  <el-icon class="play-icon"><CaretRight /></el-icon>
+                  <el-icon class="play-icon">
+                    <CaretRight />
+                  </el-icon>
                 </div>
               </div>
               <div class="playlist-info">
-                <h4 class="playlist-name" :title="playlist.name">{{ playlist.name }}</h4>
+                <h4
+                  class="playlist-name"
+                  :title="playlist.name"
+                >
+                  {{ playlist.name }}
+                </h4>
                 <p class="playlist-meta">
                   <span>{{ playlist.songCount || 0 }} 首歌曲</span>
-                  <el-tag v-if="playlist.isPublic" size="small" type="success">公开</el-tag>
-                  <el-tag v-else size="small" type="info">私有</el-tag>
+                  <el-tag
+                    v-if="playlist.isPublic"
+                    size="small"
+                    type="success"
+                  >
+                    公开
+                  </el-tag>
+                  <el-tag
+                    v-else
+                    size="small"
+                    type="info"
+                  >
+                    私有
+                  </el-tag>
                 </p>
-                <p class="playlist-desc" v-if="playlist.description">{{ playlist.description }}</p>
+                <p
+                  v-if="playlist.description"
+                  class="playlist-desc"
+                >
+                  {{ playlist.description }}
+                </p>
               </div>
-              <div class="playlist-actions" @click.stop>
+              <div
+                class="playlist-actions"
+                @click.stop
+              >
                 <el-dropdown trigger="click">
-                  <el-button circle size="small">
+                  <el-button
+                    circle
+                    size="small"
+                  >
                     <el-icon><MoreFilled /></el-icon>
                   </el-button>
                   <template #dropdown>
@@ -271,7 +375,10 @@
                       <el-dropdown-item @click="togglePlaylistVisibility(playlist)">
                         <el-icon><View /></el-icon> {{ playlist.isPublic ? '设为私有' : '设为公开' }}
                       </el-dropdown-item>
-                      <el-dropdown-item @click="confirmDeletePlaylist(playlist)" divided>
+                      <el-dropdown-item
+                        divided
+                        @click="confirmDeletePlaylist(playlist)"
+                      >
                         <el-icon><Delete /></el-icon> 删除
                       </el-dropdown-item>
                     </el-dropdown-menu>
@@ -282,9 +389,17 @@
           </div>
 
           <!-- 空状态 -->
-          <div v-else class="empty-state">
+          <div
+            v-else
+            class="empty-state"
+          >
             <el-empty description="还没有创建歌单">
-              <el-button type="primary" @click="showCreatePlaylistDialog">创建我的第一个歌单</el-button>
+              <el-button
+                type="primary"
+                @click="showCreatePlaylistDialog"
+              >
+                创建我的第一个歌单
+              </el-button>
             </el-empty>
           </div>
 
@@ -309,8 +424,14 @@
       width="500px"
       @close="playlistDialogVisible = false"
     >
-      <el-form :model="playlistForm" label-width="80px">
-        <el-form-item label="歌单名称" required>
+      <el-form
+        :model="playlistForm"
+        label-width="80px"
+      >
+        <el-form-item
+          label="歌单名称"
+          required
+        >
           <el-input 
             v-model="playlistForm.name" 
             placeholder="请输入歌单名称"
@@ -331,7 +452,10 @@
         </el-form-item>
         
         <el-form-item label="分类">
-          <el-select v-model="playlistForm.category" placeholder="选择歌单分类">
+          <el-select
+            v-model="playlistForm.category"
+            placeholder="选择歌单分类"
+          >
             <el-option 
               v-for="cat in playlistCategories" 
               :key="cat" 
@@ -360,7 +484,10 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="playlistDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="savePlaylist">保存</el-button>
+          <el-button
+            type="primary"
+            @click="savePlaylist"
+          >保存</el-button>
         </span>
       </template>
     </el-dialog>
@@ -808,7 +935,7 @@ export default {
     // 初始化
     onMounted(() => {
       // 支持通过URL参数切换Tab
-      const tab = route.query.tab
+      const tab = route?.query?.tab
       if (tab && ['favorites', 'history', 'playlists'].includes(tab)) {
         activeTab.value = tab
       }

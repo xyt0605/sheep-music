@@ -2,38 +2,73 @@
   <div class="playlist-square">
     <div class="page-header">
       <h2>🎵 歌单广场</h2>
-      <p class="subtitle">发现更多精彩歌单</p>
+      <p class="subtitle">
+        发现更多精彩歌单
+      </p>
     </div>
     
     <!-- 分类筛选 -->
     <div class="category-filter">
-      <el-radio-group v-model="selectedCategory" @change="handleCategoryChange">
-        <el-radio-button label="">全部</el-radio-button>
-        <el-radio-button label="流行">流行</el-radio-button>
-        <el-radio-button label="摇滚">摇滚</el-radio-button>
-        <el-radio-button label="民谣">民谣</el-radio-button>
-        <el-radio-button label="电子">电子</el-radio-button>
-        <el-radio-button label="纯音乐">纯音乐</el-radio-button>
-        <el-radio-button label="其他">其他</el-radio-button>
+      <el-radio-group
+        v-model="selectedCategory"
+        @change="handleCategoryChange"
+      >
+        <el-radio-button label="">
+          全部
+        </el-radio-button>
+        <el-radio-button label="流行">
+          流行
+        </el-radio-button>
+        <el-radio-button label="摇滚">
+          摇滚
+        </el-radio-button>
+        <el-radio-button label="民谣">
+          民谣
+        </el-radio-button>
+        <el-radio-button label="电子">
+          电子
+        </el-radio-button>
+        <el-radio-button label="纯音乐">
+          纯音乐
+        </el-radio-button>
+        <el-radio-button label="其他">
+          其他
+        </el-radio-button>
       </el-radio-group>
     </div>
     
     <!-- Tab切换 -->
-    <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+    <el-tabs
+      v-model="activeTab"
+      @tab-change="handleTabChange"
+    >
       <!-- 推荐歌单 -->
       <el-tab-pane name="recommend">
         <template #label>
           <span>
             推荐歌单
-            <el-tag v-if="isLogin && !selectedCategory && currentPage === 1" size="small" type="success" style="margin-left: 8px;">个性化</el-tag>
+            <el-tag
+              v-if="isLogin && !selectedCategory && currentPage === 1"
+              size="small"
+              type="success"
+              style="margin-left: 8px;"
+            >个性化</el-tag>
           </span>
         </template>
         
-        <div v-if="loading" class="loading-container">
-          <el-icon class="is-loading"><Loading /></el-icon>
+        <div
+          v-if="loading"
+          class="loading-container"
+        >
+          <el-icon class="is-loading">
+            <Loading />
+          </el-icon>
         </div>
         
-        <div v-else-if="playlists.length > 0" class="playlist-grid">
+        <div
+          v-else-if="playlists.length > 0"
+          class="playlist-grid"
+        >
           <div 
             v-for="playlist in playlists" 
             :key="playlist.id"
@@ -48,11 +83,18 @@
                 class="playlist-cover"
               />
               <div class="playlist-overlay">
-                <el-icon class="play-icon"><CaretRight /></el-icon>
+                <el-icon class="play-icon">
+                  <CaretRight />
+                </el-icon>
               </div>
             </div>
             <div class="playlist-info">
-              <h4 class="playlist-name" :title="playlist.name">{{ playlist.name }}</h4>
+              <h4
+                class="playlist-name"
+                :title="playlist.name"
+              >
+                {{ playlist.name }}
+              </h4>
               <p class="playlist-creator">
                 <el-icon><User /></el-icon>
                 {{ playlist.creator?.nickname || '未知' }}
@@ -71,14 +113,27 @@
           </div>
         </div>
         
-        <div v-else class="empty-state">
+        <div
+          v-else
+          class="empty-state"
+        >
           <el-empty description="暂无歌单">
             <template #image>
-              <el-icon style="font-size: 80px; color: #ddd;"><FolderOpened /></el-icon>
+              <el-icon style="font-size: 80px; color: #ddd;">
+                <FolderOpened />
+              </el-icon>
             </template>
-            <template v-if="!isLogin" #description>
+            <template
+              v-if="!isLogin"
+              #description
+            >
               <p>暂无推荐歌单</p>
-              <el-button type="primary" @click="$router.push('/login')">登录查看个性化推荐</el-button>
+              <el-button
+                type="primary"
+                @click="$router.push('/login')"
+              >
+                登录查看个性化推荐
+              </el-button>
             </template>
           </el-empty>
         </div>
@@ -96,12 +151,23 @@
       </el-tab-pane>
       
       <!-- 热门歌单 -->
-      <el-tab-pane label="热门歌单" name="hot">
-        <div v-if="loading" class="loading-container">
-          <el-icon class="is-loading"><Loading /></el-icon>
+      <el-tab-pane
+        label="热门歌单"
+        name="hot"
+      >
+        <div
+          v-if="loading"
+          class="loading-container"
+        >
+          <el-icon class="is-loading">
+            <Loading />
+          </el-icon>
         </div>
         
-        <div v-else-if="hotPlaylists.length > 0" class="playlist-grid">
+        <div
+          v-else-if="hotPlaylists.length > 0"
+          class="playlist-grid"
+        >
           <div 
             v-for="playlist in hotPlaylists" 
             :key="playlist.id"
@@ -116,11 +182,18 @@
                 class="playlist-cover"
               />
               <div class="playlist-overlay">
-                <el-icon class="play-icon"><CaretRight /></el-icon>
+                <el-icon class="play-icon">
+                  <CaretRight />
+                </el-icon>
               </div>
             </div>
             <div class="playlist-info">
-              <h4 class="playlist-name" :title="playlist.name">{{ playlist.name }}</h4>
+              <h4
+                class="playlist-name"
+                :title="playlist.name"
+              >
+                {{ playlist.name }}
+              </h4>
               <p class="playlist-creator">
                 <el-icon><User /></el-icon>
                 {{ playlist.creator?.nickname || '未知' }}
@@ -139,10 +212,15 @@
           </div>
         </div>
         
-        <div v-else class="empty-state">
+        <div
+          v-else
+          class="empty-state"
+        >
           <el-empty description="暂无热门歌单">
             <template #image>
-              <el-icon style="font-size: 80px; color: #ddd;"><FolderOpened /></el-icon>
+              <el-icon style="font-size: 80px; color: #ddd;">
+                <FolderOpened />
+              </el-icon>
             </template>
           </el-empty>
         </div>

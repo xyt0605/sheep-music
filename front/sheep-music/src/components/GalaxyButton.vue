@@ -1,11 +1,12 @@
 <template>
   <button
+    type="button"
     class="galaxy-button"
     :class="[size, variant, { loading, disabled }]"
     :disabled="disabled || loading"
     @click="handleClick"
   >
-    <span class="glow"></span>
+    <span class="glow" />
     <span class="content">
       <slot />
     </span>

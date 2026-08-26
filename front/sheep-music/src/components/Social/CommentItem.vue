@@ -1,6 +1,12 @@
 <template>
-  <div class="comment-item" :class="{ 'is-reply': isReply }">
-    <el-avatar :src="comment.userAvatar || comment.user?.avatar" :size="isReply ? 32 : 40">
+  <div
+    class="comment-item"
+    :class="{ 'is-reply': isReply }"
+  >
+    <el-avatar
+      :src="comment.userAvatar || comment.user?.avatar"
+      :size="isReply ? 32 : 40"
+    >
       <el-icon><User /></el-icon>
     </el-avatar>
     
@@ -22,15 +28,17 @@
         </div>
       </div>
       
-      <div class="comment-text">{{ comment.content }}</div>
+      <div class="comment-text">
+        {{ comment.content }}
+      </div>
       
       <div class="comment-actions">
         <el-button
           text
           type="primary"
           size="small"
-          @click="handleLike"
           :loading="likeLoading"
+          @click="handleLike"
         >
           <el-icon><Star /></el-icon>
           <span>{{ comment.likeCount || 0 }}</span>
@@ -52,15 +60,18 @@
           text
           type="danger"
           size="small"
-          @click="handleDelete"
           :loading="deleteLoading"
+          @click="handleDelete"
         >
           删除
         </el-button>
       </div>
       
       <!-- 回复列表 -->
-      <div v-if="replies.length > 0" class="replies">
+      <div
+        v-if="replies.length > 0"
+        class="replies"
+      >
         <CommentItem
           v-for="reply in replies"
           :key="reply.id"

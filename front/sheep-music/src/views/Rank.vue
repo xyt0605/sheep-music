@@ -2,23 +2,43 @@
   <div class="rank-page">
     <div class="page-header">
       <h2>📊 {{ pageTitle }}</h2>
-      <p class="subtitle">{{ pageSubtitle }}</p>
+      <p class="subtitle">
+        {{ pageSubtitle }}
+      </p>
     </div>
     
     <!-- Tab 切换 -->
-    <el-tabs v-model="activeTab" class="rank-tabs" @tab-change="handleTabChange">
-      <el-tab-pane label="🔥 热门歌曲" name="hot"></el-tab-pane>
-      <el-tab-pane label="🎵 新歌速递" name="new"></el-tab-pane>
+    <el-tabs
+      v-model="activeTab"
+      class="rank-tabs"
+      @tab-change="handleTabChange"
+    >
+      <el-tab-pane
+        label="🔥 热门歌曲"
+        name="hot"
+      />
+      <el-tab-pane
+        label="🎵 新歌速递"
+        name="new"
+      />
     </el-tabs>
     
     <!-- 加载状态 -->
-    <div v-if="loading" class="loading-state">
-      <el-icon class="is-loading"><Loading /></el-icon>
+    <div
+      v-if="loading"
+      class="loading-state"
+    >
+      <el-icon class="is-loading">
+        <Loading />
+      </el-icon>
       <p>加载中...</p>
     </div>
     
     <!-- 歌曲列表 -->
-    <div v-else-if="songs.length > 0" class="song-list">
+    <div
+      v-else-if="songs.length > 0"
+      class="song-list"
+    >
       <div 
         v-for="(song, index) in songs" 
         :key="song.id"
@@ -26,22 +46,39 @@
         :class="{ 'top-item': index < 3 }"
         @click="handlePlaySong(song)"
       >
-        <div class="song-rank" :class="getRankClass(index)">
+        <div
+          class="song-rank"
+          :class="getRankClass(index)"
+        >
           {{ index + 1 }}
         </div>
-        <img :src="song.cover || defaultCover" class="song-cover">
+        <img
+          :src="song.cover || defaultCover"
+          class="song-cover"
+        >
         <div class="song-info">
-          <div class="song-name">{{ song.title }}</div>
+          <div class="song-name">
+            {{ song.title }}
+          </div>
           <div class="song-artist">
-            <template v-for="(artist, idx) in song.artists || []" :key="artist.id">
-              <span class="clickable" @click.stop="goToArtist(artist.id)">{{ artist.name }}</span>
+            <template
+              v-for="(artist, idx) in song.artists || []"
+              :key="artist.id"
+            >
+              <span
+                class="clickable"
+                @click.stop="goToArtist(artist.id)"
+              >{{ artist.name }}</span>
               <span v-if="idx < (song.artists?.length || 0) - 1"> / </span>
             </template>
             <span v-if="!song.artists || song.artists.length === 0">未知歌手</span>
           </div>
         </div>
         <div class="song-stats">
-          <div v-if="activeTab === 'hot'" class="stat-item">
+          <div
+            v-if="activeTab === 'hot'"
+            class="stat-item"
+          >
             <el-icon><Headset /></el-icon>
             <span>{{ formatCount(song.playCount) }}</span>
           </div>
@@ -55,37 +92,40 @@
             icon="CaretRight" 
             circle 
             size="small" 
-            @click.stop="handlePlaySong(song)"
             title="播放"
+            @click.stop="handlePlaySong(song)"
           />
           <el-button 
             icon="Plus" 
             circle 
             size="small" 
-            @click.stop="handleAddToPlaylist(song)"
             title="添加到播放列表"
+            @click.stop="handleAddToPlaylist(song)"
           />
           <el-button 
             icon="FolderAdd" 
             circle 
             size="small" 
-            @click.stop="showAddToPlaylistDialog(song.id)"
             title="添加到歌单"
+            @click.stop="showAddToPlaylistDialog(song.id)"
           />
           <el-button 
             :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'"
             circle 
             size="small" 
             :type="favoriteSongs[song.id] ? 'danger' : ''"
-            @click.stop="handleToggleFavorite(song.id)"
             title="收藏"
+            @click.stop="handleToggleFavorite(song.id)"
           />
         </div>
-    </div>
+      </div>
     </div>
     
     <!-- 空状态 -->
-    <div v-else class="empty-state">
+    <div
+      v-else
+      class="empty-state"
+    >
       <el-empty :description="`暂无${activeTab === 'hot' ? '热门' : '最新'}歌曲`" />
     </div>
     

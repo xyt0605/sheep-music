@@ -2,7 +2,9 @@
   <div class="my-favorites">
     <div class="page-header">
       <h2>💖 我的收藏</h2>
-      <p class="count-text">共 {{ pagination.total }} 首歌曲</p>
+      <p class="count-text">
+        共 {{ pagination.total }} 首歌曲
+      </p>
     </div>
     
     <!-- 收藏列表 -->
@@ -19,61 +21,86 @@
           class="song-cover"
         >
         <div class="song-info">
-          <div class="song-name">{{ favorite.song?.title }}</div>
+          <div class="song-name">
+            {{ favorite.song?.title }}
+          </div>
           <div class="song-artist">
-            <template v-for="(artist, idx) in favorite.song?.artists || []" :key="artist.id">
-              <span class="clickable" @click.stop="goToArtist(artist.id)">{{ artist.name }}</span>
+            <template
+              v-for="(artist, idx) in favorite.song?.artists || []"
+              :key="artist.id"
+            >
+              <span
+                class="clickable"
+                @click.stop="goToArtist(artist.id)"
+              >{{ artist.name }}</span>
               <span v-if="idx < (favorite.song?.artists?.length || 0) - 1"> / </span>
             </template>
             <span v-if="!favorite.song?.artists || favorite.song.artists.length === 0">未知歌手</span>
           </div>
         </div>
-        <div class="song-duration">{{ formatDuration(favorite.song?.duration) }}</div>
-        <div class="favorite-time">{{ formatDate(favorite.createTime) }}</div>
+        <div class="song-duration">
+          {{ formatDuration(favorite.song?.duration) }}
+        </div>
+        <div class="favorite-time">
+          {{ formatDate(favorite.createTime) }}
+        </div>
         <div class="song-actions">
           <el-button 
             icon="CaretRight" 
             circle 
             size="small" 
-            @click.stop="handlePlaySong(favorite.song)" 
-            title="播放"
+            title="播放" 
+            @click.stop="handlePlaySong(favorite.song)"
           />
           <el-button 
             icon="Plus" 
             circle 
             size="small" 
-            @click.stop="handleAddToPlaylist(favorite.song)" 
-            title="添加到播放列表"
+            title="添加到播放列表" 
+            @click.stop="handleAddToPlaylist(favorite.song)"
           />
           <el-button 
             icon="FolderAdd" 
             circle 
             size="small" 
-            @click.stop="showAddToPlaylistDialog(favorite.song.id)" 
-            title="添加到歌单"
+            title="添加到歌单" 
+            @click.stop="showAddToPlaylistDialog(favorite.song.id)"
           />
           <el-button 
             icon="Delete" 
             circle 
             size="small" 
             type="danger"
-            @click.stop="handleRemoveFavorite(favorite.song.id)" 
-            title="取消收藏"
+            title="取消收藏" 
+            @click.stop="handleRemoveFavorite(favorite.song.id)"
           />
         </div>
       </div>
     </div>
     
     <!-- 空状态 -->
-    <div v-if="favorites.length === 0 && !loading" class="empty-state">
+    <div
+      v-if="favorites.length === 0 && !loading"
+      class="empty-state"
+    >
       <el-empty description="暂无收藏">
-        <el-button type="primary" @click="$router.push('/home')">去首页逛逛</el-button>
+        <el-button
+          type="primary"
+          @click="$router.push('/home')"
+        >
+          去首页逛逛
+        </el-button>
       </el-empty>
     </div>
     
     <!-- 加载状态 -->
-    <div v-if="loading" class="loading-state">
-      <el-icon class="is-loading"><Loading /></el-icon>
+    <div
+      v-if="loading"
+      class="loading-state"
+    >
+      <el-icon class="is-loading">
+        <Loading />
+      </el-icon>
       <p>加载中...</p>
     </div>
     
@@ -85,9 +112,9 @@
       :total="pagination.total"
       :page-sizes="[10, 20, 50, 100]"
       layout="total, sizes, prev, pager, next, jumper"
+      class="pagination"
       @size-change="loadFavorites"
       @current-change="loadFavorites"
-      class="pagination"
     />
     
     <!-- 添加到歌单对话框 -->

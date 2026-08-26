@@ -3,28 +3,35 @@
     <!-- 页面标题 -->
     <div class="page-header">
       <h2>🎵 发现音乐</h2>
-      <p class="subtitle">基于你的喜好，为你推荐精选内容</p>
+      <p class="subtitle">
+        基于你的喜好，为你推荐精选内容
+      </p>
     </div>
 
     <!-- 猜你喜欢 -->
     <div class="recommendation-section">
       <div class="section-header">
         <div class="title-group">
-          <el-icon class="section-icon"><MagicStick /></el-icon>
+          <el-icon class="section-icon">
+            <MagicStick />
+          </el-icon>
           <h3>猜你喜欢</h3>
           <span class="section-desc">每天为你更新</span>
         </div>
         <el-button 
           text 
           icon="Refresh" 
-          @click="refreshGuessYouLike"
           :loading="guessYouLikeLoading"
+          @click="refreshGuessYouLike"
         >
           换一批
         </el-button>
       </div>
 
-      <div v-loading="guessYouLikeLoading" class="song-grid">
+      <div
+        v-loading="guessYouLikeLoading"
+        class="song-grid"
+      >
         <div 
           v-for="song in guessYouLikeSongs" 
           :key="song.id"
@@ -32,9 +39,15 @@
           @click="handlePlaySong(song)"
         >
           <div class="song-cover-wrapper">
-            <img :src="song.cover || defaultCover" class="song-cover" alt="封面">
+            <img
+              :src="song.cover || defaultCover"
+              class="song-cover"
+              alt="封面"
+            >
             <div class="cover-overlay">
-              <el-icon class="play-icon"><CaretRight /></el-icon>
+              <el-icon class="play-icon">
+                <CaretRight />
+              </el-icon>
             </div>
             <div class="song-play-count">
               <el-icon><Headset /></el-icon>
@@ -42,40 +55,49 @@
             </div>
           </div>
           <div class="song-info">
-            <div class="song-title">{{ song.title }}</div>
-            <div class="song-artist">{{ getArtistNames(song) }}</div>
+            <div class="song-title">
+              {{ song.title }}
+            </div>
+            <div class="song-artist">
+              {{ getArtistNames(song) }}
+            </div>
           </div>
           <div class="song-actions-hover">
             <el-button 
               icon="Plus" 
               circle 
               size="small"
-              @click.stop="handleAddToPlaylist(song)"
               title="添加到播放列表"
+              @click.stop="handleAddToPlaylist(song)"
             />
             <el-button 
               icon="FolderAdd" 
               circle 
               size="small"
-              @click.stop="showAddToPlaylistDialog(song.id)"
               title="添加到歌单"
+              @click.stop="showAddToPlaylistDialog(song.id)"
             />
             <el-button 
               :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'"
               circle 
               size="small"
               :type="favoriteSongs[song.id] ? 'danger' : ''"
-              @click.stop="handleToggleFavorite(song.id)"
               title="收藏"
+              @click.stop="handleToggleFavorite(song.id)"
             />
           </div>
         </div>
       </div>
 
-      <div v-if="!guessYouLikeLoading && guessYouLikeSongs.length === 0" class="empty-hint">
+      <div
+        v-if="!guessYouLikeLoading && guessYouLikeSongs.length === 0"
+        class="empty-hint"
+      >
         <el-empty description="暂无推荐，试试多听听歌曲吧~">
           <template #image>
-            <el-icon style="font-size: 80px; color: #ddd;"><Headset /></el-icon>
+            <el-icon style="font-size: 80px; color: #ddd;">
+              <Headset />
+            </el-icon>
           </template>
         </el-empty>
       </div>
@@ -85,38 +107,55 @@
     <div class="recommendation-section">
       <div class="section-header">
         <div class="title-group">
-          <el-icon class="section-icon"><UserFilled /></el-icon>
+          <el-icon class="section-icon">
+            <UserFilled />
+          </el-icon>
           <h3>为你推荐</h3>
           <span class="section-desc">根据你的收藏和播放习惯</span>
         </div>
         <el-button 
           text 
           icon="Refresh" 
-          @click="refreshPersonalized"
           :loading="personalizedLoading"
+          @click="refreshPersonalized"
         >
           换一批
         </el-button>
       </div>
 
-      <div v-loading="personalizedLoading" class="song-list">
+      <div
+        v-loading="personalizedLoading"
+        class="song-list"
+      >
         <div 
           v-for="(song, index) in personalizedSongs" 
           :key="song.id"
           class="song-item"
           @click="handlePlaySong(song)"
         >
-          <div class="song-index">{{ index + 1 }}</div>
-          <img :src="song.cover || defaultCover" class="song-cover-small" alt="封面">
+          <div class="song-index">
+            {{ index + 1 }}
+          </div>
+          <img
+            :src="song.cover || defaultCover"
+            class="song-cover-small"
+            alt="封面"
+          >
           <div class="song-info-inline">
-            <div class="song-name">{{ song.title }}</div>
-            <div class="song-artist-name">{{ getArtistNames(song) }}</div>
+            <div class="song-name">
+              {{ song.title }}
+            </div>
+            <div class="song-artist-name">
+              {{ getArtistNames(song) }}
+            </div>
           </div>
           <div class="song-stats">
             <el-icon><Headset /></el-icon>
             {{ formatCount(song.playCount) }}
           </div>
-          <div class="song-duration">{{ formatDuration(song.duration) }}</div>
+          <div class="song-duration">
+            {{ formatDuration(song.duration) }}
+          </div>
           <div class="song-actions">
             <el-button 
               icon="CaretRight" 
@@ -147,10 +186,15 @@
         </div>
       </div>
 
-      <div v-if="!personalizedLoading && personalizedSongs.length === 0" class="empty-hint">
+      <div
+        v-if="!personalizedLoading && personalizedSongs.length === 0"
+        class="empty-hint"
+      >
         <el-empty description="暂无推荐">
           <template #image>
-            <el-icon style="font-size: 80px; color: #ddd;"><Document /></el-icon>
+            <el-icon style="font-size: 80px; color: #ddd;">
+              <Document />
+            </el-icon>
           </template>
         </el-empty>
       </div>
@@ -160,21 +204,26 @@
     <div class="recommendation-section">
       <div class="section-header">
         <div class="title-group">
-          <el-icon class="section-icon"><Collection /></el-icon>
+          <el-icon class="section-icon">
+            <Collection />
+          </el-icon>
           <h3>精选歌单</h3>
           <span class="section-desc">发现更多好歌</span>
         </div>
         <el-button 
           text 
           icon="Refresh" 
-          @click="refreshPlaylists"
           :loading="playlistsLoading"
+          @click="refreshPlaylists"
         >
           换一批
         </el-button>
       </div>
 
-      <div v-loading="playlistsLoading" class="playlist-grid">
+      <div
+        v-loading="playlistsLoading"
+        class="playlist-grid"
+      >
         <div 
           v-for="playlist in recommendedPlaylists" 
           :key="playlist.id"
@@ -182,9 +231,15 @@
           @click="goToPlaylist(playlist.id)"
         >
           <div class="playlist-cover-wrapper">
-            <img :src="playlist.cover || defaultPlaylistCover" class="playlist-cover" alt="封面">
+            <img
+              :src="playlist.cover || defaultPlaylistCover"
+              class="playlist-cover"
+              alt="封面"
+            >
             <div class="cover-overlay">
-              <el-icon class="play-icon"><CaretRight /></el-icon>
+              <el-icon class="play-icon">
+                <CaretRight />
+              </el-icon>
             </div>
             <div class="playlist-song-count">
               <el-icon><Headset /></el-icon>
@@ -192,7 +247,9 @@
             </div>
           </div>
           <div class="playlist-info">
-            <div class="playlist-name">{{ playlist.name }}</div>
+            <div class="playlist-name">
+              {{ playlist.name }}
+            </div>
             <div class="playlist-creator">
               by {{ playlist.userName || '未知' }}
             </div>
@@ -200,10 +257,15 @@
         </div>
       </div>
 
-      <div v-if="!playlistsLoading && recommendedPlaylists.length === 0" class="empty-hint">
+      <div
+        v-if="!playlistsLoading && recommendedPlaylists.length === 0"
+        class="empty-hint"
+      >
         <el-empty description="暂无推荐歌单">
           <template #image>
-            <el-icon style="font-size: 80px; color: #ddd;"><FolderOpened /></el-icon>
+            <el-icon style="font-size: 80px; color: #ddd;">
+              <FolderOpened />
+            </el-icon>
           </template>
         </el-empty>
       </div>

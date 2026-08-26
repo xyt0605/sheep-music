@@ -55,9 +55,12 @@
 
 /* 弹跳动画 */
 @keyframes bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -69,9 +72,12 @@
 
 /* 脉冲动画 */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
@@ -86,6 +92,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -100,6 +107,7 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -111,13 +119,24 @@
 
 /* 摇晃动画 */
 @keyframes shake {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(0);
   }
-  10%, 30%, 50%, 70%, 90% {
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
     transform: translateX(-5px);
   }
-  20%, 40%, 60%, 80% {
+
+  20%,
+  40%,
+  60%,
+  80% {
     transform: translateX(5px);
   }
 }
@@ -128,9 +147,12 @@
 
 /* 闪烁动画 */
 @keyframes blink {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.3;
   }
@@ -146,6 +168,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -162,6 +185,7 @@
     opacity: 0;
     transform: translateY(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -178,6 +202,7 @@
     opacity: 0;
     transform: translateX(-30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -194,6 +219,7 @@
     opacity: 0;
     transform: translateX(30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -205,11 +231,25 @@
 }
 
 /* 延迟动画类 */
-.delay-1 { animation-delay: 0.1s; }
-.delay-2 { animation-delay: 0.2s; }
-.delay-3 { animation-delay: 0.3s; }
-.delay-4 { animation-delay: 0.4s; }
-.delay-5 { animation-delay: 0.5s; }
+.delay-1 {
+  animation-delay: 0.1s;
+}
+
+.delay-2 {
+  animation-delay: 0.2s;
+}
+
+.delay-3 {
+  animation-delay: 0.3s;
+}
+
+.delay-4 {
+  animation-delay: 0.4s;
+}
+
+.delay-5 {
+  animation-delay: 0.5s;
+}
 
 /* ===== 路由切换动画 ===== */
 
@@ -229,20 +269,20 @@
   transform: translateX(-30px);
 }
 
-/* 缩放淡入淡出 */
+/* 缩放淡入淡出 - 优化版 */
 .zoom-fade-enter-active,
 .zoom-fade-leave-active {
-  transition: all 0.4s ease;
+  transition: all 0.3s cubic-bezier(0.55, 0, 0.1, 1);
 }
 
 .zoom-fade-enter-from {
   opacity: 0;
-  transform: scale(1.1);
+  transform: scale(1.02);
 }
 
 .zoom-fade-leave-to {
   opacity: 0;
-  transform: scale(0.9);
+  transform: scale(0.98);
 }
 
 /* 3D 翻转 */
@@ -280,7 +320,7 @@
 
 /* 霓虹发光效果 */
 .neon-glow {
-  text-shadow: 
+  text-shadow:
     0 0 10px currentColor,
     0 0 20px currentColor,
     0 0 30px currentColor,
@@ -294,4 +334,3 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-

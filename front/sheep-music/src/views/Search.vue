@@ -29,11 +29,16 @@
     </div>
 
     <!-- 初始状态：热门搜索 + 搜索历史 -->
-    <div v-if="!keyword && !hasSearched" class="initial-state">
+    <div
+      v-if="!keyword && !hasSearched"
+      class="initial-state"
+    >
       <!-- 热门搜索 -->
       <div class="hot-search-section">
         <div class="section-header">
-          <el-icon class="header-icon"><TrendCharts /></el-icon>
+          <el-icon class="header-icon">
+            <TrendCharts />
+          </el-icon>
           <h3>热门搜索</h3>
         </div>
         <div class="hot-search-list">
@@ -50,15 +55,25 @@
               {{ index + 1 }}
             </span>
             <span class="hot-keyword">{{ item }}</span>
-            <el-icon v-if="index < 3" class="hot-icon"><Trophy /></el-icon>
+            <el-icon
+              v-if="index < 3"
+              class="hot-icon"
+            >
+              <Trophy />
+            </el-icon>
           </div>
         </div>
       </div>
 
       <!-- 搜索历史 -->
-      <div v-if="searchHistory.length > 0" class="search-history-section">
+      <div
+        v-if="searchHistory.length > 0"
+        class="search-history-section"
+      >
         <div class="section-header">
-          <el-icon class="header-icon"><Clock /></el-icon>
+          <el-icon class="header-icon">
+            <Clock />
+          </el-icon>
           <h3>搜索历史</h3>
           <el-button 
             text 
@@ -89,15 +104,26 @@
     </div>
 
     <!-- 加载状态 -->
-    <div v-if="loading" class="loading-state">
-      <el-icon class="is-loading"><Loading /></el-icon>
+    <div
+      v-if="loading"
+      class="loading-state"
+    >
+      <el-icon class="is-loading">
+        <Loading />
+      </el-icon>
       <p>搜索中...</p>
     </div>
 
     <!-- 搜索结果 - 单曲 -->
     <transition name="fade">
-      <div v-if="!loading && keyword && searchType === 'songs'" class="search-results">
-        <div v-if="songResults.length > 0" class="songs-container">
+      <div
+        v-if="!loading && keyword && searchType === 'songs'"
+        class="search-results"
+      >
+        <div
+          v-if="songResults.length > 0"
+          class="songs-container"
+        >
           <div class="result-header">
             <h3>找到 {{ totalSongs }} 首歌曲</h3>
           </div>
@@ -109,52 +135,69 @@
               class="song-item"
               @click="handlePlaySong(song)"
             >
-              <div class="song-index">{{ (currentPage - 1) * pageSize + index + 1 }}</div>
-              <img :src="song.cover || defaultCover" class="song-cover">
+              <div class="song-index">
+                {{ (currentPage - 1) * pageSize + index + 1 }}
+              </div>
+              <img
+                :src="song.cover || defaultCover"
+                class="song-cover"
+              >
               <div class="song-info">
-                <div class="song-name" v-html="highlightKeyword(song.title)"></div>
+                <div
+                  class="song-name"
+                  v-html="highlightKeyword(song.title)"
+                />
                 <div class="song-artist">
-                  <template v-for="(artist, idx) in song.artists || []" :key="artist.id">
-                    <span class="clickable" @click.stop="goToArtist(artist.id)" v-html="highlightKeyword(artist.name)"></span>
+                  <template
+                    v-for="(artist, idx) in song.artists || []"
+                    :key="artist.id"
+                  >
+                    <span
+                      class="clickable"
+                      @click.stop="goToArtist(artist.id)"
+                      v-html="highlightKeyword(artist.name)"
+                    />
                     <span v-if="idx < (song.artists?.length || 0) - 1"> / </span>
                   </template>
                   <span v-if="!song.artists || song.artists.length === 0">未知歌手</span>
                 </div>
               </div>
-              <div class="song-duration">{{ formatDuration(song.duration) }}</div>
+              <div class="song-duration">
+                {{ formatDuration(song.duration) }}
+              </div>
               <div class="song-actions">
                 <el-button 
                   icon="CaretRight" 
                   circle 
                   size="small" 
-                  @click.stop="handlePlaySong(song)"
                   title="播放"
+                  @click.stop="handlePlaySong(song)"
                 />
                 <el-button 
                   icon="Plus" 
                   circle 
                   size="small" 
-                  @click.stop="handleAddToPlaylist(song)"
                   title="添加到播放列表"
+                  @click.stop="handleAddToPlaylist(song)"
                 />
                 <el-button 
                   icon="FolderAdd" 
                   circle 
                   size="small" 
-                  @click.stop="showAddToPlaylistDialog(song.id)"
                   title="添加到歌单"
+                  @click.stop="showAddToPlaylistDialog(song.id)"
                 />
                 <el-button 
                   :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'"
                   circle 
                   size="small" 
                   :type="favoriteSongs[song.id] ? 'danger' : ''"
-                  @click.stop="handleToggleFavorite(song.id)"
                   title="收藏"
+                  @click.stop="handleToggleFavorite(song.id)"
                 />
               </div>
             </div>
-    </div>
+          </div>
     
           <!-- 分页 -->
           <el-pagination
@@ -165,14 +208,19 @@
             layout="prev, pager, next"
             class="pagination"
             @current-change="handlePageChange"
-      />
-    </div>
+          />
+        </div>
     
         <!-- 空状态 - 单曲 -->
-        <div v-else class="empty-state">
+        <div
+          v-else
+          class="empty-state"
+        >
           <el-empty description="没有找到相关歌曲">
             <template #image>
-              <el-icon class="empty-icon"><FolderOpened /></el-icon>
+              <el-icon class="empty-icon">
+                <FolderOpened />
+              </el-icon>
             </template>
           </el-empty>
         </div>
@@ -181,8 +229,14 @@
 
     <!-- 搜索结果 - 歌手 -->
     <transition name="fade">
-      <div v-if="!loading && keyword && searchType === 'artists'" class="search-results">
-        <div v-if="artistResults.length > 0" class="artists-container">
+      <div
+        v-if="!loading && keyword && searchType === 'artists'"
+        class="search-results"
+      >
+        <div
+          v-if="artistResults.length > 0"
+          class="artists-container"
+        >
           <div class="result-header">
             <h3>找到 {{ totalArtists }} 位歌手</h3>
           </div>
@@ -195,27 +249,42 @@
               @click="goToArtist(artist.id)"
             >
               <div class="artist-avatar-wrapper">
-                <img :src="artist.avatar || defaultAvatar" class="artist-avatar">
+                <img
+                  :src="artist.avatar || defaultAvatar"
+                  class="artist-avatar"
+                >
                 <div class="artist-overlay">
-                  <el-icon class="play-icon"><CaretRight /></el-icon>
+                  <el-icon class="play-icon">
+                    <CaretRight />
+                  </el-icon>
                 </div>
               </div>
               <div class="artist-info">
-                <div class="artist-name" v-html="highlightKeyword(artist.name)"></div>
-                <div class="artist-region">{{ artist.region || '未知地区' }}</div>
+                <div
+                  class="artist-name"
+                  v-html="highlightKeyword(artist.name)"
+                />
+                <div class="artist-region">
+                  {{ artist.region || '未知地区' }}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- 空状态 - 歌手 -->
-        <div v-else class="empty-state">
+        <div
+          v-else
+          class="empty-state"
+        >
           <el-empty description="没有找到相关歌手">
             <template #image>
-              <el-icon class="empty-icon"><UserFilled /></el-icon>
+              <el-icon class="empty-icon">
+                <UserFilled />
+              </el-icon>
             </template>
-      </el-empty>
-    </div>
+          </el-empty>
+        </div>
       </div>
     </transition>
     

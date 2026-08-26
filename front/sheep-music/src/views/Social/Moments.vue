@@ -2,7 +2,10 @@
   <div class="moments-page">
     <div class="page-header">
       <h2>动态</h2>
-      <el-button type="primary" @click="showPublishDialog = true">
+      <el-button
+        type="primary"
+        @click="showPublishDialog = true"
+      >
         <el-icon>
           <Plus />
         </el-icon>
@@ -10,35 +13,65 @@
       </el-button>
     </div>
 
-    <div v-loading="loading" class="moments-list">
-      <div v-if="moments.length === 0 && !loading" class="empty-state">
+    <div
+      v-loading="loading"
+      class="moments-list"
+    >
+      <div
+        v-if="moments.length === 0 && !loading"
+        class="empty-state"
+      >
         <el-empty description="暂无动态" />
       </div>
 
-      <div v-for="moment in moments" :key="moment.id" class="moment-card">
+      <div
+        v-for="moment in moments"
+        :key="moment.id"
+        class="moment-card"
+      >
         <!-- 用户信息 -->
         <div class="moment-header">
-          <el-avatar :src="moment.userAvatar || moment.user?.avatar" :size="45">
+          <el-avatar
+            :src="moment.userAvatar || moment.user?.avatar"
+            :size="45"
+          >
             <el-icon>
               <User />
             </el-icon>
           </el-avatar>
           <div class="header-info">
-            <div class="user-name">{{ moment.username || moment.user?.nickname }}</div>
-            <div class="moment-time">{{ formatTime(moment.createTime) }}</div>
+            <div class="user-name">
+              {{ moment.username || moment.user?.nickname }}
+            </div>
+            <div class="moment-time">
+              {{ formatTime(moment.createTime) }}
+            </div>
           </div>
         </div>
 
         <!-- 动态内容 -->
         <div class="moment-content">
-          <div v-if="moment.content" class="moment-text">
+          <div
+            v-if="moment.content"
+            class="moment-text"
+          >
             {{ moment.content }}
           </div>
 
           <!-- 分享的歌曲 -->
-          <div v-if="moment.type === 'song'" class="moment-share">
-            <div class="share-item" @click="goToSong(moment.relatedId)">
-              <el-image :src="moment.relatedCover" fit="cover" class="share-cover">
+          <div
+            v-if="moment.type === 'song'"
+            class="moment-share"
+          >
+            <div
+              class="share-item"
+              @click="goToSong(moment.relatedId)"
+            >
+              <el-image
+                :src="moment.relatedCover"
+                fit="cover"
+                class="share-cover"
+              >
                 <template #error>
                   <div class="image-error">
                     <el-icon>
@@ -48,16 +81,30 @@
                 </template>
               </el-image>
               <div class="share-info">
-                <div class="share-title">{{ moment.relatedTitle }}</div>
-                <div class="share-type">歌曲</div>
+                <div class="share-title">
+                  {{ moment.relatedTitle }}
+                </div>
+                <div class="share-type">
+                  歌曲
+                </div>
               </div>
             </div>
           </div>
 
           <!-- 分享的歌单 -->
-          <div v-if="moment.type === 'playlist'" class="moment-share">
-            <div class="share-item" @click="goToPlaylist(moment.relatedId)">
-              <el-image :src="moment.relatedCover" fit="cover" class="share-cover">
+          <div
+            v-if="moment.type === 'playlist'"
+            class="moment-share"
+          >
+            <div
+              class="share-item"
+              @click="goToPlaylist(moment.relatedId)"
+            >
+              <el-image
+                :src="moment.relatedCover"
+                fit="cover"
+                class="share-cover"
+              >
                 <template #error>
                   <div class="image-error">
                     <el-icon>
@@ -67,71 +114,121 @@
                 </template>
               </el-image>
               <div class="share-info">
-                <div class="share-title">{{ moment.relatedTitle }}</div>
-                <div class="share-type">歌单</div>
+                <div class="share-title">
+                  {{ moment.relatedTitle }}
+                </div>
+                <div class="share-type">
+                  歌单
+                </div>
               </div>
             </div>
           </div>
 
           <!-- 图片 -->
-          <div v-if="moment.images" class="moment-images">
-            <el-image v-for="(img, index) in parseImages(moment.images)" :key="index" :src="img" fit="cover"
-              :preview-src-list="parseImages(moment.images)" :initial-index="index" class="moment-image" />
+          <div
+            v-if="moment.images"
+            class="moment-images"
+          >
+            <el-image
+              v-for="(img, index) in parseImages(moment.images)"
+              :key="index"
+              :src="img"
+              fit="cover"
+              :preview-src-list="parseImages(moment.images)"
+              :initial-index="index"
+              class="moment-image"
+            />
           </div>
         </div>
 
         <!-- 操作栏 -->
         <div class="moment-actions">
-          <el-button text type="primary" @click="handleLike(moment)" :loading="likeLoading === moment.id">
+          <el-button
+            class="action-btn"
+            round
+            :loading="likeLoading === moment.id"
+            @click="handleLike(moment)"
+          >
             <el-icon>
               <Star />
             </el-icon>
             <span>{{ moment.likeCount || 0 }}</span>
           </el-button>
 
-          <el-button text type="primary" @click="handleComment(moment)">
+          <el-button
+            class="action-btn"
+            round
+            @click="handleComment(moment)"
+          >
             <el-icon>
               <ChatLineRound />
             </el-icon>
             <span>{{ moment.commentCount || 0 }}</span>
           </el-button>
 
-          <el-button v-if="canDelete(moment)" text type="danger" @click="handleDelete(moment)"
-            :loading="deleteLoading === moment.id">
+          <el-button
+            v-if="canDelete(moment)"
+            text
+            type="danger"
+            :loading="deleteLoading === moment.id"
+            @click="handleDelete(moment)"
+          >
             删除
           </el-button>
         </div>
 
-        <!-- 内联评论区域 -->
-        <div class="moment-comments-section">
+        <!-- 内联评论区域（只在有评论时显示）-->
+        <div
+          v-if="(getMomentState(moment.id).total || moment.commentCount) > 0"
+          class="moment-comments-section"
+        >
           <div class="comment-input">
             <el-input
+              :ref="el => setInlineInputRef(moment.id, el)"
               v-model="getMomentState(moment.id).input"
               type="textarea"
               :rows="2"
               placeholder="写评论..."
               maxlength="500"
               show-word-limit
-              :ref="el => setInlineInputRef(moment.id, el)"
             />
             <div class="comment-actions">
-              <el-popover placement="top" :width="340" trigger="click">
+              <el-popover
+                placement="top"
+                :width="340"
+                trigger="click"
+              >
                 <template #reference>
-                  <el-button text><el-icon><ChatLineRound /></el-icon> 表情</el-button>
+                  <el-button text>
+                    <el-icon><ChatLineRound /></el-icon> 表情
+                  </el-button>
                 </template>
                 <EmojiPicker @pick="e => insertInlineEmoji(moment.id, e)" />
               </el-popover>
-              <el-button type="primary" :loading="getMomentState(moment.id).posting" @click="submitMomentComment(moment)">发表评论</el-button>
+              <el-button
+                type="primary"
+                :loading="getMomentState(moment.id).posting"
+                @click="submitMomentComment(moment)"
+              >
+                发表评论
+              </el-button>
             </div>
           </div>
 
-          <div v-loading="getMomentState(moment.id).loading" class="moment-comments">
-            <div v-if="getMomentState(moment.id).items.length === 0 && !getMomentState(moment.id).loading" class="empty-state">
-              <el-empty description="暂无评论" />
-            </div>
-            <div v-else class="comment-items">
-              <div v-for="comment in getMomentState(moment.id).items" :key="comment.id" class="comment-item">
-                <el-avatar :src="comment.userAvatar || comment.user?.avatar" :size="32">
+          <div
+            v-loading="getMomentState(moment.id).loading"
+            class="moment-comments"
+          >
+            <div class="comment-items">
+              <div
+                v-for="comment in getDisplayComments(moment.id)"
+                :key="comment.id"
+                class="comment-item"
+              >
+                <el-avatar
+                  :src="comment.userAvatar || comment.user?.avatar"
+                  :size="32"
+                >
                   <el-icon><User /></el-icon>
                 </el-avatar>
                 <div class="comment-main">
@@ -139,12 +236,26 @@
                     <span class="comment-username">{{ comment.username || comment.user?.nickname || '匿名用户' }}</span>
                     <span class="comment-time">{{ formatTime(comment.createTime) }}</span>
                   </div>
-                  <div class="comment-content">{{ comment.content }}</div>
+                  <div class="comment-content">
+                    {{ comment.content }}
+                  </div>
                 </div>
               </div>
             </div>
-            <div v-if="getMomentState(moment.id).hasMore" class="load-more">
-              <el-button text :loading="getMomentState(moment.id).loading" @click="loadMomentComments(moment.id)">加载更多</el-button>
+            
+            <!-- 分页器（评论>10时显示）-->
+            <div
+              v-if="getMomentState(moment.id).total > 10"
+              class="comments-pagination"
+            >
+              <el-pagination
+                :current-page="getMomentState(moment.id).currentPage"
+                :page-size="10"
+                :total="getMomentState(moment.id).total"
+                layout="prev, pager, next"
+                small
+                @current-change="(page) => handlePageChange(moment.id, page)"
+              />
             </div>
           </div>
         </div>
@@ -152,30 +263,63 @@
     </div>
 
     <!-- 加载更多 -->
-    <div v-if="hasMore" class="load-more">
-      <el-button text :loading="loading" @click="loadMore">
+    <div
+      v-if="hasMore"
+      class="load-more"
+    >
+      <el-button
+        text
+        :loading="loading"
+        @click="loadMore"
+      >
         加载更多
       </el-button>
     </div>
 
     <!-- 发布动态对话框 -->
-    <el-dialog v-model="showPublishDialog" title="发布动态" width="600px">
-      <el-form :model="momentForm" label-width="80px">
+    <el-dialog
+      v-model="showPublishDialog"
+      title="发布动态"
+      width="600px"
+    >
+      <el-form
+        :model="momentForm"
+        label-width="80px"
+      >
         <el-form-item label="动态类型">
           <el-radio-group v-model="momentForm.type">
-            <el-radio value="text">纯文本</el-radio>
-            <el-radio value="song">分享歌曲</el-radio>
-            <el-radio value="playlist">分享歌单</el-radio>
+            <el-radio value="text">
+              纯文本
+            </el-radio>
+            <el-radio value="song">
+              分享歌曲
+            </el-radio>
+            <el-radio value="playlist">
+              分享歌单
+            </el-radio>
           </el-radio-group>
         </el-form-item>
 
         <el-form-item label="内容">
-          <el-input v-model="momentForm.content" type="textarea" :rows="4" placeholder="说点什么..." maxlength="500"
-            show-word-limit ref="publishInputRef" />
+          <el-input
+            ref="publishInputRef"
+            v-model="momentForm.content"
+            type="textarea"
+            :rows="4"
+            placeholder="说点什么..."
+            maxlength="500"
+            show-word-limit
+          />
           <div style="margin-top:8px; text-align:right;">
-            <el-popover placement="top" :width="340" trigger="click">
+            <el-popover
+              placement="top"
+              :width="340"
+              trigger="click"
+            >
               <template #reference>
-                <el-button text><el-icon><ChatLineRound /></el-icon> 表情</el-button>
+                <el-button text>
+                  <el-icon><ChatLineRound /></el-icon> 表情
+                </el-button>
               </template>
               <EmojiPicker @pick="insertPublishEmoji" />
             </el-popover>
@@ -184,16 +328,28 @@
 
         <el-form-item label="可见范围">
           <el-radio-group v-model="momentForm.visibility">
-            <el-radio value="public">公开</el-radio>
-            <el-radio value="friends">仅好友</el-radio>
-            <el-radio value="private">仅自己</el-radio>
+            <el-radio value="public">
+              公开
+            </el-radio>
+            <el-radio value="friends">
+              仅好友
+            </el-radio>
+            <el-radio value="private">
+              仅自己
+            </el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
 
       <template #footer>
-        <el-button @click="showPublishDialog = false">取消</el-button>
-        <el-button type="primary" @click="handlePublish" :loading="publishing">
+        <el-button @click="showPublishDialog = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="publishing"
+          @click="handlePublish"
+        >
           发布
         </el-button>
       </template>
@@ -243,9 +399,11 @@ const getMomentState = (id) => {
       loading: false,
       hasMore: true,
       page: 0,
-      size: 3,
+      size: 10,
       posting: false,
-      input: ''
+      input: '',
+      total: 0,          // 总评论数
+      currentPage: 1     // 当前页码（用于分页器）
     }
   }
   return commentsByMoment.value[id]
@@ -374,18 +532,25 @@ const handleComment = async (moment) => {
 const loadMomentComments = async (momentId, reset = false) => {
   const st = getMomentState(momentId)
   if (st.loading) return
-  if (!reset && st.items.length > 0) return
+  
   if (reset) {
     st.page = 0
     st.items = []
     st.hasMore = true
   }
+  
   st.loading = true
   try {
-    const res = await getMomentComments(momentId, { page: st.page, size: st.size })
+    // 添加排序参数：按创建时间降序（最新的在前）
+    const res = await getMomentComments(momentId, { 
+      page: st.page, 
+      size: st.size,
+      sort: 'createTime,desc'  // 按创建时间倒序排列
+    })
     if (res.code === 200) {
       const items = res.data?.content || []
       st.items = [...st.items, ...items]
+      st.total = res.data?.totalElements || st.items.length
       const last = res.data?.last ?? true
       st.hasMore = !last
       if (!last) st.page += 1
@@ -411,22 +576,54 @@ const submitMomentComment = async (moment) => {
     const res = await commentMoment({ momentId: moment.id, content: text })
     if (res.code === 200) {
       ElMessage.success('评论成功')
-      st.items.unshift({
-        id: res.data?.id || Date.now(),
-        content: text,
-        createTime: new Date().toISOString(),
-        userId: userStore.userInfo?.id,
-        username: userStore.userInfo?.nickname,
-        userAvatar: userStore.userInfo?.avatar
-      })
+      
+      // 更新评论总数
       moment.commentCount = (moment.commentCount || 0) + 1
+      st.total = (st.total || 0) + 1
+      
+      // 清空输入框
       st.input = ''
+      
+      // 如果当前不在第1页，跳转到第1页
+      if (st.currentPage !== 1) {
+        await handlePageChange(moment.id, 1)
+      } else {
+        // 如果在第1页，将新评论插入到列表顶部
+        st.items.unshift({
+          id: res.data?.id || Date.now(),
+          content: text,
+          createTime: new Date().toISOString(),
+          userId: userStore.userInfo?.id,
+          username: userStore.userInfo?.nickname,
+          userAvatar: userStore.userInfo?.avatar
+        })
+        // 如果当前页评论数超过10条，移除最后一条（保持每页10条）
+        if (st.items.length > 10) {
+          st.items.pop()
+        }
+      }
     }
   } catch (error) {
     console.error('发表评论失败:', error)
   } finally {
     st.posting = false
   }
+}
+
+// 处理分页切换
+const handlePageChange = async (momentId, page) => {
+  const st = getMomentState(momentId)
+  st.currentPage = page
+  st.page = page - 1  // 后端页码从0开始
+  st.items = []  // 清空当前页评论
+  st.hasMore = true  // 重置hasMore状态
+  await loadMomentComments(momentId, false)  // 不要reset，因为我们已经手动设置了page
+}
+
+// 获取显示的评论列表（直接返回当前页的items）
+const getDisplayComments = (momentId) => {
+  const st = getMomentState(momentId)
+  return st.items
 }
 
 // 删除
@@ -720,6 +917,64 @@ const insertInlineEmoji = (id, emoji) => {
   line-height: 1.6;
   color: var(--text-secondary, #555);
   white-space: pre-wrap;
+}
+
+.action-btn {
+  background: var(--gradient-primary);
+  border: none;
+  color: white !important;
+  padding: 8px 20px;
+  height: 32px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+  opacity: 0.95;
+  color: white !important;
+}
+
+.action-btn :deep(.el-icon) {
+  margin-right: 6px;
+  font-size: 16px;
+  color: white !important;
+}
+
+.action-btn span {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.moment-comments .load-more {
+  text-align: center;
+  padding: 12px 0;
+}
+
+.moment-comments .load-more .el-button {
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+/* 分页器样式 */
+.comments-pagination {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+  margin-top: 12px;
+  border-top: 1px solid var(--border-color-light, #eee);
+}
+
+.comments-pagination :deep(.el-pagination) {
+  font-size: 13px;
+}
+
+.comments-pagination :deep(.el-pager li) {
+  min-width: 28px;
+  height: 28px;
+  line-height: 28px;
+  font-size: 13px;
 }
 </style>
 

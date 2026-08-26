@@ -1,10 +1,25 @@
 <template>
-  <div class="music-visualizer" :class="{ active: isPlaying }">
-    <canvas ref="canvasRef" :width="width" :height="height"></canvas>
+  <div
+    class="music-visualizer"
+    :class="{ active: isPlaying }"
+  >
+    <canvas
+      ref="canvasRef"
+      :width="width"
+      :height="height"
+    />
     
     <!-- 简单的条形可视化（作为备用） -->
-    <div v-if="!supportsCanvas" class="simple-bars">
-      <div v-for="i in 20" :key="i" class="bar" :style="{ animationDelay: `${i * 0.05}s` }"></div>
+    <div
+      v-if="!supportsCanvas"
+      class="simple-bars"
+    >
+      <div
+        v-for="i in 20"
+        :key="i"
+        class="bar"
+        :style="{ animationDelay: `${i * 0.05}s` }"
+      />
     </div>
   </div>
 </template>

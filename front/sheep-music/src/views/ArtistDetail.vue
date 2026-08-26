@@ -1,31 +1,54 @@
 <template>
   <div class="artist-detail">
     <!-- 加载状态 -->
-    <div v-if="loading" class="loading-container">
-      <el-icon class="is-loading"><Loading /></el-icon>
+    <div
+      v-if="loading"
+      class="loading-container"
+    >
+      <el-icon class="is-loading">
+        <Loading />
+      </el-icon>
       <p>加载中...</p>
     </div>
 
     <!-- 歌手详情 -->
-    <div v-else-if="artist" class="artist-content">
+    <div
+      v-else-if="artist"
+      class="artist-content"
+    >
       <!-- 歌手信息卡片 -->
       <div class="artist-card">
         <div class="artist-avatar">
-          <img :src="artist.avatar || defaultAvatar" alt="歌手头像">
+          <img
+            :src="artist.avatar || defaultAvatar"
+            alt="歌手头像"
+          >
         </div>
         <div class="artist-info">
-          <h1 class="artist-name">{{ artist.name }}</h1>
+          <h1 class="artist-name">
+            {{ artist.name }}
+          </h1>
           <div class="artist-meta">
-            <el-tag v-if="artist.region" type="info" size="large">
+            <el-tag
+              v-if="artist.region"
+              type="info"
+              size="large"
+            >
               <el-icon><LocationInformation /></el-icon>
               {{ artist.region }}
             </el-tag>
-            <el-tag type="success" size="large">
+            <el-tag
+              type="success"
+              size="large"
+            >
               <el-icon><Headset /></el-icon>
               {{ songList.length }} 首歌曲
             </el-tag>
           </div>
-          <p v-if="artist.description" class="artist-description">
+          <p
+            v-if="artist.description"
+            class="artist-description"
+          >
             {{ artist.description }}
           </p>
           <div class="artist-actions">
@@ -38,7 +61,10 @@
               <el-icon><CaretRight /></el-icon>
               播放全部
             </el-button>
-            <el-button size="large" @click="goBack">
+            <el-button
+              size="large"
+              @click="goBack"
+            >
               <el-icon><Back /></el-icon>
               返回
             </el-button>
@@ -55,19 +81,32 @@
           </h2>
         </div>
 
-        <div v-if="songList.length > 0" class="song-list">
+        <div
+          v-if="songList.length > 0"
+          class="song-list"
+        >
           <div 
             v-for="(song, index) in songList" 
             :key="song.id"
             class="song-item"
             @click="handlePlaySong(song, index)"
           >
-            <div class="song-index">{{ index + 1 }}</div>
-            <img :src="song.cover || defaultCover" class="song-cover">
+            <div class="song-index">
+              {{ index + 1 }}
+            </div>
+            <img
+              :src="song.cover || defaultCover"
+              class="song-cover"
+            >
             <div class="song-info">
-              <div class="song-name">{{ song.title }}</div>
+              <div class="song-name">
+                {{ song.title }}
+              </div>
               <div class="song-meta">
-                <span v-if="song.albumName" class="album-name">
+                <span
+                  v-if="song.albumName"
+                  class="album-name"
+                >
                   <el-icon><Document /></el-icon>
                   {{ song.albumName }}
                 </span>
@@ -83,47 +122,62 @@
                 icon="CaretRight" 
                 circle 
                 size="small" 
-                @click.stop="handlePlaySong(song, index)"
                 title="播放"
+                @click.stop="handlePlaySong(song, index)"
               />
               <el-button 
                 icon="Plus" 
                 circle 
                 size="small" 
-                @click.stop="handleAddToPlaylist(song)"
                 title="添加到播放列表"
+                @click.stop="handleAddToPlaylist(song)"
               />
               <el-button 
                 icon="FolderAdd" 
                 circle 
                 size="small" 
-                @click.stop="showAddToPlaylistDialog(song.id)"
                 title="添加到歌单"
+                @click.stop="showAddToPlaylistDialog(song.id)"
               />
               <el-button 
                 :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'"
                 circle 
                 size="small" 
                 :type="favoriteSongs[song.id] ? 'danger' : ''"
-                @click.stop="handleToggleFavorite(song.id)"
                 title="收藏"
+                @click.stop="handleToggleFavorite(song.id)"
               />
             </div>
           </div>
         </div>
 
         <!-- 无歌曲 -->
-        <div v-else class="empty-songs">
+        <div
+          v-else
+          class="empty-songs"
+        >
           <el-empty description="该歌手暂无歌曲" />
         </div>
       </div>
     </div>
 
     <!-- 错误状态 -->
-    <div v-else class="error-state">
-      <el-result icon="error" title="加载失败" sub-title="无法获取歌手信息">
+    <div
+      v-else
+      class="error-state"
+    >
+      <el-result
+        icon="error"
+        title="加载失败"
+        sub-title="无法获取歌手信息"
+      >
         <template #extra>
-          <el-button type="primary" @click="goBack">返回</el-button>
+          <el-button
+            type="primary"
+            @click="goBack"
+          >
+            返回
+          </el-button>
         </template>
       </el-result>
     </div>

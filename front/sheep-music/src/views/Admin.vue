@@ -2,7 +2,9 @@
   <div class="admin-page">
     <div class="page-header">
       <h2>🔧 管理后台</h2>
-      <p class="subtitle">系统管理与数据维护</p>
+      <p class="subtitle">
+        系统管理与数据维护
+      </p>
     </div>
     
     <el-alert
@@ -18,14 +20,23 @@
     </el-alert>
     
     <!-- Tab 切换 -->
-    <el-tabs v-model="activeTab" type="card">
+    <el-tabs
+      v-model="activeTab"
+      type="card"
+    >
       <!-- 歌手管理 -->
-      <el-tab-pane label="🎤 歌手管理" name="artist">
+      <el-tab-pane
+        label="🎤 歌手管理"
+        name="artist"
+      >
         <ArtistManagement />
       </el-tab-pane>
       
       <!-- 歌曲管理 -->
-      <el-tab-pane label="🎵 歌曲管理" name="song">
+      <el-tab-pane
+        label="🎵 歌曲管理"
+        name="song"
+      >
         <SongManagement />
       </el-tab-pane>
     </el-tabs>

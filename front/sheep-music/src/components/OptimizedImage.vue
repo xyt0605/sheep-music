@@ -1,9 +1,17 @@
 <template>
-  <div class="optimized-image" :style="{ aspectRatio: aspectRatio }">
+  <div
+    class="optimized-image"
+    :style="{ aspectRatio: aspectRatio }"
+  >
     <transition name="fade">
-      <div v-if="loading && !error" class="image-placeholder">
-        <div class="placeholder-shimmer"></div>
-        <el-icon class="placeholder-icon"><Picture /></el-icon>
+      <div
+        v-if="loading && !error"
+        class="image-placeholder"
+      >
+        <div class="placeholder-shimmer" />
+        <el-icon class="placeholder-icon">
+          <Picture />
+        </el-icon>
       </div>
     </transition>
     
@@ -14,17 +22,29 @@
         :src="currentSrc"
         :alt="alt"
         :class="imgClass"
+        loading="lazy"
         @load="handleLoad"
         @error="handleError"
-        loading="lazy"
-      />
+      >
     </transition>
     
     <transition name="fade">
-      <div v-if="error" class="image-error" @click="retry">
-        <el-icon class="error-icon"><Picture /></el-icon>
+      <div
+        v-if="error"
+        class="image-error"
+        @click="retry"
+      >
+        <el-icon class="error-icon">
+          <Picture />
+        </el-icon>
         <span class="error-text">{{ errorText }}</span>
-        <el-button size="small" text @click.stop="retry">重试</el-button>
+        <el-button
+          size="small"
+          text
+          @click.stop="retry"
+        >
+          重试
+        </el-button>
       </div>
     </transition>
   </div>

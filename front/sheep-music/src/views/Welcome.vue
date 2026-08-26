@@ -4,73 +4,189 @@
       <!-- Logo 和标题 -->
       <div class="logo-section">
         <div class="music-icon">
-          <svg width="72" height="72" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg
+            width="72"
+            height="72"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <defs>
-              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#0ea5e9"/>
-                <stop offset="100%" stop-color="#22d3ee"/>
+              <linearGradient
+                id="g1"
+                x1="0"
+                y1="0"
+                x2="1"
+                y2="1"
+              >
+                <stop
+                  offset="0%"
+                  stop-color="#0ea5e9"
+                />
+                <stop
+                  offset="100%"
+                  stop-color="#22d3ee"
+                />
               </linearGradient>
             </defs>
-            <path d="M9 19a3 3 0 1 1-3-3 3 3 0 0 1 3 3Zm9-12v8.5a3.5 3.5 0 1 1-2-3.15V7h-7v8.5a3.5 3.5 0 1 1-2-3.15V5h11Z" stroke="url(#g1)" stroke-width="1.6" fill="none"/>
+            <path
+              d="M9 19a3 3 0 1 1-3-3 3 3 0 0 1 3 3Zm9-12v8.5a3.5 3.5 0 1 1-2-3.15V7h-7v8.5a3.5 3.5 0 1 1-2-3.15V5h11Z"
+              stroke="url(#g1)"
+              stroke-width="1.6"
+              fill="none"
+            />
           </svg>
         </div>
-        <h1 class="title">Sheep Music</h1>
-        <p class="subtitle">发现音乐，享受生活</p>
+        <h1 class="title">
+          Sheep Music
+        </h1>
+        <p class="subtitle">
+          发现音乐，享受生活
+        </p>
       </div>
       
       <!-- 功能介绍 -->
       <div class="features">
         <div class="feature-item">
           <div class="feature-icon">
-            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              width="42"
+              height="42"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <defs>
-                <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#06b6d4"/>
-                  <stop offset="100%" stop-color="#3b82f6"/>
+                <linearGradient
+                  id="g2"
+                  x1="0"
+                  y1="0"
+                  x2="1"
+                  y2="1"
+                >
+                  <stop
+                    offset="0%"
+                    stop-color="#06b6d4"
+                  />
+                  <stop
+                    offset="100%"
+                    stop-color="#3b82f6"
+                  />
                 </linearGradient>
               </defs>
-              <path d="M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm12 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM9 12V6a3 3 0 0 1 3-3h4" stroke="url(#g2)" stroke-width="1.6" stroke-linecap="round"/>
+              <path
+                d="M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm12 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM9 12V6a3 3 0 0 1 3-3h4"
+                stroke="url(#g2)"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
             </svg>
           </div>
-          <div class="feature-text">海量音乐库</div>
+          <div class="feature-text">
+            海量音乐库
+          </div>
         </div>
         <div class="feature-item">
           <div class="feature-icon">
-            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              width="42"
+              height="42"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <defs>
-                <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#06b6d4"/>
-                  <stop offset="100%" stop-color="#3b82f6"/>
+                <linearGradient
+                  id="g3"
+                  x1="0"
+                  y1="0"
+                  x2="1"
+                  y2="1"
+                >
+                  <stop
+                    offset="0%"
+                    stop-color="#06b6d4"
+                  />
+                  <stop
+                    offset="100%"
+                    stop-color="#3b82f6"
+                  />
                 </linearGradient>
               </defs>
-              <path d="M8 5h8a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Z" stroke="url(#g3)" stroke-width="1.6"/>
-              <path d="M10 12l5 3V9l-5 3Z" stroke="url(#g3)" stroke-width="1.6" stroke-linejoin="round"/>
+              <path
+                d="M8 5h8a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Z"
+                stroke="url(#g3)"
+                stroke-width="1.6"
+              />
+              <path
+                d="M10 12l5 3V9l-5 3Z"
+                stroke="url(#g3)"
+                stroke-width="1.6"
+                stroke-linejoin="round"
+              />
             </svg>
           </div>
-          <div class="feature-text">随时随地播放</div>
+          <div class="feature-text">
+            随时随地播放
+          </div>
         </div>
         <div class="feature-item">
           <div class="feature-icon">
-            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              width="42"
+              height="42"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <defs>
-                <linearGradient id="g4" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#06b6d4"/>
-                  <stop offset="100%" stop-color="#3b82f6"/>
+                <linearGradient
+                  id="g4"
+                  x1="0"
+                  y1="0"
+                  x2="1"
+                  y2="1"
+                >
+                  <stop
+                    offset="0%"
+                    stop-color="#06b6d4"
+                  />
+                  <stop
+                    offset="100%"
+                    stop-color="#3b82f6"
+                  />
                 </linearGradient>
               </defs>
-              <path d="M12 21s-6-3.5-6-8a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 4.5-6 8-10 8Z" stroke="url(#g4)" stroke-width="1.6" stroke-linecap="round"/>
+              <path
+                d="M12 21s-6-3.5-6-8a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 4.5-6 8-10 8Z"
+                stroke="url(#g4)"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
             </svg>
           </div>
-          <div class="feature-text">创建专属歌单</div>
+          <div class="feature-text">
+            创建专属歌单
+          </div>
         </div>
       </div>
       
       <!-- 操作按钮 -->
       <div class="action-buttons">
-        <GalaxyButton size="lg" variant="primary" class="action-btn" @click="goToLogin">
+        <GalaxyButton
+          size="lg"
+          variant="primary"
+          class="action-btn"
+          @click="goToLogin"
+        >
           立即登录
         </GalaxyButton>
-        <GalaxyButton size="lg" variant="secondary" class="action-btn outline" @click="goToRegister">
+        <GalaxyButton
+          size="lg"
+          variant="secondary"
+          class="action-btn outline"
+          @click="goToRegister"
+        >
           免费注册
         </GalaxyButton>
       </div>

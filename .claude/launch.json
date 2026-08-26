@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sheep-music-front",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "front/sheep-music", "run", "dev"],
+      "port": 8001
+    }
+  ]
+}

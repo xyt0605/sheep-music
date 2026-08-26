@@ -1,11 +1,19 @@
 <template>
   <div class="playlist-detail">
-    <div v-if="loading" class="loading-container">
-      <el-icon class="is-loading"><Loading /></el-icon>
+    <div
+      v-if="loading"
+      class="loading-container"
+    >
+      <el-icon class="is-loading">
+        <Loading />
+      </el-icon>
       <p>加载中...</p>
     </div>
     
-    <div v-else-if="playlist" class="detail-container">
+    <div
+      v-else-if="playlist"
+      class="detail-container"
+    >
       <!-- 歌单头部信息 -->
       <div class="playlist-header">
         <div class="cover-section">
@@ -19,12 +27,32 @@
         
         <div class="info-section">
           <div class="playlist-tag">
-            <el-tag v-if="playlist.category" type="primary" size="small">{{ playlist.category }}</el-tag>
-            <el-tag v-if="playlist.isPublic" type="success" size="small">公开</el-tag>
-            <el-tag v-else type="info" size="small">私有</el-tag>
+            <el-tag
+              v-if="playlist.category"
+              type="primary"
+              size="small"
+            >
+              {{ playlist.category }}
+            </el-tag>
+            <el-tag
+              v-if="playlist.isPublic"
+              type="success"
+              size="small"
+            >
+              公开
+            </el-tag>
+            <el-tag
+              v-else
+              type="info"
+              size="small"
+            >
+              私有
+            </el-tag>
           </div>
           
-          <h1 class="playlist-name">{{ playlist.name }}</h1>
+          <h1 class="playlist-name">
+            {{ playlist.name }}
+          </h1>
           
           <div class="creator-info">
             <el-icon><User /></el-icon>
@@ -33,7 +61,10 @@
             <span>{{ formatDate(playlist.createTime) }}</span>
           </div>
           
-          <p class="playlist-description" v-if="playlist.description">
+          <p
+            v-if="playlist.description"
+            class="playlist-description"
+          >
             {{ playlist.description }}
           </p>
           
@@ -49,16 +80,33 @@
           </div>
           
           <div class="action-buttons">
-            <el-button type="primary" size="large" @click="playAll">
+            <el-button
+              type="primary"
+              size="large"
+              @click="playAll"
+            >
               <el-icon><CaretRight /></el-icon> 播放全部
             </el-button>
-            <el-button size="large" @click="playAll(true)">
+            <el-button
+              size="large"
+              @click="playAll(true)"
+            >
               <el-icon><Refresh /></el-icon> 随机播放
             </el-button>
-            <el-button v-if="isOwner" size="large" @click="goToEdit">
+            <el-button
+              v-if="isOwner"
+              size="large"
+              @click="goToEdit"
+            >
               <el-icon><Edit /></el-icon> 编辑
             </el-button>
-            <el-button v-if="isOwner" size="large" type="primary" plain @click="sharePlaylistClick">
+            <el-button
+              v-if="isOwner"
+              size="large"
+              type="primary"
+              plain
+              @click="sharePlaylistClick"
+            >
               <el-icon><Share /></el-icon> 分享到广场
             </el-button>
           </div>
@@ -72,82 +120,117 @@
           <span class="song-count">共 {{ songs.length }} 首</span>
         </div>
         
-        <div v-if="songs.length > 0" class="song-list">
+        <div
+          v-if="songs.length > 0"
+          class="song-list"
+        >
           <div 
             v-for="(item, index) in songs" 
             :key="item.id"
             class="song-item"
             @click="playSong(item.song, index)"
           >
-            <div class="song-index">{{ index + 1 }}</div>
-            <img :src="item.song?.cover || defaultCover" class="song-cover" />
+            <div class="song-index">
+              {{ index + 1 }}
+            </div>
+            <img
+              :src="item.song?.cover || defaultCover"
+              class="song-cover"
+            >
             <div class="song-info">
-              <div class="song-name">{{ item.song?.title || '未知歌曲' }}</div>
+              <div class="song-name">
+                {{ item.song?.title || '未知歌曲' }}
+              </div>
               <div class="song-artist">
                 <template v-if="item.song?.artists && item.song.artists.length > 0">
-                  <span v-for="(artist, idx) in item.song.artists" :key="artist.id">
-                    <span class="clickable" @click.stop="goToArtist(artist.id)">{{ artist.name }}</span>
+                  <span
+                    v-for="(artist, idx) in item.song.artists"
+                    :key="artist.id"
+                  >
+                    <span
+                      class="clickable"
+                      @click.stop="goToArtist(artist.id)"
+                    >{{ artist.name }}</span>
                     <span v-if="idx < item.song.artists.length - 1"> / </span>
                   </span>
                 </template>
                 <span v-else>未知歌手</span>
               </div>
             </div>
-            <div class="song-duration">{{ formatDuration(item.song?.duration) }}</div>
-            <div class="song-actions" @click.stop>
+            <div class="song-duration">
+              {{ formatDuration(item.song?.duration) }}
+            </div>
+            <div
+              class="song-actions"
+              @click.stop
+            >
               <el-button 
                 icon="CaretRight" 
                 circle 
                 size="small" 
-                @click="playSong(item.song, index)"
                 title="播放"
+                @click="playSong(item.song, index)"
               />
               <el-button 
                 icon="Plus" 
                 circle 
                 size="small" 
-                @click="addToPlaylist(item.song)"
                 title="添加到播放列表"
+                @click="addToPlaylist(item.song)"
               />
               <el-button 
                 icon="FolderAdd" 
                 circle 
                 size="small" 
-                @click="showAddToPlaylistDialog(item.song?.id)"
                 title="添加到其他歌单"
+                @click="showAddToPlaylistDialog(item.song?.id)"
               />
               <el-button 
                 icon="Share" 
                 circle 
                 size="small" 
-                @click="shareSongClick(item.song)"
                 title="分享歌曲"
+                @click="shareSongClick(item.song)"
               />
               <el-button 
                 v-if="isOwner"
                 icon="Delete" 
                 circle 
                 size="small" 
-                @click="removeSong(item.songId)"
                 title="从歌单移除"
+                @click="removeSong(item.songId)"
               />
             </div>
           </div>
         </div>
         
-        <div v-else class="empty-state">
+        <div
+          v-else
+          class="empty-state"
+        >
           <el-empty description="歌单还没有歌曲">
-            <el-button v-if="isOwner" type="primary" @click="router.push('/')">去首页添加歌曲</el-button>
+            <el-button
+              v-if="isOwner"
+              type="primary"
+              @click="router.push('/')"
+            >
+              去首页添加歌曲
+            </el-button>
           </el-empty>
         </div>
       </div>
 
       <!-- 评论区 -->
-      <div v-if="songs.length > 0" class="comments-section">
+      <div
+        v-if="songs.length > 0"
+        class="comments-section"
+      >
         <div class="section-header comment-header">
           <div class="comment-title">
             <h3>评论区</h3>
-            <p class="comment-subtitle">请选择歌曲查看评论并参与讨论</p>
+            <p class="comment-subtitle">
+              请选择歌曲查看评论并参与讨论
+            </p>
           </div>
           <el-select
             v-model="commentSongId"
@@ -169,20 +252,34 @@
 
         <div v-if="commentSong">
           <div class="comment-song-info">
-            <img :src="commentSong.cover || defaultCover" class="comment-song-cover" />
+            <img
+              :src="commentSong.cover || defaultCover"
+              class="comment-song-cover"
+            >
             <div class="comment-song-text">
               <h4>{{ commentSong.title }}</h4>
               <p>{{ formatArtists(commentSong.artists) }}</p>
             </div>
           </div>
-          <CommentList :song-id="commentSong.id" :show-rating="true" />
+          <CommentList
+            :song-id="commentSong.id"
+            :show-rating="true"
+          />
         </div>
       </div>
     </div>
     
-    <div v-else class="error-state">
+    <div
+      v-else
+      class="error-state"
+    >
       <el-empty description="歌单不存在或已被删除">
-        <el-button type="primary" @click="$router.back()">返回</el-button>
+        <el-button
+          type="primary"
+          @click="$router.back()"
+        >
+          返回
+        </el-button>
       </el-empty>
     </div>
     

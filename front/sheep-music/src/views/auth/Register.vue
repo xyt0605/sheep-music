@@ -2,8 +2,12 @@
   <div class="register-container">
     <div class="register-box">
       <!-- 标题 -->
-      <h2 class="title">Sheep Music</h2>
-      <p class="subtitle">创建新账号</p>
+      <h2 class="title">
+        Sheep Music
+      </h2>
+      <p class="subtitle">
+        创建新账号
+      </p>
       
       <!-- 注册表单 -->
       <el-form
@@ -80,7 +84,9 @@
         <!-- 登录链接 -->
         <div class="login-link">
           已有账号？
-          <router-link to="/login">立即登录</router-link>
+          <router-link to="/login">
+            立即登录
+          </router-link>
         </div>
       </el-form>
     </div>
