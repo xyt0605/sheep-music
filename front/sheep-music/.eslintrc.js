@@ -1,13 +1,20 @@
 module.exports = {
   root: true,
   env: {
-    node: true
+    browser: true,
+    node: true,
+    es2021: true
   },
-  extends: [],
-  rules: {
-    // 禁用所有规则
-  },
+  parser: 'vue-eslint-parser',
   parserOptions: {
-    parser: '@babel/eslint-parser'
-  }
+    parser: '@babel/eslint-parser',
+    requireConfigFile: false,
+    ecmaVersion: 2021,
+    sourceType: 'module'
+  },
+  extends: [
+    'plugin:vue/vue3-recommended',
+    'eslint:recommended'
+  ],
+  rules: {}
 }

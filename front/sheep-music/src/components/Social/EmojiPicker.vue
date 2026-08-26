@@ -4,23 +4,28 @@
     <div class="picker-container">
       <emoji-picker
         ref="pickerRef"
-        :dataSource="dataSource"
-        :skinToneEmoji="skinToneEmoji"
+        :data-source="dataSource"
+        :skin-tone-emoji="skinToneEmoji"
         class="custom-picker"
         @emoji-click="handleEmojiPick"
-      ></emoji-picker>
+      />
     </div>
 
     <!-- 最近使用 -->
-    <div v-if="recentEmojis.length" class="recent-emojis">
-      <div class="recent-label">最近使用</div>
+    <div
+      v-if="recentEmojis.length"
+      class="recent-emojis"
+    >
+      <div class="recent-label">
+        最近使用
+      </div>
       <div class="recent-grid">
         <button
           v-for="emoji in recentEmojis"
           :key="emoji"
           class="recent-emoji"
-          @click="pickEmoji(emoji)"
           :title="emoji"
+          @click="pickEmoji(emoji)"
         >
           {{ emoji }}
         </button>
@@ -32,6 +37,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import 'emoji-picker-element'
+import data from 'emoji-picker-element-data/en/cldr/data.json'
 
 const emit = defineEmits(['pick'])
 
@@ -39,7 +45,9 @@ const pickerRef = ref(null)
 const recentEmojis = ref([])
 
 // emoji-picker-element 配置
-const dataSource = 'https://cdn.jsdelivr.net/npm/emoji-picker-element-data@^1/en/cldr/data.json'
+const dataSource = URL.createObjectURL(
+  new Blob([JSON.stringify(data)], { type: 'application/json' })
+)
 const skinToneEmoji = '🖐️'
 
 // 处理 emoji 选择
@@ -92,8 +100,8 @@ onMounted(() => {
 .emoji-picker-wrap {
   background: var(--card-bg, #fff);
   border: 1px solid var(--border-color-light, #eee);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -121,46 +129,55 @@ onMounted(() => {
   --category-button-active-color: var(--primary-color, #409eff);
   --outline-color: var(--primary-color, #409eff);
   --input-border-radius: 20px;
-  --input-padding: 6px 12px;
+  --input-padding: 8px 16px;
+  --indicator-color: var(--primary-color, #409eff);
+  --button-hover-background: rgba(0,0,0,0.05);
 }
 
 /* 最近使用 */
 .recent-emojis {
-  padding: 8px 12px;
+  padding: 10px 16px;
   border-top: 1px solid var(--border-color-light, #eee);
   background: var(--bg-secondary, #f9fafc);
 }
 
 .recent-label {
-  font-size: 11px;
-  color: var(--text-secondary, #999);
-  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--text-secondary, #909399);
+  margin-bottom: 8px;
+  font-weight: 500;
 }
 
 .recent-grid {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .recent-emoji {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: none;
-  background: transparent;
-  border-radius: 4px;
+  background: #fff;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
 .recent-emoji:hover {
-  background-color: rgba(0,0,0,0.05);
-  transform: scale(1.1);
+  background-color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.recent-emoji:active {
+  transform: scale(0.95);
 }
 </style>
 

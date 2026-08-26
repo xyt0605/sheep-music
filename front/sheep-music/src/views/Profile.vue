@@ -2,14 +2,19 @@
   <div class="profile-page">
     <div class="page-header">
       <h2>👤 个人中心</h2>
-      <p class="subtitle">管理你的个人信息</p>
+      <p class="subtitle">
+        管理你的个人信息
+      </p>
     </div>
     
     <div class="user-info-card">
       <el-card shadow="hover">
         <div class="user-basic-info">
           <div class="avatar-container">
-            <el-avatar :size="100" :src="userStore.userInfo?.avatar">
+            <el-avatar
+              :size="100"
+              :src="userStore.userInfo?.avatar"
+            >
               {{ userStore.userInfo?.nickname?.charAt(0) }}
             </el-avatar>
             <el-upload
@@ -22,16 +27,34 @@
               :on-progress="handleUploadProgress"
               :on-error="handleUploadError"
             >
-              <el-button size="small" type="primary" :loading="uploadLoading">
+              <el-button
+                size="small"
+                type="primary"
+                :loading="uploadLoading"
+              >
                 {{ uploadLoading ? '上传中...' : '更换头像' }}
               </el-button>
             </el-upload>
           </div>
           <div class="user-details">
             <h3>{{ userStore.userInfo?.nickname }}</h3>
-            <p class="username">@{{ userStore.userInfo?.username }}</p>
-            <el-tag v-if="userStore.isAdmin" type="danger" size="small">管理员</el-tag>
-            <el-tag v-else type="success" size="small">普通用户</el-tag>
+            <p class="username">
+              @{{ userStore.userInfo?.username }}
+            </p>
+            <el-tag
+              v-if="userStore.isAdmin"
+              type="danger"
+              size="small"
+            >
+              管理员
+            </el-tag>
+            <el-tag
+              v-else
+              type="success"
+              size="small"
+            >
+              普通用户
+            </el-tag>
           </div>
         </div>
         
@@ -51,8 +74,15 @@
         <el-divider />
         
         <div class="actions">
-          <el-button type="primary" @click="showEditDialog">编辑资料</el-button>
-          <el-button @click="showPasswordDialog">修改密码</el-button>
+          <el-button
+            type="primary"
+            @click="showEditDialog"
+          >
+            编辑资料
+          </el-button>
+          <el-button @click="showPasswordDialog">
+            修改密码
+          </el-button>
         </div>
       </el-card>
     </div>
@@ -70,7 +100,10 @@
         :rules="editRules"
         label-width="80px"
       >
-        <el-form-item label="昵称" prop="nickname">
+        <el-form-item
+          label="昵称"
+          prop="nickname"
+        >
           <el-input
             v-model="editForm.nickname"
             placeholder="请输入昵称"
@@ -79,7 +112,10 @@
           />
         </el-form-item>
         
-        <el-form-item label="邮箱" prop="email">
+        <el-form-item
+          label="邮箱"
+          prop="email"
+        >
           <el-input
             v-model="editForm.email"
             placeholder="请输入邮箱"
@@ -87,9 +123,15 @@
           />
         </el-form-item>
         
-        <el-form-item label="头像" prop="avatar">
+        <el-form-item
+          label="头像"
+          prop="avatar"
+        >
           <div class="avatar-edit">
-            <el-avatar :size="80" :src="editForm.avatar">
+            <el-avatar
+              :size="80"
+              :src="editForm.avatar"
+            >
               {{ editForm.nickname?.charAt(0) }}
             </el-avatar>
             <div class="avatar-actions">
@@ -99,7 +141,12 @@
                 type="url"
                 style="margin-bottom: 10px;"
               />
-              <el-text type="info" size="small">提示：关闭对话框后，可点击个人中心的"更换头像"按钮上传图片</el-text>
+              <el-text
+                type="info"
+                size="small"
+              >
+                提示：关闭对话框后，可点击个人中心的"更换头像"按钮上传图片
+              </el-text>
             </div>
           </div>
         </el-form-item>
@@ -108,7 +155,11 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="editDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="editLoading" @click="handleEditSubmit">
+          <el-button
+            type="primary"
+            :loading="editLoading"
+            @click="handleEditSubmit"
+          >
             确定
           </el-button>
         </span>
@@ -128,7 +179,10 @@
         :rules="passwordRules"
         label-width="100px"
       >
-        <el-form-item label="旧密码" prop="oldPassword">
+        <el-form-item
+          label="旧密码"
+          prop="oldPassword"
+        >
           <el-input
             v-model="passwordForm.oldPassword"
             type="password"
@@ -137,7 +191,10 @@
           />
         </el-form-item>
         
-        <el-form-item label="新密码" prop="newPassword">
+        <el-form-item
+          label="新密码"
+          prop="newPassword"
+        >
           <el-input
             v-model="passwordForm.newPassword"
             type="password"
@@ -146,7 +203,10 @@
           />
         </el-form-item>
         
-        <el-form-item label="确认新密码" prop="confirmPassword">
+        <el-form-item
+          label="确认新密码"
+          prop="confirmPassword"
+        >
           <el-input
             v-model="passwordForm.confirmPassword"
             type="password"
@@ -159,7 +219,11 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="passwordDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="passwordLoading" @click="handlePasswordSubmit">
+          <el-button
+            type="primary"
+            :loading="passwordLoading"
+            @click="handlePasswordSubmit"
+          >
             确定
           </el-button>
         </span>

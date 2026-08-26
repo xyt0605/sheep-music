@@ -1,5 +1,8 @@
 <template>
-  <teleport to="body" :disabled="!isMounted">
+  <teleport
+    to="body"
+    :disabled="!isMounted"
+  >
     <transition name="slide-down">
       <div 
         v-if="visible && isMounted" 
@@ -20,9 +23,15 @@
         @dblclick.stop="toggleLock"
       >
         <!-- 控制栏（鼠标悬停显示） -->
-        <div class="lyric-controls" v-show="!isLocked || showControls">
+        <div
+          v-show="!isLocked || showControls"
+          class="lyric-controls"
+        >
           <!-- 拖动手柄 -->
-          <div class="drag-handle" title="双击锁定/解锁">
+          <div
+            class="drag-handle"
+            title="双击锁定/解锁"
+          >
             <el-icon><Rank /></el-icon>
             {{ isLocked ? '🔒' : '🔓' }}
           </div>
@@ -37,11 +46,20 @@
               popper-class="lyric-control-popover"
             >
               <template #reference>
-                <el-button icon="Sunny" circle size="small" title="透明度" />
+                <el-button
+                  icon="Sunny"
+                  circle
+                  size="small"
+                  title="透明度"
+                />
               </template>
               <div class="opacity-control">
-                <div class="control-title">透明度</div>
-                <div class="control-value">{{ Math.round(opacity * 100) }}%</div>
+                <div class="control-title">
+                  透明度
+                </div>
+                <div class="control-value">
+                  {{ Math.round(opacity * 100) }}%
+                </div>
                 <el-slider 
                   v-model="opacity" 
                   :min="0.3" 
@@ -60,10 +78,17 @@
               popper-class="lyric-color-popover"
             >
               <template #reference>
-                <el-button icon="Brush" circle size="small" title="背景色" />
+                <el-button
+                  icon="Brush"
+                  circle
+                  size="small"
+                  title="背景色"
+                />
               </template>
               <div class="color-control">
-                <div class="color-control-title">背景颜色</div>
+                <div class="color-control-title">
+                  背景颜色
+                </div>
                 <div class="color-presets">
                   <div 
                     v-for="color in colorPresets" 
@@ -71,10 +96,13 @@
                     class="color-item"
                     :class="{ active: backgroundColor === color }"
                     :style="{ backgroundColor: color }"
-                    @click="changeBackgroundColor(color)"
                     :title="getColorName(color)"
+                    @click="changeBackgroundColor(color)"
                   >
-                    <el-icon v-if="backgroundColor === color" class="check-icon">
+                    <el-icon
+                      v-if="backgroundColor === color"
+                      class="check-icon"
+                    >
                       <Check />
                     </el-icon>
                   </div>
@@ -90,11 +118,20 @@
               popper-class="lyric-control-popover"
             >
               <template #reference>
-                <el-button icon="FontSize" circle size="small" title="字体大小" />
+                <el-button
+                  icon="FontSize"
+                  circle
+                  size="small"
+                  title="字体大小"
+                />
               </template>
               <div class="font-control">
-                <div class="control-title">字体大小</div>
-                <div class="control-value">{{ fontSize }}px</div>
+                <div class="control-title">
+                  字体大小
+                </div>
+                <div class="control-value">
+                  {{ fontSize }}px
+                </div>
                 <el-slider 
                   v-model="fontSize" 
                   :min="16" 
@@ -126,16 +163,28 @@
         </div>
         
         <!-- 歌词显示区域 -->
-        <div class="lyric-content" :style="{ fontSize: fontSize + 'px' }">
-          <transition name="lyric-fade" mode="out-in">
-            <div :key="currentLyric" class="lyric-line">
+        <div
+          class="lyric-content"
+          :style="{ fontSize: fontSize + 'px' }"
+        >
+          <transition
+            name="lyric-fade"
+            mode="out-in"
+          >
+            <div
+              :key="currentLyric"
+              class="lyric-line"
+            >
               {{ currentLyric || '暂无歌词' }}
             </div>
           </transition>
           
           <!-- 下一句歌词（可选） -->
           <transition name="fade">
-            <div v-if="nextLyric && showNextLine" class="lyric-next">
+            <div
+              v-if="nextLyric && showNextLine"
+              class="lyric-next"
+            >
               {{ nextLyric }}
             </div>
           </transition>
@@ -143,7 +192,10 @@
         
         <!-- 歌曲信息（可选显示） -->
         <transition name="fade">
-          <div v-if="showSongInfo" class="song-info">
+          <div
+            v-if="showSongInfo"
+            class="song-info"
+          >
             <span class="song-title">{{ currentSong?.title || '未播放' }}</span>
             <span class="song-artist">
               {{ currentSong?.artists?.map(a => a.name).join(' / ') || '' }}
@@ -155,14 +207,14 @@
         <div 
           v-if="!isLocked"
           class="resize-handle resize-left"
-          @mousedown.stop="startResize($event, 'left')"
           title="拖拽调整宽度"
+          @mousedown.stop="startResize($event, 'left')"
         />
         <div 
           v-if="!isLocked"
           class="resize-handle resize-right"
-          @mousedown.stop="startResize($event, 'right')"
           title="拖拽调整宽度"
+          @mousedown.stop="startResize($event, 'right')"
         />
       </div>
     </transition>

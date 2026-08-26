@@ -1,7 +1,10 @@
 <template>
-  <div class="galaxy-loader" :class="size">
-    <div class="ring"></div>
-    <div class="core"></div>
+  <div
+    class="galaxy-loader"
+    :class="size"
+  >
+    <div class="ring" />
+    <div class="core" />
   </div>
 </template>
 

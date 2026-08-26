@@ -1,12 +1,15 @@
 <template>
-  <div class="playlist-cover" :style="{ width: size + 'px', height: size + 'px' }">
+  <div
+    class="playlist-cover"
+    :style="{ width: size + 'px', height: size + 'px' }"
+  >
     <!-- 显示封面（使用最新添加的歌曲封面，类似QQ音乐） -->
     <img
       :src="coverUrl || defaultCover"
       alt="歌单封面"
       class="cover-image"
       @error="handleImageError"
-    />
+    >
   </div>
 </template>
 

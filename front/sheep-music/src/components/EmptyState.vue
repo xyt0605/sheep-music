@@ -1,5 +1,8 @@
 <template>
-  <div class="empty-state" :class="{ compact }">
+  <div
+    class="empty-state"
+    :class="{ compact }"
+  >
     <div class="empty-icon">
       <slot name="icon">
         <component :is="iconComponent" />
@@ -7,12 +10,25 @@
     </div>
     
     <div class="empty-content">
-      <h3 v-if="title" class="empty-title">{{ title }}</h3>
-      <p v-if="description" class="empty-description">{{ description }}</p>
+      <h3
+        v-if="title"
+        class="empty-title"
+      >
+        {{ title }}
+      </h3>
+      <p
+        v-if="description"
+        class="empty-description"
+      >
+        {{ description }}
+      </p>
       
-      <slot name="extra"></slot>
+      <slot name="extra" />
       
-      <div v-if="actionText || $slots.action" class="empty-action">
+      <div
+        v-if="actionText || $slots.action"
+        class="empty-action"
+      >
         <slot name="action">
           <el-button
             v-if="actionText"

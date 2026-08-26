@@ -3,24 +3,52 @@
     <div class="page-header">
       <h2>分享广场</h2>
       <div class="header-controls">
-        <el-radio-group v-model="shareTypeFilter" size="small" @change="handleTypeChange">
-          <el-radio-button value="all">全部</el-radio-button>
-          <el-radio-button value="playlist">歌单</el-radio-button>
-          <el-radio-button value="song">歌曲</el-radio-button>
+        <el-radio-group
+          v-model="shareTypeFilter"
+          size="small"
+          @change="handleTypeChange"
+        >
+          <el-radio-button value="all">
+            全部
+          </el-radio-button>
+          <el-radio-button value="playlist">
+            歌单
+          </el-radio-button>
+          <el-radio-button value="song">
+            歌曲
+          </el-radio-button>
         </el-radio-group>
-        <el-radio-group v-model="sortType" size="small" @change="handleSortChange" style="margin-left: 12px;">
-          <el-radio-button value="latest">最新</el-radio-button>
-          <el-radio-button value="hot">热门</el-radio-button>
+        <el-radio-group
+          v-model="sortType"
+          size="small"
+          style="margin-left: 12px;"
+          @change="handleSortChange"
+        >
+          <el-radio-button value="latest">
+            最新
+          </el-radio-button>
+          <el-radio-button value="hot">
+            热门
+          </el-radio-button>
         </el-radio-group>
       </div>
     </div>
     
-    <div v-loading="loading" class="shares-list">
-      <div v-if="shares.length === 0 && !loading" class="empty-state">
+    <div
+      v-loading="loading"
+      class="shares-list"
+    >
+      <div
+        v-if="shares.length === 0 && !loading"
+        class="empty-state"
+      >
         <el-empty description="暂无分享" />
       </div>
       
-      <div v-else class="shares-grid">
+      <div
+        v-else
+        class="shares-grid"
+      >
         <div
           v-for="share in filteredShares"
           :key="share.id"
@@ -39,22 +67,36 @@
                 </div>
               </template>
             </el-image>
-            <div v-if="share.shareType" class="share-type-badge">
-              <el-tag :type="share.shareType === 'song' ? 'success' : 'primary'" size="small">
+            <div
+              v-if="share.shareType"
+              class="share-type-badge"
+            >
+              <el-tag
+                :type="share.shareType === 'song' ? 'success' : 'primary'"
+                size="small"
+              >
                 {{ share.shareType === 'song' ? '歌曲' : '歌单' }}
               </el-tag>
             </div>
           </div>
           
           <div class="share-content">
-            <div class="share-title">{{ getShareTitle(share) }}</div>
-            <div v-if="share.description" class="share-description">
+            <div class="share-title">
+              {{ getShareTitle(share) }}
+            </div>
+            <div
+              v-if="share.description"
+              class="share-description"
+            >
               {{ share.description }}
             </div>
             
             <div class="share-meta">
               <div class="share-user">
-                <el-avatar :src="share.userAvatar || share.user?.avatar" :size="24">
+                <el-avatar
+                  :src="share.userAvatar || share.user?.avatar"
+                  :size="24"
+                >
                   <el-icon><User /></el-icon>
                 </el-avatar>
                 <span>{{ share.userName || share.user?.nickname }}</span>
@@ -71,23 +113,33 @@
               </div>
             </div>
             
-          <div class="share-time">
-            {{ formatTime(share.createTime) }}
-          </div>
-          <div class="share-actions">
-            <el-button text @click.stop="handleAction(share)">
-              <el-icon><Star /></el-icon>
-              {{ share.shareType === 'song' ? '点赞' : '收藏' }} {{ share.shareType === 'song' ? (share.likeCount || 0) : (share.collectCount || 0) }}
-            </el-button>
+            <div class="share-time">
+              {{ formatTime(share.createTime) }}
+            </div>
+            <div class="share-actions">
+              <el-button
+                text
+                @click.stop="handleAction(share)"
+              >
+                <el-icon><Star /></el-icon>
+                {{ share.shareType === 'song' ? '点赞' : '收藏' }} {{ share.shareType === 'song' ? (share.likeCount || 0) : (share.collectCount || 0) }}
+              </el-button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    </div>
     
     <!-- 加载更多 -->
-    <div v-if="hasMore" class="load-more">
-      <el-button text :loading="loading" @click="loadMore">
+    <div
+      v-if="hasMore"
+      class="load-more"
+    >
+      <el-button
+        text
+        :loading="loading"
+        @click="loadMore"
+      >
         加载更多
       </el-button>
     </div>

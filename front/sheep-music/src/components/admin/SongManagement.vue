@@ -1,321 +1,757 @@
 <template>
-    <div class="song-management">
-        <!-- 操作栏 -->
-        <div class="toolbar">
-            <el-button type="primary" icon="Plus" @click="showAddDialog">
-                新增歌曲
+  <div class="song-management">
+    <!-- 操作栏 -->
+    <div class="toolbar">
+      <el-button
+        type="primary"
+        icon="Plus"
+        @click="showAddDialog"
+      >
+        新增歌曲
+      </el-button>
+      <el-button
+        type="success"
+        icon="Edit"
+        @click="showBatchEditDialog"
+      >
+        批量编辑类型和语言
+      </el-button>
+      <el-button
+        icon="Refresh"
+        @click="fetchSongs"
+      >
+        刷新
+      </el-button>
+    </div>
+
+    <!-- 歌曲列表 -->
+    <el-table
+      v-loading="loading"
+      :data="songList"
+      border
+      stripe
+      style="width: 100%"
+    >
+      <el-table-column
+        type="index"
+        label="序号"
+        width="60"
+        align="center"
+      />
+
+      <el-table-column
+        label="封面"
+        width="80"
+        align="center"
+      >
+        <template #default="{ row }">
+          <el-image
+            style="width: 50px; height: 50px; border-radius: 4px;"
+            :src="row.cover"
+            fit="cover"
+          >
+            <template #error>
+              <div class="image-slot">
+                🎵
+              </div>
+            </template>
+          </el-image>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        prop="title"
+        label="歌曲名称"
+        width="200"
+      />
+
+      <el-table-column
+        label="歌手"
+        width="150"
+      >
+        <template #default="{ row }">
+          {{ row.artists && row.artists.length > 0 ? row.artists.map(a => a.name).join(' / ') : '-' }}
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        prop="albumName"
+        label="专辑"
+        width="150"
+        show-overflow-tooltip
+      />
+            
+      <el-table-column
+        prop="genre"
+        label="类型"
+        width="100"
+        align="center"
+      >
+        <template #default="{ row }">
+          <el-tag
+            v-if="row.genre"
+            size="small"
+            type="info"
+          >
+            {{ row.genre }}
+          </el-tag>
+          <span
+            v-else
+            style="color: #999;"
+          >未设置</span>
+        </template>
+      </el-table-column>
+            
+      <el-table-column
+        prop="language"
+        label="语言"
+        width="100"
+        align="center"
+      >
+        <template #default="{ row }">
+          <el-tag
+            v-if="row.language"
+            size="small"
+            type="success"
+          >
+            {{ row.language }}
+          </el-tag>
+          <span
+            v-else
+            style="color: #999;"
+          >未设置</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        prop="duration"
+        label="时长"
+        width="80"
+        align="center"
+      >
+        <template #default="{ row }">
+          {{ formatDuration(row.duration) }}
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        prop="playCount"
+        label="播放次数"
+        width="100"
+        align="center"
+      />
+
+      <el-table-column
+        prop="status"
+        label="状态"
+        width="80"
+        align="center"
+      >
+        <template #default="{ row }">
+          <el-tag
+            :type="row.status === 1 ? 'success' : 'danger'"
+            size="small"
+          >
+            {{ row.status === 1 ? '上架' : '下架' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        prop="createTime"
+        label="创建时间"
+        width="180"
+      >
+        <template #default="{ row }">
+          {{ formatDate(row.createTime) }}
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        label="操作"
+        width="180"
+        fixed="right"
+        align="center"
+      >
+        <template #default="{ row }">
+          <el-button
+            type="primary"
+            size="small"
+            @click="showEditDialog(row)"
+          >
+            编辑
+          </el-button>
+          <el-popconfirm
+            title="确定要删除这首歌曲吗？"
+            @confirm="handleDelete(row.id)"
+          >
+            <template #reference>
+              <el-button
+                type="danger"
+                size="small"
+              >
+                删除
+              </el-button>
+            </template>
+          </el-popconfirm>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 分页 -->
+    <el-pagination
+      v-model:current-page="pagination.page"
+      v-model:page-size="pagination.size"
+      :total="pagination.total"
+      :page-sizes="[10, 20, 50, 100]"
+      layout="total, sizes, prev, pager, next, jumper"
+      style="margin-top: 20px; justify-content: center;"
+      @size-change="fetchSongs"
+      @current-change="fetchSongs"
+    />
+
+    <!-- 新增/编辑对话框 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogMode === 'add' ? '新增歌曲' : '编辑歌曲'"
+      width="700px"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="formRef"
+        :model="formData"
+        :rules="formRules"
+        label-width="100px"
+      >
+        <el-form-item
+          label="歌曲名称"
+          prop="title"
+        >
+          <el-input
+            v-model="formData.title"
+            placeholder="请输入歌曲名称"
+            maxlength="100"
+            show-word-limit
+          />
+        </el-form-item>
+
+        <el-form-item
+          label="歌手"
+          prop="artistIds"
+        >
+          <el-select
+            v-model="formData.artistIds"
+            placeholder="请选择歌手（可多选）"
+            filterable
+            multiple 
+            collapse-tags
+            collapse-tags-tooltip
+            style="width: 100%"
+          >
+            <el-option
+              v-for="artist in artists"
+              :key="artist.id"
+              :label="artist.name"
+              :value="artist.id"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item
+          label="专辑名称"
+          prop="albumName"
+        >
+          <el-input
+            v-model="formData.albumName"
+            placeholder="请输入专辑名称（可选）"
+            maxlength="100"
+          />
+        </el-form-item>
+
+        <el-form-item
+          label="时长（秒）"
+          prop="duration"
+        >
+          <el-input-number
+            v-model="formData.duration"
+            :min="0"
+            :max="7200"
+            placeholder="例如：245"
+            style="width: 100%"
+          />
+          <span style="margin-left: 10px; color: #999;">
+            {{ formatDuration(formData.duration) }}
+          </span>
+        </el-form-item>
+
+        <el-form-item
+          label="封面图片"
+          prop="cover"
+        >
+          <el-upload
+            class="cover-uploader"
+            :action="uploadCoverAction"
+            :headers="uploadHeaders"
+            :show-file-list="false"
+            :on-success="handleCoverSuccess"
+            :before-upload="beforeCoverUpload"
+            :on-progress="() => coverUploading = true"
+          >
+            <img
+              v-if="formData.cover"
+              :src="formData.cover"
+              class="cover-image"
+            >
+            <el-icon
+              v-else
+              class="cover-uploader-icon"
+              :class="{ uploading: coverUploading }"
+            >
+              <Plus />
+            </el-icon>
+          </el-upload>
+          <div style="color: #999; font-size: 12px; margin-top: 5px;">
+            点击上传封面图片，支持 JPG/PNG，大小不超过 2MB
+          </div>
+        </el-form-item>
+
+        <el-form-item
+          label="音乐文件"
+          prop="url"
+        >
+          <el-upload
+            :action="uploadMusicAction"
+            :headers="uploadHeaders"
+            :on-success="handleMusicSuccess"
+            :before-upload="beforeMusicUpload"
+            :on-progress="() => musicUploading = true"
+            :show-file-list="false"
+          >
+            <el-button
+              type="primary"
+              :loading="musicUploading"
+            >
+              {{ musicUploading ? '上传中...' : (formData.url ? '重新上传' : '上传音乐') }}
             </el-button>
-            <el-button type="success" icon="Edit" @click="showBatchEditDialog">
-                批量编辑类型和语言
+          </el-upload>
+          <div
+            v-if="formData.url"
+            style="margin-top: 10px;"
+          >
+            <el-tag type="success">
+              ✓ 已上传
+            </el-tag>
+            <span style="margin-left: 10px; color: #999; font-size: 12px;">
+              {{ formData.url.substring(formData.url.lastIndexOf('/') + 1) }}
+            </span>
+          </div>
+          <div style="color: #999; font-size: 12px; margin-top: 5px;">
+            支持 MP3/WAV/FLAC 等格式，大小不超过 30MB
+          </div>
+        </el-form-item>
+
+        <el-form-item
+          label="歌词"
+          prop="lyric"
+        >
+          <el-input
+            v-model="formData.lyric"
+            type="textarea"
+            :rows="6"
+            placeholder="请输入歌词（LRC 格式），例如：&#10;[00:00.00]歌曲标题&#10;[00:05.00]歌手名&#10;[00:20.50]歌词第一句"
+          />
+          <div style="color: #999; font-size: 12px; margin-top: 5px;">
+            可选，支持 LRC 格式歌词
+          </div>
+        </el-form-item>
+
+        <el-form-item
+          label="状态"
+          prop="status"
+        >
+          <el-radio-group v-model="formData.status">
+            <el-radio :label="1">
+              上架
+            </el-radio>
+            <el-radio :label="0">
+              下架
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="submitLoading"
+          @click="handleSubmit"
+        >
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 批量编辑类型和语言对话框 -->
+    <el-dialog
+      v-model="batchEditDialogVisible"
+      title="批量编辑歌曲类型和语言"
+      width="90%"
+      top="5vh"
+      :close-on-click-modal="false"
+    >
+      <div class="batch-edit-container">
+        <div class="batch-edit-toolbar">
+          <el-alert
+            type="info"
+            :closable="false"
+            show-icon
+          >
+            <template #title>
+              <span>共 {{ batchSongList.length }} 首歌曲，可直接在表格中编辑类型和语言</span>
+            </template>
+          </el-alert>
+          <div style="margin-top: 10px;">
+            <el-button
+              type="primary"
+              icon="Select"
+              @click="quickSetGenre"
+            >
+              快速设置类型
             </el-button>
-            <el-button icon="Refresh" @click="fetchSongs">刷新</el-button>
+            <el-button
+              type="success"
+              icon="Select"
+              @click="quickSetLanguage"
+            >
+              快速设置语言
+            </el-button>
+            <el-input
+              v-model="batchSearchKeyword"
+              placeholder="搜索歌曲名称或歌手"
+              style="width: 300px; margin-left: 10px;"
+              clearable
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
+          </div>
         </div>
 
-        <!-- 歌曲列表 -->
-        <el-table :data="songList" v-loading="loading" border stripe style="width: 100%">
-            <el-table-column type="index" label="序号" width="60" align="center" />
-
-            <el-table-column label="封面" width="80" align="center">
-                <template #default="{ row }">
-                    <el-image style="width: 50px; height: 50px; border-radius: 4px;" :src="row.cover" fit="cover">
-                        <template #error>
-                            <div class="image-slot">🎵</div>
-                        </template>
-                    </el-image>
+        <el-table
+          v-loading="batchLoading"
+          :data="filteredBatchSongList"
+          border
+          stripe 
+          style="width: 100%; margin-top: 15px;"
+          max-height="500"
+        >
+          <el-table-column
+            type="index"
+            label="序号"
+            width="60"
+            align="center"
+          />
+                    
+          <el-table-column
+            label="封面"
+            width="70"
+            align="center"
+          >
+            <template #default="{ row }">
+              <el-image
+                style="width: 40px; height: 40px; border-radius: 4px;" 
+                :src="row.cover"
+                fit="cover"
+              >
+                <template #error>
+                  <div class="image-slot-small">
+                    🎵
+                  </div>
                 </template>
-            </el-table-column>
+              </el-image>
+            </template>
+          </el-table-column>
 
-            <el-table-column prop="title" label="歌曲名称" width="200" />
+          <el-table-column
+            prop="title"
+            label="歌曲名称"
+            width="200"
+            show-overflow-tooltip
+          />
+                    
+          <el-table-column
+            label="歌手"
+            width="150"
+            show-overflow-tooltip
+          >
+            <template #default="{ row }">
+              {{ row.artists && row.artists.length > 0 ? row.artists.map(a => a.name).join(' / ') : '-' }}
+            </template>
+          </el-table-column>
 
-            <el-table-column label="歌手" width="150">
-                <template #default="{ row }">
-                    {{ row.artists && row.artists.length > 0 ? row.artists.map(a => a.name).join(' / ') : '-' }}
-                </template>
-            </el-table-column>
+          <el-table-column
+            label="类型"
+            width="150"
+            align="center"
+          >
+            <template #default="{ row }">
+              <el-select
+                v-model="row.genre"
+                size="small"
+                placeholder="选择类型"
+                clearable
+              >
+                <el-option
+                  label="流行"
+                  value="流行"
+                />
+                <el-option
+                  label="摇滚"
+                  value="摇滚"
+                />
+                <el-option
+                  label="民谣"
+                  value="民谣"
+                />
+                <el-option
+                  label="电子"
+                  value="电子"
+                />
+                <el-option
+                  label="说唱"
+                  value="说唱"
+                />
+                <el-option
+                  label="R&B"
+                  value="R&B"
+                />
+                <el-option
+                  label="爵士"
+                  value="爵士"
+                />
+                <el-option
+                  label="古典"
+                  value="古典"
+                />
+                <el-option
+                  label="轻音乐"
+                  value="轻音乐"
+                />
+                <el-option
+                  label="纯音乐"
+                  value="纯音乐"
+                />
+              </el-select>
+            </template>
+          </el-table-column>
 
-            <el-table-column prop="albumName" label="专辑" width="150" show-overflow-tooltip />
-            
-            <el-table-column prop="genre" label="类型" width="100" align="center">
-                <template #default="{ row }">
-                    <el-tag v-if="row.genre" size="small" type="info">{{ row.genre }}</el-tag>
-                    <span v-else style="color: #999;">未设置</span>
-                </template>
-            </el-table-column>
-            
-            <el-table-column prop="language" label="语言" width="100" align="center">
-                <template #default="{ row }">
-                    <el-tag v-if="row.language" size="small" type="success">{{ row.language }}</el-tag>
-                    <span v-else style="color: #999;">未设置</span>
-                </template>
-            </el-table-column>
+          <el-table-column
+            label="语言"
+            width="150"
+            align="center"
+          >
+            <template #default="{ row }">
+              <el-select
+                v-model="row.language"
+                size="small"
+                placeholder="选择语言"
+                clearable
+              >
+                <el-option
+                  label="国语"
+                  value="国语"
+                />
+                <el-option
+                  label="粤语"
+                  value="粤语"
+                />
+                <el-option
+                  label="英语"
+                  value="英语"
+                />
+                <el-option
+                  label="日语"
+                  value="日语"
+                />
+                <el-option
+                  label="韩语"
+                  value="韩语"
+                />
+                <el-option
+                  label="其他"
+                  value="其他"
+                />
+              </el-select>
+            </template>
+          </el-table-column>
 
-            <el-table-column prop="duration" label="时长" width="80" align="center">
-                <template #default="{ row }">
-                    {{ formatDuration(row.duration) }}
-                </template>
-            </el-table-column>
-
-            <el-table-column prop="playCount" label="播放次数" width="100" align="center" />
-
-            <el-table-column prop="status" label="状态" width="80" align="center">
-                <template #default="{ row }">
-                    <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
-                        {{ row.status === 1 ? '上架' : '下架' }}
-                    </el-tag>
-                </template>
-            </el-table-column>
-
-            <el-table-column prop="createTime" label="创建时间" width="180">
-                <template #default="{ row }">
-                    {{ formatDate(row.createTime) }}
-                </template>
-            </el-table-column>
-
-            <el-table-column label="操作" width="180" fixed="right" align="center">
-                <template #default="{ row }">
-                    <el-button type="primary" size="small" @click="showEditDialog(row)">
-                        编辑
-                    </el-button>
-                    <el-popconfirm title="确定要删除这首歌曲吗？" @confirm="handleDelete(row.id)">
-                        <template #reference>
-                            <el-button type="danger" size="small">删除</el-button>
-                        </template>
-                    </el-popconfirm>
-                </template>
-            </el-table-column>
+          <el-table-column
+            label="当前值"
+            width="200"
+            align="center"
+          >
+            <template #default="{ row }">
+              <div style="display: flex; flex-direction: column; gap: 5px;">
+                <el-tag
+                  v-if="row.genre"
+                  size="small"
+                  type="info"
+                >
+                  类型: {{ row.genre }}
+                </el-tag>
+                <el-tag
+                  v-if="row.language"
+                  size="small"
+                  type="success"
+                >
+                  语言: {{ row.language }}
+                </el-tag>
+              </div>
+            </template>
+          </el-table-column>
         </el-table>
+      </div>
 
-        <!-- 分页 -->
-        <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.size"
-            :total="pagination.total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper"
-            @size-change="fetchSongs" @current-change="fetchSongs" style="margin-top: 20px; justify-content: center;" />
+      <template #footer>
+        <el-button @click="batchEditDialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="batchSubmitLoading"
+          @click="handleBatchSubmit"
+        >
+          保存修改
+        </el-button>
+      </template>
+    </el-dialog>
 
-        <!-- 新增/编辑对话框 -->
-        <el-dialog v-model="dialogVisible" :title="dialogMode === 'add' ? '新增歌曲' : '编辑歌曲'" width="700px"
-            :close-on-click-modal="false">
-            <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
-                <el-form-item label="歌曲名称" prop="title">
-                    <el-input v-model="formData.title" placeholder="请输入歌曲名称" maxlength="100" show-word-limit />
-                </el-form-item>
+    <!-- 快速设置类型对话框 -->
+    <el-dialog
+      v-model="quickGenreDialogVisible"
+      title="快速设置类型"
+      width="400px"
+    >
+      <el-form label-width="80px">
+        <el-form-item label="选择类型">
+          <el-select
+            v-model="quickGenreValue"
+            placeholder="请选择类型"
+            style="width: 100%"
+          >
+            <el-option
+              label="流行"
+              value="流行"
+            />
+            <el-option
+              label="摇滚"
+              value="摇滚"
+            />
+            <el-option
+              label="民谣"
+              value="民谣"
+            />
+            <el-option
+              label="电子"
+              value="电子"
+            />
+            <el-option
+              label="说唱"
+              value="说唱"
+            />
+            <el-option
+              label="R&B"
+              value="R&B"
+            />
+            <el-option
+              label="爵士"
+              value="爵士"
+            />
+            <el-option
+              label="古典"
+              value="古典"
+            />
+            <el-option
+              label="轻音乐"
+              value="轻音乐"
+            />
+            <el-option
+              label="纯音乐"
+              value="纯音乐"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="quickGenreDialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="applyQuickGenre"
+        >
+          应用到所有歌曲
+        </el-button>
+      </template>
+    </el-dialog>
 
-                <el-form-item label="歌手" prop="artistIds">
-                    <el-select v-model="formData.artistIds" placeholder="请选择歌手（可多选）" filterable multiple 
-                        collapse-tags collapse-tags-tooltip style="width: 100%">
-                        <el-option v-for="artist in artists" :key="artist.id" :label="artist.name" :value="artist.id" />
-                    </el-select>
-                </el-form-item>
-
-                <el-form-item label="专辑名称" prop="albumName">
-                    <el-input v-model="formData.albumName" placeholder="请输入专辑名称（可选）" maxlength="100" />
-                </el-form-item>
-
-                <el-form-item label="时长（秒）" prop="duration">
-                    <el-input-number v-model="formData.duration" :min="0" :max="7200" placeholder="例如：245"
-                        style="width: 100%" />
-                    <span style="margin-left: 10px; color: #999;">
-                        {{ formatDuration(formData.duration) }}
-                    </span>
-                </el-form-item>
-
-                <el-form-item label="封面图片" prop="cover">
-                    <el-upload class="cover-uploader" :action="uploadCoverAction" :headers="uploadHeaders"
-                        :show-file-list="false" :on-success="handleCoverSuccess" :before-upload="beforeCoverUpload"
-                        :on-progress="() => coverUploading = true">
-                        <img v-if="formData.cover" :src="formData.cover" class="cover-image" />
-                        <el-icon v-else class="cover-uploader-icon" :class="{ uploading: coverUploading }">
-                            <Plus />
-                        </el-icon>
-                    </el-upload>
-                    <div style="color: #999; font-size: 12px; margin-top: 5px;">
-                        点击上传封面图片，支持 JPG/PNG，大小不超过 2MB
-                    </div>
-                </el-form-item>
-
-                <el-form-item label="音乐文件" prop="url">
-                    <el-upload :action="uploadMusicAction" :headers="uploadHeaders" :on-success="handleMusicSuccess"
-                        :before-upload="beforeMusicUpload" :on-progress="() => musicUploading = true"
-                        :show-file-list="false">
-                        <el-button type="primary" :loading="musicUploading">
-                            {{ musicUploading ? '上传中...' : (formData.url ? '重新上传' : '上传音乐') }}
-                        </el-button>
-                    </el-upload>
-                    <div v-if="formData.url" style="margin-top: 10px;">
-                        <el-tag type="success">✓ 已上传</el-tag>
-                        <span style="margin-left: 10px; color: #999; font-size: 12px;">
-                            {{ formData.url.substring(formData.url.lastIndexOf('/') + 1) }}
-                        </span>
-                    </div>
-                    <div style="color: #999; font-size: 12px; margin-top: 5px;">
-                        支持 MP3/WAV/FLAC 等格式，大小不超过 30MB
-                    </div>
-                </el-form-item>
-
-                <el-form-item label="歌词" prop="lyric">
-                    <el-input v-model="formData.lyric" type="textarea" :rows="6"
-                        placeholder="请输入歌词（LRC 格式），例如：&#10;[00:00.00]歌曲标题&#10;[00:05.00]歌手名&#10;[00:20.50]歌词第一句" />
-                    <div style="color: #999; font-size: 12px; margin-top: 5px;">
-                        可选，支持 LRC 格式歌词
-                    </div>
-                </el-form-item>
-
-                <el-form-item label="状态" prop="status">
-                    <el-radio-group v-model="formData.status">
-                        <el-radio :label="1">上架</el-radio>
-                        <el-radio :label="0">下架</el-radio>
-                    </el-radio-group>
-                </el-form-item>
-            </el-form>
-
-            <template #footer>
-                <el-button @click="dialogVisible = false">取消</el-button>
-                <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
-                    确定
-                </el-button>
-            </template>
-        </el-dialog>
-
-        <!-- 批量编辑类型和语言对话框 -->
-        <el-dialog v-model="batchEditDialogVisible" title="批量编辑歌曲类型和语言" width="90%" top="5vh"
-            :close-on-click-modal="false">
-            <div class="batch-edit-container">
-                <div class="batch-edit-toolbar">
-                    <el-alert type="info" :closable="false" show-icon>
-                        <template #title>
-                            <span>共 {{ batchSongList.length }} 首歌曲，可直接在表格中编辑类型和语言</span>
-                        </template>
-                    </el-alert>
-                    <div style="margin-top: 10px;">
-                        <el-button type="primary" icon="Select" @click="quickSetGenre">快速设置类型</el-button>
-                        <el-button type="success" icon="Select" @click="quickSetLanguage">快速设置语言</el-button>
-                        <el-input
-                            v-model="batchSearchKeyword"
-                            placeholder="搜索歌曲名称或歌手"
-                            style="width: 300px; margin-left: 10px;"
-                            clearable
-                        >
-                            <template #prefix>
-                                <el-icon><Search /></el-icon>
-                            </template>
-                        </el-input>
-                    </div>
-                </div>
-
-                <el-table :data="filteredBatchSongList" border stripe style="width: 100%; margin-top: 15px;" 
-                    max-height="500" v-loading="batchLoading">
-                    <el-table-column type="index" label="序号" width="60" align="center" />
-                    
-                    <el-table-column label="封面" width="70" align="center">
-                        <template #default="{ row }">
-                            <el-image style="width: 40px; height: 40px; border-radius: 4px;" 
-                                :src="row.cover" fit="cover">
-                                <template #error>
-                                    <div class="image-slot-small">🎵</div>
-                                </template>
-                            </el-image>
-                        </template>
-                    </el-table-column>
-
-                    <el-table-column prop="title" label="歌曲名称" width="200" show-overflow-tooltip />
-                    
-                    <el-table-column label="歌手" width="150" show-overflow-tooltip>
-                        <template #default="{ row }">
-                            {{ row.artists && row.artists.length > 0 ? row.artists.map(a => a.name).join(' / ') : '-' }}
-                        </template>
-                    </el-table-column>
-
-                    <el-table-column label="类型" width="150" align="center">
-                        <template #default="{ row }">
-                            <el-select v-model="row.genre" size="small" placeholder="选择类型" clearable>
-                                <el-option label="流行" value="流行" />
-                                <el-option label="摇滚" value="摇滚" />
-                                <el-option label="民谣" value="民谣" />
-                                <el-option label="电子" value="电子" />
-                                <el-option label="说唱" value="说唱" />
-                                <el-option label="R&B" value="R&B" />
-                                <el-option label="爵士" value="爵士" />
-                                <el-option label="古典" value="古典" />
-                                <el-option label="轻音乐" value="轻音乐" />
-                                <el-option label="纯音乐" value="纯音乐" />
-                            </el-select>
-                        </template>
-                    </el-table-column>
-
-                    <el-table-column label="语言" width="150" align="center">
-                        <template #default="{ row }">
-                            <el-select v-model="row.language" size="small" placeholder="选择语言" clearable>
-                                <el-option label="国语" value="国语" />
-                                <el-option label="粤语" value="粤语" />
-                                <el-option label="英语" value="英语" />
-                                <el-option label="日语" value="日语" />
-                                <el-option label="韩语" value="韩语" />
-                                <el-option label="其他" value="其他" />
-                            </el-select>
-                        </template>
-                    </el-table-column>
-
-                    <el-table-column label="当前值" width="200" align="center">
-                        <template #default="{ row }">
-                            <div style="display: flex; flex-direction: column; gap: 5px;">
-                                <el-tag v-if="row.genre" size="small" type="info">类型: {{ row.genre }}</el-tag>
-                                <el-tag v-if="row.language" size="small" type="success">语言: {{ row.language }}</el-tag>
-                            </div>
-                        </template>
-                    </el-table-column>
-                </el-table>
-            </div>
-
-            <template #footer>
-                <el-button @click="batchEditDialogVisible = false">取消</el-button>
-                <el-button type="primary" :loading="batchSubmitLoading" @click="handleBatchSubmit">
-                    保存修改
-                </el-button>
-            </template>
-        </el-dialog>
-
-        <!-- 快速设置类型对话框 -->
-        <el-dialog v-model="quickGenreDialogVisible" title="快速设置类型" width="400px">
-            <el-form label-width="80px">
-                <el-form-item label="选择类型">
-                    <el-select v-model="quickGenreValue" placeholder="请选择类型" style="width: 100%">
-                        <el-option label="流行" value="流行" />
-                        <el-option label="摇滚" value="摇滚" />
-                        <el-option label="民谣" value="民谣" />
-                        <el-option label="电子" value="电子" />
-                        <el-option label="说唱" value="说唱" />
-                        <el-option label="R&B" value="R&B" />
-                        <el-option label="爵士" value="爵士" />
-                        <el-option label="古典" value="古典" />
-                        <el-option label="轻音乐" value="轻音乐" />
-                        <el-option label="纯音乐" value="纯音乐" />
-                    </el-select>
-                </el-form-item>
-            </el-form>
-            <template #footer>
-                <el-button @click="quickGenreDialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="applyQuickGenre">应用到所有歌曲</el-button>
-            </template>
-        </el-dialog>
-
-        <!-- 快速设置语言对话框 -->
-        <el-dialog v-model="quickLanguageDialogVisible" title="快速设置语言" width="400px">
-            <el-form label-width="80px">
-                <el-form-item label="选择语言">
-                    <el-select v-model="quickLanguageValue" placeholder="请选择语言" style="width: 100%">
-                        <el-option label="国语" value="国语" />
-                        <el-option label="粤语" value="粤语" />
-                        <el-option label="英语" value="英语" />
-                        <el-option label="日语" value="日语" />
-                        <el-option label="韩语" value="韩语" />
-                        <el-option label="其他" value="其他" />
-                    </el-select>
-                </el-form-item>
-            </el-form>
-            <template #footer>
-                <el-button @click="quickLanguageDialogVisible = false">取消</el-button>
-                <el-button type="primary" @click="applyQuickLanguage">应用到所有歌曲</el-button>
-            </template>
-        </el-dialog>
-    </div>
+    <!-- 快速设置语言对话框 -->
+    <el-dialog
+      v-model="quickLanguageDialogVisible"
+      title="快速设置语言"
+      width="400px"
+    >
+      <el-form label-width="80px">
+        <el-form-item label="选择语言">
+          <el-select
+            v-model="quickLanguageValue"
+            placeholder="请选择语言"
+            style="width: 100%"
+          >
+            <el-option
+              label="国语"
+              value="国语"
+            />
+            <el-option
+              label="粤语"
+              value="粤语"
+            />
+            <el-option
+              label="英语"
+              value="英语"
+            />
+            <el-option
+              label="日语"
+              value="日语"
+            />
+            <el-option
+              label="韩语"
+              value="韩语"
+            />
+            <el-option
+              label="其他"
+              value="其他"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="quickLanguageDialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="applyQuickLanguage"
+        >
+          应用到所有歌曲
+        </el-button>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script>

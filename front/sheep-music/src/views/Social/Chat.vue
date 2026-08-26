@@ -4,7 +4,10 @@
     <div class="conversation-list">
       <div class="list-header">
         <h3>聊天</h3>
-        <el-button text @click="refreshConversations">
+        <el-button
+          text
+          @click="refreshConversations"
+        >
           <el-icon><Refresh /></el-icon>
         </el-button>
       </div>
@@ -18,8 +21,14 @@
         />
       </div>
       
-      <div v-loading="loading" class="conversations">
-        <div v-if="filteredConversations.length === 0 && !loading" class="empty-state">
+      <div
+        v-loading="loading"
+        class="conversations"
+      >
+        <div
+          v-if="filteredConversations.length === 0 && !loading"
+          class="empty-state"
+        >
           <el-empty description="暂无会话" />
         </div>
         
@@ -36,14 +45,21 @@
             :max="99"
             class="conversation-badge"
           >
-            <el-avatar :src="conv.friendAvatar" :size="45">
+            <el-avatar
+              :src="conv.friendAvatar"
+              :size="45"
+            >
               <el-icon><User /></el-icon>
             </el-avatar>
           </el-badge>
           
           <div class="conv-info">
-            <div class="conv-name">{{ conv.friendName }}</div>
-            <div class="conv-message">{{ formatConversationMessage(conv) }}</div>
+            <div class="conv-name">
+              {{ conv.friendName }}
+            </div>
+            <div class="conv-message">
+              {{ formatConversationMessage(conv) }}
+            </div>
           </div>
           
           <div class="conv-time">
@@ -55,21 +71,38 @@
     
     <!-- 右侧：聊天窗口 -->
     <div class="chat-window">
-      <div v-if="currentFriend" class="chat-container">
+      <div
+        v-if="currentFriend"
+        class="chat-container"
+      >
         <!-- 聊天头部 -->
         <div class="chat-header">
-          <el-avatar :src="currentFriend.avatar" :size="40">
+          <el-avatar
+            :src="currentFriend.avatar"
+            :size="40"
+          >
             <el-icon><User /></el-icon>
           </el-avatar>
           <div class="header-info">
-            <div class="friend-name">{{ currentFriend.nickname || currentFriend.username }}</div>
-            <div class="friend-status">在线</div>
+            <div class="friend-name">
+              {{ currentFriend.nickname || currentFriend.username }}
+            </div>
+            <div class="friend-status">
+              在线
+            </div>
           </div>
         </div>
         
         <!-- 消息列表 -->
-        <div ref="messageListRef" class="message-list" v-loading="messagesLoading">
-          <div v-if="messages.length === 0 && !messagesLoading" class="empty-messages">
+        <div
+          ref="messageListRef"
+          v-loading="messagesLoading"
+          class="message-list"
+        >
+          <div
+            v-if="messages.length === 0 && !messagesLoading"
+            class="empty-messages"
+          >
             <el-empty description="开始聊天吧~" />
           </div>
           
@@ -88,11 +121,21 @@
             </el-avatar>
             
             <div class="message-content">
-              <div class="message-bubble" :class="{ 'is-self': message.senderId === userStore.userInfo?.id }">
-                <div v-if="message.type === 'text' && !message.isRecalled" class="message-text">
+              <div
+                class="message-bubble"
+                :class="{ 'is-self': message.senderId === userStore.userInfo?.id }"
+              >
+                <div
+                  v-if="message.type === 'text' && !message.isRecalled"
+                  class="message-text"
+                >
                   {{ message.content }}
                 </div>
-                <div v-else-if="message.type === 'song' && !message.isRecalled" class="message-share" @click="handleViewSharedSong(message)">
+                <div
+                  v-else-if="message.type === 'song' && !message.isRecalled"
+                  class="message-share"
+                  @click="handleViewSharedSong(message)"
+                >
                   <el-image 
                     v-if="message.shareData?.cover"
                     :src="message.shareData.cover" 
@@ -105,15 +148,26 @@
                       </div>
                     </template>
                   </el-image>
-                  <div v-else class="share-cover-error">
+                  <div
+                    v-else
+                    class="share-cover-error"
+                  >
                     <el-icon><VideoPlay /></el-icon>
                   </div>
                   <div class="share-content">
-                    <div class="share-title">{{ message.shareData?.name || '歌曲' }}</div>
-                    <div class="share-subtitle">{{ message.shareData?.artist || '' }}</div>
+                    <div class="share-title">
+                      {{ message.shareData?.name || '歌曲' }}
+                    </div>
+                    <div class="share-subtitle">
+                      {{ message.shareData?.artist || '' }}
+                    </div>
                   </div>
                 </div>
-                <div v-else-if="message.type === 'playlist' && !message.isRecalled" class="message-share" @click="handleViewSharedPlaylist(message)">
+                <div
+                  v-else-if="message.type === 'playlist' && !message.isRecalled"
+                  class="message-share"
+                  @click="handleViewSharedPlaylist(message)"
+                >
                   <el-image 
                     v-if="message.shareData?.cover"
                     :src="message.shareData.cover" 
@@ -126,15 +180,25 @@
                       </div>
                     </template>
                   </el-image>
-                  <div v-else class="share-cover-error">
+                  <div
+                    v-else
+                    class="share-cover-error"
+                  >
                     <el-icon><List /></el-icon>
                   </div>
                   <div class="share-content">
-                    <div class="share-title">{{ message.shareData?.name || '歌单' }}</div>
-                    <div class="share-subtitle">{{ message.shareData?.songCount || 0 }} 首歌曲</div>
+                    <div class="share-title">
+                      {{ message.shareData?.name || '歌单' }}
+                    </div>
+                    <div class="share-subtitle">
+                      {{ message.shareData?.songCount || 0 }} 首歌曲
+                    </div>
                   </div>
                 </div>
-                <div v-if="message.isRecalled" class="message-recalled">
+                <div
+                  v-if="message.isRecalled"
+                  class="message-recalled"
+                >
                   [消息已撤回]
                 </div>
               </div>
@@ -146,7 +210,9 @@
                   size="small"
                   class="recall-btn"
                   @click="handleRecallMessage(message)"
-                >撤回</el-button>
+                >
+                  撤回
+                </el-button>
               </div>
             </div>
             
@@ -174,20 +240,26 @@
           />
           <div class="input-actions">
             <el-button-group>
-              <el-button text @click="handleShareSong">
+              <el-button
+                text
+                @click="handleShareSong"
+              >
                 <el-icon><VideoPlay /></el-icon>
                 分享歌曲
               </el-button>
-              <el-button text @click="handleSharePlaylist">
+              <el-button
+                text
+                @click="handleSharePlaylist"
+              >
                 <el-icon><List /></el-icon>
                 分享歌单
               </el-button>
             </el-button-group>
             <el-button
               type="primary"
-              @click="handleSendMessage"
               :loading="sending"
               :disabled="!messageContent.trim()"
+              @click="handleSendMessage"
             >
               发送
             </el-button>
@@ -195,16 +267,25 @@
         </div>
       </div>
       
-      <div v-else class="empty-chat">
+      <div
+        v-else
+        class="empty-chat"
+      >
         <el-empty description="选择一个好友开始聊天" />
       </div>
     </div>
     
     <!-- 歌曲选择器 -->
-    <SongSelector v-model="showSongSelector" @select="handleSongSelected" />
+    <SongSelector
+      v-model="showSongSelector"
+      @select="handleSongSelected"
+    />
     
     <!-- 歌单选择器 -->
-    <PlaylistShareSelector v-model="showPlaylistSelector" @select="handlePlaylistSelected" />
+    <PlaylistShareSelector
+      v-model="showPlaylistSelector"
+      @select="handlePlaylistSelected"
+    />
   </div>
 </template>
 
@@ -454,8 +535,13 @@ const loadChatHistory = async (friendId, reset = true) => {
       hasMore.value = !data.first
       
       // 滚动到底部
-      await nextTick()
-      scrollToBottom()
+      if (reset) {
+        await nextTick()
+        // 使用 setTimeout 确保 DOM 完全渲染（包括图片等可能影响高度的元素）
+        setTimeout(() => {
+          scrollToBottom()
+        }, 100)
+      }
     }
   } catch (error) {
     console.error('加载聊天记录失败:', error)
@@ -724,9 +810,11 @@ const handleViewSharedPlaylist = (message) => {
 
 // 滚动到底部
 const scrollToBottom = () => {
-  if (messageListRef.value) {
-    messageListRef.value.scrollTop = messageListRef.value.scrollHeight
-  }
+  nextTick(() => {
+    if (messageListRef.value) {
+      messageListRef.value.scrollTop = messageListRef.value.scrollHeight
+    }
+  })
 }
 
 // 监听路由变化
@@ -818,19 +906,33 @@ onMounted(async () => {
       }
     }
   }
+  
   // 订阅聊天消息 - 用于更新会话列表
   const offChatForConversations = wsClient.onChatMessage(async (msg) => {
     try {
       if (!msg) return
       
-      // 等待后端数据库更新
-      await new Promise(resolve => setTimeout(resolve, 500))
+      const fid = currentFriendId.value
+      const isCurrentChat = fid && (msg.senderId === fid || msg.receiverId === fid)
       
-      // 始终更新会话列表（静默更新）
-      // 导航栏的未读数由 Layout.vue 统一处理
-      await loadConversations(true)
+      // 如果是当前对话的消息，由另一个监听器处理
+      // 如果不是当前对话，或者没有打开任何对话，立即更新会话列表
+      if (!isCurrentChat) {
+        // 等待后端数据库更新（减少延迟）
+        await new Promise(resolve => setTimeout(resolve, 200))
+        
+        // 更新会话列表，显示未读徽章（非静默更新）
+        await loadConversations(false)
+      } else {
+        // 当前对话的消息，稍作延迟后静默更新（因为会被标记已读）
+        await new Promise(resolve => setTimeout(resolve, 200))
+        await loadConversations(true)
+      }
       
-      // 如果消息涉及到当前正在聊天的好友，更新其信息
+      // 更新导航栏未读数
+      await socialStore.updateUnreadMessageCount()
+      
+      // 更新当前好友信息（如果需要）
       if (currentFriendId.value) {
         const fid = currentFriendId.value
         if (msg.senderId === fid || msg.receiverId === fid) {

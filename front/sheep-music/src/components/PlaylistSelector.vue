@@ -7,17 +7,29 @@
   >
     <div class="playlist-selector">
       <div class="create-new">
-        <el-button type="primary" size="small" @click="showCreateDialog">
+        <el-button
+          type="primary"
+          size="small"
+          @click="showCreateDialog"
+        >
           <el-icon><Plus /></el-icon> 创建新歌单
         </el-button>
       </div>
       
-      <div v-if="loading" class="loading">
-        <el-icon class="is-loading"><Loading /></el-icon>
+      <div
+        v-if="loading"
+        class="loading"
+      >
+        <el-icon class="is-loading">
+          <Loading />
+        </el-icon>
         <span>加载中...</span>
       </div>
       
-      <div v-else-if="playlists.length > 0" class="playlist-list">
+      <div
+        v-else-if="playlists.length > 0"
+        class="playlist-list"
+      >
         <div 
           v-for="playlist in playlists" 
           :key="playlist.id"
@@ -32,16 +44,34 @@
             class="playlist-cover"
           />
           <div class="playlist-info">
-            <div class="playlist-name">{{ playlist.name }}</div>
-            <div class="playlist-count">{{ playlist.songCount || 0 }} 首歌曲</div>
+            <div class="playlist-name">
+              {{ playlist.name }}
+            </div>
+            <div class="playlist-count">
+              {{ playlist.songCount || 0 }} 首歌曲
+            </div>
           </div>
-          <el-icon v-if="playlist.disabled" class="check-icon" color="#67C23A"><Check /></el-icon>
+          <el-icon
+            v-if="playlist.disabled"
+            class="check-icon"
+            color="#67C23A"
+          >
+            <Check />
+          </el-icon>
         </div>
       </div>
       
-      <div v-else class="empty-state">
+      <div
+        v-else
+        class="empty-state"
+      >
         <el-empty description="还没有歌单">
-          <el-button type="primary" @click="showCreateDialog">创建第一个歌单</el-button>
+          <el-button
+            type="primary"
+            @click="showCreateDialog"
+          >
+            创建第一个歌单
+          </el-button>
         </el-empty>
       </div>
     </div>
@@ -53,8 +83,14 @@
       width="400px"
       append-to-body
     >
-      <el-form :model="createForm" label-width="80px">
-        <el-form-item label="歌单名称" required>
+      <el-form
+        :model="createForm"
+        label-width="80px"
+      >
+        <el-form-item
+          label="歌单名称"
+          required
+        >
           <el-input 
             v-model="createForm.name" 
             placeholder="请输入歌单名称"
@@ -62,19 +98,47 @@
           />
         </el-form-item>
         <el-form-item label="分类">
-          <el-select v-model="createForm.category" placeholder="选择分类">
-            <el-option label="流行" value="流行" />
-            <el-option label="摇滚" value="摇滚" />
-            <el-option label="民谣" value="民谣" />
-            <el-option label="电子" value="电子" />
-            <el-option label="纯音乐" value="纯音乐" />
-            <el-option label="其他" value="其他" />
+          <el-select
+            v-model="createForm.category"
+            placeholder="选择分类"
+          >
+            <el-option
+              label="流行"
+              value="流行"
+            />
+            <el-option
+              label="摇滚"
+              value="摇滚"
+            />
+            <el-option
+              label="民谣"
+              value="民谣"
+            />
+            <el-option
+              label="电子"
+              value="电子"
+            />
+            <el-option
+              label="纯音乐"
+              value="纯音乐"
+            />
+            <el-option
+              label="其他"
+              value="其他"
+            />
           </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="createDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleCreate">创建</el-button>
+        <el-button @click="createDialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleCreate"
+        >
+          创建
+        </el-button>
       </template>
     </el-dialog>
   </el-dialog>

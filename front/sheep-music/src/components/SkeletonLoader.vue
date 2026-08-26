@@ -1,44 +1,71 @@
 <template>
   <div class="skeleton-loader">
     <!-- 歌曲列表骨架屏 -->
-    <div v-if="type === 'song-list'" class="skeleton-song-list">
-      <div v-for="i in rows" :key="i" class="skeleton-song-item">
-        <div class="skeleton-index shimmer"></div>
-        <div class="skeleton-cover shimmer"></div>
+    <div
+      v-if="type === 'song-list'"
+      class="skeleton-song-list"
+    >
+      <div
+        v-for="i in rows"
+        :key="i"
+        class="skeleton-song-item"
+      >
+        <div class="skeleton-index shimmer" />
+        <div class="skeleton-cover shimmer" />
         <div class="skeleton-info">
-          <div class="skeleton-title shimmer"></div>
-          <div class="skeleton-artist shimmer"></div>
+          <div class="skeleton-title shimmer" />
+          <div class="skeleton-artist shimmer" />
         </div>
-        <div class="skeleton-stats shimmer"></div>
+        <div class="skeleton-stats shimmer" />
         <div class="skeleton-actions">
-          <div class="skeleton-btn shimmer"></div>
-          <div class="skeleton-btn shimmer"></div>
-          <div class="skeleton-btn shimmer"></div>
+          <div class="skeleton-btn shimmer" />
+          <div class="skeleton-btn shimmer" />
+          <div class="skeleton-btn shimmer" />
         </div>
       </div>
     </div>
 
     <!-- 歌曲网格骨架屏 -->
-    <div v-else-if="type === 'song-grid'" class="skeleton-song-grid">
-      <div v-for="i in rows" :key="i" class="skeleton-card">
-        <div class="skeleton-card-cover shimmer"></div>
-        <div class="skeleton-card-title shimmer"></div>
-        <div class="skeleton-card-artist shimmer"></div>
+    <div
+      v-else-if="type === 'song-grid'"
+      class="skeleton-song-grid"
+    >
+      <div
+        v-for="i in rows"
+        :key="i"
+        class="skeleton-card"
+      >
+        <div class="skeleton-card-cover shimmer" />
+        <div class="skeleton-card-title shimmer" />
+        <div class="skeleton-card-artist shimmer" />
       </div>
     </div>
 
     <!-- 歌手卡片骨架屏 -->
-    <div v-else-if="type === 'artist-grid'" class="skeleton-artist-grid">
-      <div v-for="i in rows" :key="i" class="skeleton-artist-card">
-        <div class="skeleton-artist-avatar shimmer"></div>
-        <div class="skeleton-artist-name shimmer"></div>
-        <div class="skeleton-artist-stats shimmer"></div>
+    <div
+      v-else-if="type === 'artist-grid'"
+      class="skeleton-artist-grid"
+    >
+      <div
+        v-for="i in rows"
+        :key="i"
+        class="skeleton-artist-card"
+      >
+        <div class="skeleton-artist-avatar shimmer" />
+        <div class="skeleton-artist-name shimmer" />
+        <div class="skeleton-artist-stats shimmer" />
       </div>
     </div>
 
     <!-- 默认骨架屏 -->
-    <div v-else class="skeleton-default">
-      <el-skeleton :rows="rows" animated />
+    <div
+      v-else
+      class="skeleton-default"
+    >
+      <el-skeleton
+        :rows="rows"
+        animated
+      />
     </div>
   </div>
 </template>

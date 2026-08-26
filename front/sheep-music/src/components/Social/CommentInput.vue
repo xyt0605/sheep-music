@@ -1,13 +1,21 @@
 <template>
   <div class="comment-input-wrapper">
     <div class="input-main">
-      <el-avatar :src="userStore.userInfo?.avatar" :size="40" class="user-avatar">
+      <el-avatar
+        :src="userStore.userInfo?.avatar"
+        :size="40"
+        class="user-avatar"
+      >
         {{ userStore.userInfo?.nickname?.charAt(0) }}
       </el-avatar>
       
-      <div class="input-container" :class="{ active: isFocused || content.length > 0 }">
+      <div
+        class="input-container"
+        :class="{ active: isFocused || content.length > 0 }"
+      >
         <div class="textarea-wrapper">
           <el-input
+            ref="inputRef"
             v-model="content"
             type="textarea"
             :rows="isFocused || content.length > 0 ? 3 : 1"
@@ -17,15 +25,25 @@
             class="custom-textarea"
             @focus="handleFocus"
             @blur="handleBlur"
-            ref="inputRef"
           />
         </div>
         
-        <div class="input-footer" v-show="isFocused || content.length > 0">
+        <div
+          v-show="isFocused || content.length > 0"
+          class="input-footer"
+        >
           <div class="footer-left">
-            <el-popover placement="top-start" :width="320" trigger="click" :teleported="false">
+            <el-popover
+              placement="top-start"
+              :width="320"
+              trigger="click"
+              :teleported="false"
+            >
               <template #reference>
-                <el-button link class="tool-btn">
+                <el-button
+                  link
+                  class="tool-btn"
+                >
                   <span class="emoji-icon">😃</span>
                   <span class="btn-text">表情</span>
                 </el-button>
@@ -33,22 +51,32 @@
               <EmojiPicker @pick="insertEmoji" />
             </el-popover>
             
-            <div class="rating-wrap" v-if="showRating">
+            <div
+              v-if="showRating"
+              class="rating-wrap"
+            >
               <span class="rating-label">评分</span>
-              <el-rate v-model="rating" size="small" allow-half />
+              <el-rate
+                v-model="rating"
+                size="small"
+                allow-half
+              />
             </div>
           </div>
           
           <div class="footer-right">
-            <span class="word-count" :class="{ full: content.length >= 500 }">{{ content.length }}/500</span>
+            <span
+              class="word-count"
+              :class="{ full: content.length >= 500 }"
+            >{{ content.length }}/500</span>
             <el-button 
               type="primary" 
               size="small" 
               round 
               :loading="loading" 
-              @click="handleSubmit" 
-              :disabled="!content.trim()"
+              :disabled="!content.trim()" 
               class="submit-btn"
+              @click="handleSubmit"
             >
               发送
             </el-button>

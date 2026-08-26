@@ -1,7 +1,13 @@
 <template>
-  <div class="dynamic-background" :style="backgroundStyle">
-    <canvas ref="canvasRef" class="gradient-canvas"></canvas>
-    <div class="blur-overlay"></div>
+  <div
+    class="dynamic-background"
+    :style="backgroundStyle"
+  >
+    <canvas
+      ref="canvasRef"
+      class="gradient-canvas"
+    />
+    <div class="blur-overlay" />
   </div>
 </template>
 

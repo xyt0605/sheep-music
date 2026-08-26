@@ -3,10 +3,13 @@
     v-model="visible" 
     :title="dialogTitle" 
     width="520px"
-    @close="handleClose"
     append-to-body
+    @close="handleClose"
   >
-    <el-form :model="form" label-width="80px">
+    <el-form
+      :model="form"
+      label-width="80px"
+    >
       <el-form-item label="分享内容">
         <div class="share-preview">
           <el-image 
@@ -22,26 +25,37 @@
             </template>
           </el-image>
           <div class="preview-info">
-            <div class="preview-title">{{ shareData?.name || '未知' }}</div>
-            <div class="preview-subtitle">{{ shareData?.subtitle || '' }}</div>
+            <div class="preview-title">
+              {{ shareData?.name || '未知' }}
+            </div>
+            <div class="preview-subtitle">
+              {{ shareData?.subtitle || '' }}
+            </div>
           </div>
         </div>
       </el-form-item>
       
       <el-form-item label="描述">
         <el-input 
+          ref="descriptionInputRef" 
           v-model="form.description" 
           type="textarea" 
           :rows="4" 
           placeholder="给你的分享写点描述吧~" 
           maxlength="500" 
-          show-word-limit 
-          ref="descriptionInputRef"
+          show-word-limit
         />
         <div style="margin-top: 8px; text-align: right;">
-          <el-popover placement="top" :width="340" trigger="click">
+          <el-popover
+            placement="top"
+            :width="340"
+            trigger="click"
+          >
             <template #reference>
-              <el-button text size="small">
+              <el-button
+                text
+                size="small"
+              >
                 <el-icon><ChatDotRound /></el-icon>
                 表情
               </el-button>
@@ -53,8 +67,14 @@
     </el-form>
     
     <template #footer>
-      <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" :loading="loading" @click="handleShare">
+      <el-button @click="handleClose">
+        取消
+      </el-button>
+      <el-button
+        type="primary"
+        :loading="loading"
+        @click="handleShare"
+      >
         分享
       </el-button>
     </template>

@@ -2,45 +2,91 @@
   <div class="artist-management">
     <!-- 操作栏 -->
     <div class="toolbar">
-      <el-button type="primary" icon="Plus" @click="showAddDialog">
+      <el-button
+        type="primary"
+        icon="Plus"
+        @click="showAddDialog"
+      >
         新增歌手
       </el-button>
-      <el-button icon="Refresh" @click="fetchArtists">刷新</el-button>
+      <el-button
+        icon="Refresh"
+        @click="fetchArtists"
+      >
+        刷新
+      </el-button>
     </div>
     
     <!-- 歌手列表 -->
     <el-table
-      :data="artistList"
       v-loading="loading"
+      :data="artistList"
       border
       stripe
       style="width: 100%"
     >
-      <el-table-column type="index" label="序号" width="60" align="center" />
+      <el-table-column
+        type="index"
+        label="序号"
+        width="60"
+        align="center"
+      />
       
-      <el-table-column label="头像" width="80" align="center">
+      <el-table-column
+        label="头像"
+        width="80"
+        align="center"
+      >
         <template #default="{ row }">
-          <el-avatar :size="50" :src="row.avatar">
+          <el-avatar
+            :size="50"
+            :src="row.avatar"
+          >
             {{ row.name?.charAt(0) }}
           </el-avatar>
         </template>
       </el-table-column>
       
-      <el-table-column prop="name" label="歌手名称" width="150" />
+      <el-table-column
+        prop="name"
+        label="歌手名称"
+        width="150"
+      />
       
-      <el-table-column prop="region" label="国家/地区" width="120" />
+      <el-table-column
+        prop="region"
+        label="国家/地区"
+        width="120"
+      />
       
-      <el-table-column prop="description" label="简介" show-overflow-tooltip />
+      <el-table-column
+        prop="description"
+        label="简介"
+        show-overflow-tooltip
+      />
       
-      <el-table-column prop="createTime" label="创建时间" width="180">
+      <el-table-column
+        prop="createTime"
+        label="创建时间"
+        width="180"
+      >
         <template #default="{ row }">
           {{ formatDate(row.createTime) }}
         </template>
       </el-table-column>
       
-      <el-table-column label="操作" width="180" fixed="right" align="center">
+      <el-table-column
+        label="操作"
+        width="180"
+        fixed="right"
+        align="center"
+      >
         <template #default="{ row }">
-          <el-button type="primary" size="small" @click="showEditDialog(row)">
+          <el-button
+            type="primary"
+            size="small"
+            @click="showEditDialog(row)"
+          >
             编辑
           </el-button>
           <el-popconfirm
@@ -48,7 +94,12 @@
             @confirm="handleDelete(row.id)"
           >
             <template #reference>
-              <el-button type="danger" size="small">删除</el-button>
+              <el-button
+                type="danger"
+                size="small"
+              >
+                删除
+              </el-button>
             </template>
           </el-popconfirm>
         </template>
@@ -62,9 +113,9 @@
       :total="pagination.total"
       :page-sizes="[10, 20, 50, 100]"
       layout="total, sizes, prev, pager, next, jumper"
+      style="margin-top: 20px; justify-content: center;"
       @size-change="fetchArtists"
       @current-change="fetchArtists"
-      style="margin-top: 20px; justify-content: center;"
     />
     
     <!-- 新增/编辑对话框 -->
@@ -80,7 +131,10 @@
         :rules="formRules"
         label-width="100px"
       >
-        <el-form-item label="歌手名称" prop="name">
+        <el-form-item
+          label="歌手名称"
+          prop="name"
+        >
           <el-input
             v-model="formData.name"
             placeholder="请输入歌手名称"
@@ -89,20 +143,32 @@
           />
         </el-form-item>
         
-        <el-form-item label="头像URL" prop="avatar">
+        <el-form-item
+          label="头像URL"
+          prop="avatar"
+        >
           <el-input
             v-model="formData.avatar"
             placeholder="请输入头像URL"
             type="url"
           />
-          <div style="margin-top: 10px;" v-if="formData.avatar">
-            <el-avatar :size="80" :src="formData.avatar">
+          <div
+            v-if="formData.avatar"
+            style="margin-top: 10px;"
+          >
+            <el-avatar
+              :size="80"
+              :src="formData.avatar"
+            >
               {{ formData.name?.charAt(0) }}
             </el-avatar>
           </div>
         </el-form-item>
         
-        <el-form-item label="国家/地区" prop="region">
+        <el-form-item
+          label="国家/地区"
+          prop="region"
+        >
           <el-input
             v-model="formData.region"
             placeholder="例如：中国台湾"
@@ -110,7 +176,10 @@
           />
         </el-form-item>
         
-        <el-form-item label="简介" prop="description">
+        <el-form-item
+          label="简介"
+          prop="description"
+        >
           <el-input
             v-model="formData.description"
             type="textarea"
@@ -123,8 +192,14 @@
       </el-form>
       
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="submitLoading"
+          @click="handleSubmit"
+        >
           确定
         </el-button>
       </template>

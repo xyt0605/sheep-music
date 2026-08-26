@@ -3,15 +3,24 @@
     <div class="page-header">
       <h2>我的好友</h2>
       <div class="header-actions">
-        <el-button text @click="goToMoments">
+        <el-button
+          text
+          @click="goToMoments"
+        >
           <el-icon><ChatDotRound /></el-icon>
           好友动态
         </el-button>
-        <el-button text @click="goToShareSquare">
+        <el-button
+          text
+          @click="goToShareSquare"
+        >
           <el-icon><MoreFilled /></el-icon>
           分享广场
         </el-button>
-        <el-button type="primary" @click="showAddFriendDialog = true">
+        <el-button
+          type="primary"
+          @click="showAddFriendDialog = true"
+        >
           <el-icon><Plus /></el-icon>
           添加好友
         </el-button>
@@ -19,14 +28,29 @@
     </div>
     
     <!-- 好友请求标签页 -->
-    <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-      <el-tab-pane label="好友列表" name="friends">
-        <div v-loading="loading" class="friends-list">
-          <div v-if="friends.length === 0 && !loading" class="empty-state">
+    <el-tabs
+      v-model="activeTab"
+      @tab-change="handleTabChange"
+    >
+      <el-tab-pane
+        label="好友列表"
+        name="friends"
+      >
+        <div
+          v-loading="loading"
+          class="friends-list"
+        >
+          <div
+            v-if="friends.length === 0 && !loading"
+            class="empty-state"
+          >
             <el-empty description="暂无好友，快去添加好友吧~" />
           </div>
           
-          <div v-else class="friends-grid">
+          <div
+            v-else
+            class="friends-grid"
+          >
             <div
               v-for="friendship in friends"
               :key="friendship.id"
@@ -41,7 +65,10 @@
               </el-avatar>
               
               <div class="friend-info">
-                <div class="friend-name" @click="goToChat(friendship.friendId)">
+                <div
+                  class="friend-name"
+                  @click="goToChat(friendship.friendId)"
+                >
                   {{ friendship.remark || friendship.friendName || friendship.friend?.nickname }}
                 </div>
                 <div class="friend-username">
@@ -96,12 +123,21 @@
             />
           </span>
         </template>
-        <div v-loading="requestsLoading" class="requests-list">
-          <div v-if="friendRequests.length === 0 && !requestsLoading" class="empty-state">
+        <div
+          v-loading="requestsLoading"
+          class="requests-list"
+        >
+          <div
+            v-if="friendRequests.length === 0 && !requestsLoading"
+            class="empty-state"
+          >
             <el-empty description="暂无好友请求" />
           </div>
           
-          <div v-else class="request-items">
+          <div
+            v-else
+            class="request-items"
+          >
             <div
               v-for="request in friendRequests"
               :key="request.id"
@@ -115,9 +151,16 @@
               </el-avatar>
               
               <div class="request-info">
-                <div class="request-name">{{ request.userName }}</div>
-                <div class="request-time">{{ formatTime(request.createTime) }}</div>
-                <div v-if="request.remark" class="request-remark">
+                <div class="request-name">
+                  {{ request.userName }}
+                </div>
+                <div class="request-time">
+                  {{ formatTime(request.createTime) }}
+                </div>
+                <div
+                  v-if="request.remark"
+                  class="request-remark"
+                >
                   备注：{{ request.remark }}
                 </div>
               </div>
@@ -125,14 +168,14 @@
               <div class="request-actions">
                 <el-button
                   type="primary"
-                  @click="handleAcceptRequest(request.id)"
                   :loading="processingRequest === request.id"
+                  @click="handleAcceptRequest(request.id)"
                 >
                   接受
                 </el-button>
                 <el-button
-                  @click="handleRejectRequest(request.id)"
                   :loading="processingRequest === request.id"
+                  @click="handleRejectRequest(request.id)"
                 >
                   拒绝
                 </el-button>
@@ -157,7 +200,10 @@
             @keyup.enter="handleSearchUser"
           >
             <template #append>
-              <el-button @click="handleSearchUser" :loading="searching">
+              <el-button
+                :loading="searching"
+                @click="handleSearchUser"
+              >
                 <el-icon><Search /></el-icon>
               </el-button>
             </template>
@@ -165,36 +211,51 @@
         </el-form-item>
       </el-form>
       
-      <div v-if="searchResults.length > 0" class="search-results">
+      <div
+        v-if="searchResults.length > 0"
+        class="search-results"
+      >
         <div
           v-for="user in searchResults"
           :key="user.id"
           class="search-result-item"
         >
-          <el-avatar :src="user.avatar" :size="40">
+          <el-avatar
+            :src="user.avatar"
+            :size="40"
+          >
             <el-icon><User /></el-icon>
           </el-avatar>
           <div class="result-info">
-            <div class="result-name">{{ user.nickname || user.username }}</div>
-            <div class="result-username">@{{ user.username }}</div>
+            <div class="result-name">
+              {{ user.nickname || user.username }}
+            </div>
+            <div class="result-username">
+              @{{ user.username }}
+            </div>
           </div>
           <el-button
             type="primary"
             size="small"
-            @click="handleSendFriendRequest(user.id)"
             :loading="sendingRequest === user.id"
+            @click="handleSendFriendRequest(user.id)"
           >
             添加好友
           </el-button>
         </div>
       </div>
       
-      <div v-else-if="searched && !searching" class="empty-results">
+      <div
+        v-else-if="searched && !searching"
+        class="empty-results"
+      >
         <el-empty description="未找到相关用户" />
       </div>
       
       <template #footer>
-        <el-button @click="showAddFriendDialog = false">取消</el-button>
+        <el-button @click="showAddFriendDialog = false">
+          取消
+        </el-button>
       </template>
     </el-dialog>
     
@@ -215,11 +276,13 @@
       </el-form>
       
       <template #footer>
-        <el-button @click="showRemarkDialog = false">取消</el-button>
+        <el-button @click="showRemarkDialog = false">
+          取消
+        </el-button>
         <el-button
           type="primary"
-          @click="handleSetRemark"
           :loading="settingRemark"
+          @click="handleSetRemark"
         >
           确定
         </el-button>

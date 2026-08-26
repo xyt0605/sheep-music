@@ -16,10 +16,21 @@
         />
       </div>
       
-      <div v-loading="loading" class="playlist-list">
-        <div v-if="filteredPlaylists.length === 0 && !loading" class="empty-state">
+      <div
+        v-loading="loading"
+        class="playlist-list"
+      >
+        <div
+          v-if="filteredPlaylists.length === 0 && !loading"
+          class="empty-state"
+        >
           <el-empty description="还没有歌单">
-            <el-button type="primary" @click="goToCreatePlaylist">创建第一个歌单</el-button>
+            <el-button
+              type="primary"
+              @click="goToCreatePlaylist"
+            >
+              创建第一个歌单
+            </el-button>
           </el-empty>
         </div>
         
@@ -41,13 +52,20 @@
             </template>
           </el-image>
           <div class="playlist-info">
-            <div class="playlist-name">{{ playlist.name }}</div>
+            <div class="playlist-name">
+              {{ playlist.name }}
+            </div>
             <div class="playlist-desc">
               <span>{{ playlist.songCount || 0 }} 首歌曲</span>
               <span v-if="playlist.playCount"> · {{ formatPlayCount(playlist.playCount) }} 次播放</span>
             </div>
           </div>
-          <el-button type="primary" size="small">选择</el-button>
+          <el-button
+            type="primary"
+            size="small"
+          >
+            选择
+          </el-button>
         </div>
       </div>
     </div>

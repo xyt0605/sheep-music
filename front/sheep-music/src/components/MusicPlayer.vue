@@ -1,25 +1,41 @@
 <template>
-  <div class="music-player" v-show="playerStore.showPlayer">
+  <div
+    v-show="playerStore.showPlayer"
+    class="music-player"
+  >
     <!-- 隐藏的 audio 元素 -->
-    <audio ref="audioRef" preload="metadata" crossorigin="anonymous"></audio>
+    <audio
+      ref="audioRef"
+      preload="metadata"
+      crossorigin="anonymous"
+    />
     
     <!-- 播放器主体 -->
     <div class="player-main">
       <!-- 左侧：歌曲信息 -->
       <div class="player-left">
-        <div class="album-cover-wrapper" @click="showFullscreenLyric">
+        <div
+          class="album-cover-wrapper"
+          @click="showFullscreenLyric"
+        >
           <img 
             :src="processImageUrl(playerStore.currentSong?.cover) || defaultCover" 
             alt="封面" 
             :class="['song-cover', { 'playing': playerStore.isPlaying }]"
           >
           <div class="cover-overlay">
-            <el-icon class="expand-icon"><FullScreen /></el-icon>
+            <el-icon class="expand-icon">
+              <FullScreen />
+            </el-icon>
           </div>
         </div>
         <div class="song-info">
-          <div class="song-name">{{ playerStore.currentSong?.title || '暂无播放' }}</div>
-          <div class="song-artist">{{ getArtistsName(playerStore.currentSong) }}</div>
+          <div class="song-name">
+            {{ playerStore.currentSong?.title || '暂无播放' }}
+          </div>
+          <div class="song-artist">
+            {{ getArtistsName(playerStore.currentSong) }}
+          </div>
         </div>
       </div>
       
@@ -40,11 +56,15 @@
             circle 
             type="primary" 
             class="play-btn"
-            @click="playerStore.togglePlay"
             :disabled="!playerStore.currentSong"
+            @click="playerStore.togglePlay"
           >
-            <el-icon v-if="playerStore.isPlaying"><VideoPause /></el-icon>
-            <el-icon v-else><VideoPlay /></el-icon>
+            <el-icon v-if="playerStore.isPlaying">
+              <VideoPause />
+            </el-icon>
+            <el-icon v-else>
+              <VideoPlay />
+            </el-icon>
           </el-button>
           
           <el-button 
@@ -63,8 +83,8 @@
           <el-slider 
             v-model="sliderValue" 
             :show-tooltip="false"
-            @change="handleSeek"
             class="progress-slider"
+            @change="handleSeek"
           />
           <span class="time-text">{{ formatTime(playerStore.duration) }}</span>
         </div>
@@ -78,15 +98,18 @@
           <el-slider 
             v-model="volumeValue" 
             :show-tooltip="false"
-            @input="handleVolumeChange"
             class="volume-slider"
+            @input="handleVolumeChange"
           />
         </div>
 
-        <div class="divider"></div>
+        <div class="divider" />
 
         <!-- 播放模式切换 -->
-        <el-tooltip :content="playModeText" placement="top">
+        <el-tooltip
+          :content="playModeText"
+          placement="top"
+        >
           <el-button 
             class="action-btn" 
             circle
@@ -101,7 +124,10 @@
         </el-tooltip>
         
         <!-- 歌词显示 -->
-        <el-tooltip content="歌词" placement="top">
+        <el-tooltip
+          content="歌词"
+          placement="top"
+        >
           <el-button 
             class="action-btn" 
             :class="{ 'is-active': playerStore.showLyric }"
@@ -113,7 +139,10 @@
         </el-tooltip>
         
         <!-- 播放列表 -->
-        <el-tooltip content="播放列表" placement="top">
+        <el-tooltip
+          content="播放列表"
+          placement="top"
+        >
           <el-button 
             class="action-btn" 
             circle
@@ -124,7 +153,10 @@
         </el-tooltip>
 
         <!-- 歌曲评论入口 -->
-        <el-tooltip content="评论" placement="top">
+        <el-tooltip
+          content="评论"
+          placement="top"
+        >
           <el-button
             class="action-btn"
             circle
@@ -136,7 +168,10 @@
         </el-tooltip>
         
         <!-- 分享按钮 -->
-        <el-tooltip content="分享" placement="top">
+        <el-tooltip
+          content="分享"
+          placement="top"
+        >
           <el-button
             class="action-btn"
             circle
@@ -151,14 +186,24 @@
     
     <!-- 歌词面板 -->
     <transition name="lyric-slide">
-      <div class="lyric-panel" v-if="playerStore.showLyric">
+      <div
+        v-if="playerStore.showLyric"
+        class="lyric-panel"
+      >
         <div class="lyric-header">
           <h3>{{ playerStore.currentSong?.title }}</h3>
-          <el-button circle size="small" @click="playerStore.toggleLyric">
+          <el-button
+            circle
+            size="small"
+            @click="playerStore.toggleLyric"
+          >
             <el-icon><Close /></el-icon>
           </el-button>
         </div>
-        <div class="lyric-content" ref="lyricContentRef">
+        <div
+          ref="lyricContentRef"
+          class="lyric-content"
+        >
           <div 
             v-for="(line, index) in parsedLyrics" 
             :key="index"
@@ -167,7 +212,10 @@
           >
             {{ line.text }}
           </div>
-          <div v-if="!playerStore.currentSong?.lyric" class="no-lyric">
+          <div
+            v-if="!playerStore.currentSong?.lyric"
+            class="no-lyric"
+          >
             暂无歌词
           </div>
         </div>
@@ -189,10 +237,19 @@
             <span class="playlist-count">({{ playerStore.playlist.length }})</span>
           </div>
           <div class="header-actions">
-            <el-button link type="info" @click="clearPlaylist" :disabled="!playerStore.playlist.length">
+            <el-button
+              link
+              type="info"
+              :disabled="!playerStore.playlist.length"
+              @click="clearPlaylist"
+            >
               <el-icon><Delete /></el-icon> 清空
             </el-button>
-            <el-button link class="close-btn" @click="close">
+            <el-button
+              link
+              class="close-btn"
+              @click="close"
+            >
               <el-icon><Close /></el-icon>
             </el-button>
           </div>
@@ -209,16 +266,32 @@
         >
           <!-- 序号/状态 -->
           <div class="song-index-col">
-            <div v-if="index === playerStore.currentIndex" class="playing-indicator">
-              <span></span><span></span><span></span>
+            <div
+              v-if="index === playerStore.currentIndex"
+              class="playing-indicator"
+            >
+              <span /><span /><span />
             </div>
-            <span v-else class="index-num">{{ index + 1 }}</span>
+            <span
+              v-else
+              class="index-num"
+            >{{ index + 1 }}</span>
           </div>
           
           <!-- 信息 -->
           <div class="song-info-col">
-            <div class="song-title" :title="song.title">{{ song.title }}</div>
-            <div class="song-artist" :title="getArtistsName(song)">{{ getArtistsName(song) }}</div>
+            <div
+              class="song-title"
+              :title="song.title"
+            >
+              {{ song.title }}
+            </div>
+            <div
+              class="song-artist"
+              :title="getArtistsName(song)"
+            >
+              {{ getArtistsName(song) }}
+            </div>
           </div>
           
           <!-- 操作 -->
@@ -234,8 +307,14 @@
           </div>
         </div>
         
-        <div v-if="playerStore.playlist.length === 0" class="empty-playlist">
-          <el-empty description="播放列表为空" :image-size="100" />
+        <div
+          v-if="playerStore.playlist.length === 0"
+          class="empty-playlist"
+        >
+          <el-empty
+            description="播放列表为空"
+            :image-size="100"
+          />
         </div>
       </div>
     </el-dialog>
@@ -254,7 +333,9 @@
         :show-rating="false"
       />
       <template #footer>
-        <el-button @click="showCommentsDialog = false">关闭</el-button>
+        <el-button @click="showCommentsDialog = false">
+          关闭
+        </el-button>
       </template>
     </el-dialog>
     
@@ -488,6 +569,8 @@ onMounted(() => {
     playerStore.initAudio(audioRef.value)
   }
 })
+
+
 </script>
 
 <style scoped>
@@ -495,7 +578,7 @@ onMounted(() => {
 .playlist-dialog :deep(.el-dialog__header) {
   margin: 0;
   padding: 16px 24px;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid var(--border-color-light);
 }
 
 .playlist-dialog :deep(.el-dialog__body) {
@@ -511,14 +594,14 @@ onMounted(() => {
 .playlist-title {
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
 }
 
 .playlist-count {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-secondary);
   font-weight: normal;
   margin-left: 6px;
 }
@@ -541,16 +624,18 @@ onMounted(() => {
   align-items: center;
   padding: 10px 24px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
   position: relative;
+  border-radius: var(--radius-sm);
+  margin: 0 8px;
 }
 
 .playlist-item:hover {
-  background-color: var(--bg-secondary, #f5f7fa);
+  background-color: var(--bg-secondary);
 }
 
 .playlist-item.active {
-  background-color: rgba(64, 158, 255, 0.06);
+  background-color: rgba(99, 102, 241, 0.08); /* Indigo tint */
 }
 
 /* 左侧序号/波形 */
@@ -560,7 +645,7 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #c0c4cc;
+  color: var(--text-tertiary);
   font-size: 13px;
   font-family: monospace;
 }
@@ -575,7 +660,7 @@ onMounted(() => {
 
 .playing-indicator span {
   width: 2px;
-  background-color: var(--primary-color, #409eff);
+  background-color: var(--color-primary);
   animation: bounce 1s infinite ease-in-out;
 }
 
@@ -599,7 +684,7 @@ onMounted(() => {
 
 .song-title {
   font-size: 14px;
-  color: #303133;
+  color: var(--text-primary);
   font-weight: 400;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -608,26 +693,26 @@ onMounted(() => {
 
 .song-artist {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .playlist-item.active .song-title {
-  color: var(--primary-color, #409eff);
-  font-weight: 500;
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 .playlist-item.active .song-artist {
-  color: var(--primary-color, #409eff);
+  color: var(--color-primary);
   opacity: 0.8;
 }
 
 /* 操作区 */
 .song-actions-col {
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity var(--transition-fast);
   margin-left: 10px;
 }
 
@@ -638,11 +723,11 @@ onMounted(() => {
 .delete-btn {
   font-size: 16px;
   padding: 4px;
-  color: #909399;
+  color: var(--text-secondary);
 }
 
 .delete-btn:hover {
-  color: #f56c6c;
+  color: var(--color-accent);
   background: transparent;
 }
 
@@ -660,20 +745,23 @@ onMounted(() => {
   transform: translateX(-50%);
   width: calc(100% - 48px);
   max-width: 1200px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 20px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  
+  /* Glassmorphism */
+  background: var(--bg-glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  
   z-index: 1000;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
 }
 
 .music-player:hover {
   transform: translateX(-50%) translateY(-4px);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.95);
+  box-shadow: var(--shadow-xl), var(--shadow-glow);
+  border-color: var(--color-primary-light);
 }
 
 .player-main {
@@ -698,21 +786,21 @@ onMounted(() => {
   height: 56px;
   cursor: pointer;
   overflow: hidden;
-  border-radius: 12px; /* 改为圆角矩形，更现代 */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-base);
 }
 
 .album-cover-wrapper:hover {
   transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
 }
 
 .song-cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 12px;
-  /* 移除旋转动画，因为改成圆角矩形了，旋转会很奇怪，改用缩放交互 */
+  border-radius: var(--radius-md);
 }
 
 .cover-overlay {
@@ -726,9 +814,9 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--transition-base);
   pointer-events: none;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .album-cover-wrapper:hover .cover-overlay {
@@ -752,7 +840,7 @@ onMounted(() => {
 .song-name {
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary, #303133);
+  color: var(--text-primary);
   margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -761,7 +849,7 @@ onMounted(() => {
 
 .song-artist {
   font-size: 12px;
-  color: var(--text-secondary, #909399);
+  color: var(--text-secondary);
 }
 
 /* 中间 */
@@ -787,376 +875,263 @@ onMounted(() => {
 .control-btn {
   border: none;
   background: transparent;
-  color: var(--text-primary, #303133);
+  color: var(--text-primary);
   font-size: 22px;
   width: 36px;
   height: 36px;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
 }
 
 .control-btn:hover {
-  color: var(--primary-color, #409eff);
+  color: var(--color-primary);
   background: rgba(0,0,0,0.05);
   transform: scale(1.1);
 }
 
-/* 播放/暂停按钮 */
+.control-btn:disabled {
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 播放按钮 */
 .play-btn {
+  font-size: 28px;
   width: 48px;
   height: 48px;
-  font-size: 24px;
-  background: var(--primary-color, #409eff);
-  color: white;
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-  transition: all 0.2s;
-  border: none;
+  background: var(--gradient-primary) !important;
+  border: none !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  transition: all var(--transition-base);
 }
 
 .play-btn:hover {
-  background: #66b1ff;
   transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
 }
 
+.play-btn:disabled {
+  background: var(--text-tertiary) !important;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 进度条 */
 .player-progress {
+  width: 100%;
+  max-width: 480px;
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 100%;
-  max-width: 420px;
-  height: 16px;
 }
 
 .time-text {
   font-size: 11px;
-  color: #999;
-  min-width: 40px;
+  color: var(--text-secondary);
+  width: 35px;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
 }
 
 .progress-slider {
   flex: 1;
+  --el-slider-main-bg-color: var(--color-primary);
+  --el-slider-runway-bg-color: rgba(0,0,0,0.05);
+  --el-slider-button-size: 12px;
 }
 
-/* 进度条深度定制 */
-.player-progress :deep(.el-slider__runway) {
-  height: 4px;
-  margin: 6px 0;
-  background-color: rgba(0,0,0,0.06);
-  border-radius: 2px;
-}
-
-.player-progress :deep(.el-slider__bar) {
-  height: 4px;
-  background-color: var(--primary-color);
-  border-radius: 2px;
-}
-
-.player-progress :deep(.el-slider__button) {
-  width: 10px;
-  height: 10px;
-  border: 2px solid var(--primary-color);
+:deep(.el-slider__button) {
+  border: 2px solid var(--color-primary);
   background-color: #fff;
-  transition: transform 0.2s;
+  transition: transform var(--transition-fast);
 }
 
-.player-progress :deep(.el-slider__button-wrapper) {
-  width: 24px;
-  height: 24px;
-  top: -10px;
-}
-
-.player-progress :deep(.el-slider__button-wrapper:hover .el-slider__button) {
-  transform: scale(1.3);
+:deep(.el-slider__button:hover),
+:deep(.el-slider__button.dragging) {
+  transform: scale(1.2);
 }
 
 /* 右侧 */
 .player-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   min-width: 260px;
   justify-content: flex-end;
 }
 
-.divider {
-  width: 1px;
-  height: 20px;
-  background: rgba(0,0,0,0.08);
-  margin: 0 4px;
-}
-
-/* 功能按钮样式 */
-.action-btn {
-  width: 34px;
-  height: 34px;
-  font-size: 18px;
-  color: #606266;
-  border: none !important;
-  background: transparent !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-}
-
-.action-btn:hover {
-  background: rgba(0,0,0,0.04) !important;
-  color: var(--primary-color, #409eff);
-  transform: translateY(-2px);
-}
-
-.action-btn.is-active {
-  background: linear-gradient(135deg, #409eff 0%, #79bbff 100%) !important;
-  color: white !important;
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-  transform: translateY(-1px);
-}
-
-.action-btn.is-disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.action-btn.is-disabled:hover {
-  transform: none;
-  background: transparent !important;
-  color: #909399;
-}
-
-/* 音量控制优化 */
 .volume-control {
   display: flex;
   align-items: center;
-  background: rgba(0,0,0,0.03);
-  padding: 0 12px;
-  height: 32px;
-  border-radius: 16px;
-  transition: all 0.3s;
-  width: 110px;
-}
-
-.volume-control:hover {
-  background: rgba(0,0,0,0.06);
-  width: 120px;
-}
-
-.volume-control .el-icon {
-  font-size: 16px;
-  color: #909399;
-  margin-right: 8px;
+  gap: 8px;
+  width: 100px;
+  color: var(--text-secondary);
 }
 
 .volume-slider {
   flex: 1;
-  --el-slider-main-bg-color: #909399;
-  --el-slider-runway-bg-color: rgba(0,0,0,0.06);
-  --el-slider-button-size: 12px;
+  --el-slider-main-bg-color: var(--text-secondary);
+  --el-slider-runway-bg-color: rgba(0,0,0,0.05);
+  --el-slider-button-size: 10px;
 }
 
-.volume-slider :deep(.el-slider__bar) {
-  background-color: #909399;
+.divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--border-color);
+  margin: 0 4px;
 }
 
-.volume-control:hover .volume-slider :deep(.el-slider__bar) {
-  background-color: var(--primary-color, #409eff);
-}
-
-.volume-slider :deep(.el-slider__button) {
-  width: 10px;
-  height: 10px;
+.action-btn {
   border: none;
-  background-color: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-  transition: all 0.2s;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  transition: all var(--transition-fast);
 }
 
-.volume-slider :deep(.el-slider__button:hover) {
-  transform: scale(1.2);
+.action-btn:hover {
+  color: var(--text-primary);
+  background: rgba(0,0,0,0.05);
 }
 
-.volume-slider :deep(.el-slider__runway) {
-  margin: 0;
-  height: 4px;
+.action-btn.is-active {
+  color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.1);
 }
 
-/* 歌词面板 - 悬浮在上方 */
+/* 歌词面板 */
 .lyric-panel {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  right: 0;
-  margin-bottom: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  position: fixed;
+  bottom: 120px;
+  right: 24px;
+  width: 360px;
+  height: 500px;
+  background: var(--bg-glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  transform-origin: bottom center;
 }
 
 .lyric-header {
+  padding: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 24px;
   border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
 .lyric-header h3 {
   margin: 0;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
   color: var(--text-primary);
+  font-weight: 600;
 }
 
 .lyric-content {
-  height: 320px;
+  flex: 1;
   overflow-y: auto;
-  padding: 24px;
-  scroll-behavior: smooth;
-  mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+  padding: 20px;
+  text-align: center;
+  /* 隐藏滚动条但保留功能 */
+  scrollbar-width: none;
+}
+
+.lyric-content::-webkit-scrollbar {
+  display: none;
 }
 
 .lyric-line {
-  text-align: center;
-  padding: 10px 0;
-  color: #999;
-  font-size: 15px;
-  line-height: 1.6;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  opacity: 0.6;
-  filter: blur(0.5px);
+  padding: 8px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  transition: all var(--transition-base);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.lyric-line:hover {
+  background: rgba(0,0,0,0.02);
 }
 
 .lyric-line.active {
-  color: var(--primary-color, #409eff);
+  color: var(--color-primary);
   font-size: 18px;
   font-weight: 600;
+  text-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
   transform: scale(1.05);
-  opacity: 1;
-  filter: blur(0);
-  text-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
 }
 
 .no-lyric {
-  text-align: center;
-  color: #999;
-  padding: 80px 0;
-  font-size: 14px;
-}
-
-/* 播放列表弹窗样式优化 */
-.playlist-content {
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 8px;
-}
-
-.playlist-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-bottom: 4px;
-}
-
-.playlist-item:hover {
-  background: var(--bg-secondary, #f5f7fa);
-}
-
-.playlist-item.active {
-  background: var(--primary-light, #ecf5ff);
-}
-
-.playlist-item.active .playlist-item-name {
-  color: var(--primary-color, #409eff);
-  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-top: 100px;
 }
 
 /* 动画 */
 .lyric-slide-enter-active,
 .lyric-slide-leave-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
 }
 
 .lyric-slide-enter-from,
 .lyric-slide-leave-to {
   opacity: 0;
-  transform: translateY(20px) scale(0.95);
+  transform: translateY(20px);
 }
 
-/* 响应式 */
-@media (max-width: 768px) {
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
   .music-player {
-    width: calc(100% - 32px);
-    bottom: 16px;
-    padding: 0;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    transform: none;
+    border-radius: 20px 20px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .music-player:hover {
+    transform: none;
   }
   
   .player-main {
     padding: 10px 16px;
-    height: 72px;
-    gap: 12px;
+    height: auto;
+    flex-wrap: wrap;
   }
-
+  
   .player-left {
-    min-width: auto;
-    flex: 1;
-  }
-
-  .album-cover-wrapper {
-    width: 48px;
-    height: 48px;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 8px;
   }
   
   .player-center {
-    position: absolute;
-    top: -4px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    flex: none;
-    gap: 0;
-  }
-  
-  .player-controls {
-    display: none; /* 移动端简化，根据需要可调整 */
-  }
-  
-  .player-progress {
-    padding: 0;
-    max-width: none;
-  }
-  
-  .player-progress .el-slider {
-    margin: 0;
-    height: 2px;
-  }
-  
-  .player-progress .el-slider__button-wrapper {
-    display: none;
-  }
-  
-  .time-text {
-    display: none;
+    width: 100%;
+    order: 2;
   }
   
   .player-right {
-    min-width: auto;
-    gap: 4px;
+    display: none; /* 移动端简化 */
   }
   
-  .volume-control {
-    display: none;
+  .lyric-panel {
+    width: 100%;
+    right: 0;
+    bottom: 0;
+    height: 100%;
+    border-radius: 0;
+    z-index: 2000;
   }
 }
 </style>

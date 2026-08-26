@@ -1,16 +1,125 @@
 <template>
   <div class="home">
     <!-- 欢迎区域 -->
-    <div v-if="showWelcome" class="welcome-section">
-      <div class="section-close" title="隐藏此区域" @click.stop="hideWelcome">✕</div>
+    <div
+      v-if="showWelcome"
+      class="welcome-section"
+    >
+      <div
+        class="section-close"
+        title="隐藏此区域"
+        @click.stop="hideWelcome"
+      >
+        ✕
+      </div>
       <h2>你好，{{ userStore.userInfo?.nickname || '音乐爱好者' }}</h2>
       <p class="welcome-text">
         欢迎来到 Sheep Music，开始你的音乐之旅
       </p>
     </div>
+
+    <!-- 影像电台：将本期人物影像与正在播放的音乐放在同一首屏 -->
+    <section class="editorial-hero">
+      <div class="editorial-copy">
+        <div class="editorial-eyebrow">
+          <span class="eyebrow-dot" />
+          SHEEP MUSIC / VISUAL RADIO
+        </div>
+        <h1>今天，听一首<br><em>有画面的歌。</em></h1>
+        <p>
+          为你留下一段会呼吸的影像。切换片段，戴上耳机，让音乐和她们的光线一起流动。
+        </p>
+        <div class="editorial-meta">
+          <span>VOL. 01</span>
+          <span class="meta-rule" />
+          <span>{{ currentEditorial.label }}</span>
+        </div>
+        <div class="editorial-controls">
+          <button
+            class="editorial-control editorial-control-primary"
+            type="button"
+            :aria-label="editorialPlaying ? '暂停影像' : '播放影像'"
+            @click="toggleEditorialPlayback"
+          >
+            <el-icon>
+              <VideoPause v-if="editorialPlaying" />
+              <VideoPlay v-else />
+            </el-icon>
+          </button>
+          <button
+            class="editorial-control"
+            type="button"
+            :aria-label="editorialMuted ? '打开影像声音' : '静音影像'"
+            @click="toggleEditorialMute"
+          >
+            <el-icon>
+              <Mute v-if="editorialMuted" />
+              <Microphone v-else />
+            </el-icon>
+          </button>
+          <button
+            v-for="(item, index) in editorialItems"
+            :key="item.id"
+            class="editorial-switch"
+            :class="{ active: editorialIndex === index }"
+            type="button"
+            @click="selectEditorial(index)"
+          >
+            <span>{{ String(index + 1).padStart(2, '0') }}</span>
+            {{ item.label }}
+          </button>
+        </div>
+      </div>
+
+      <div class="editorial-stage">
+        <video
+          ref="editorialVideo"
+          class="editorial-video"
+          :src="currentEditorial.video"
+          :poster="currentEditorial.image"
+          autoplay
+          muted
+          loop
+          playsinline
+          @play="editorialPlaying = true"
+          @pause="editorialPlaying = false"
+        />
+        <div class="editorial-video-tint" />
+        <div class="editorial-caption">
+          <span class="caption-index">0{{ editorialIndex + 1 }}</span>
+          <span>{{ currentEditorial.caption }}</span>
+        </div>
+        <button
+          class="editorial-photo editorial-photo-back"
+          type="button"
+          aria-label="查看夜晚人像"
+          @click="selectEditorial(0)"
+        >
+          <img
+            src="/editorial/night-portrait.jpg"
+            alt="夜晚人像"
+          >
+        </button>
+        <button
+          class="editorial-photo editorial-photo-front"
+          type="button"
+          aria-label="查看竹林人像"
+          @click="selectEditorial(1)"
+        >
+          <img
+            src="/editorial/bamboo-portrait.jpg"
+            alt="竹林人像"
+          >
+        </button>
+      </div>
+    </section>
     
     <!-- 个性化推荐入口 -->
-    <div v-if="showBanner" class="recommend-banner" @click="goToDiscover">
+    <div
+      v-if="showBanner"
+      class="recommend-banner"
+      @click="goToDiscover"
+    >
       <div class="banner-content">
         <div class="banner-icon">
           <el-icon><MagicStick /></el-icon>
@@ -20,12 +129,24 @@
           <p>基于你的喜好，为你推荐精选歌曲和歌单</p>
         </div>
         <div class="banner-action">
-          <GalaxyButton size="md" variant="secondary" @click="goToDiscover">
+          <GalaxyButton
+            size="md"
+            variant="secondary"
+            @click="goToDiscover"
+          >
             立即发现
-            <el-icon class="ml-5"><ArrowRight /></el-icon>
+            <el-icon class="ml-5">
+              <ArrowRight />
+            </el-icon>
           </GalaxyButton>
         </div>
-        <div class="section-close" title="隐藏此区域" @click.stop="hideBanner">✕</div>
+        <div
+          class="section-close"
+          title="隐藏此区域"
+          @click.stop="hideBanner"
+        >
+          ✕
+        </div>
       </div>
     </div>
     
@@ -33,21 +154,35 @@
     <section class="content-section">
       <div class="section-header">
         <h3>🔥 热门歌曲</h3>
-        <el-link type="primary" @click="goToRank('hot')">查看更多 ›</el-link>
+        <el-link
+          type="primary"
+          @click="goToRank('hot')"
+        >
+          查看更多 ›
+        </el-link>
       </div>
       <!-- 加载动画 -->
-      <div v-if="hotSongsLoading" class="loader-wrap">
+      <div
+        v-if="hotSongsLoading"
+        class="loader-wrap"
+      >
         <GalaxyLoader size="lg" />
       </div>
       
-      <div v-else-if="hotSongs.length > 0" class="carousel-container">
+      <div
+        v-else-if="hotSongs.length > 0"
+        class="carousel-container"
+      >
         <el-carousel 
           :interval="5000" 
           arrow="always" 
           height="400px"
           indicator-position="outside"
         >
-          <el-carousel-item v-for="(chunk, chunkIndex) in hotSongsChunks" :key="chunkIndex">
+          <el-carousel-item
+            v-for="(chunk, chunkIndex) in hotSongsChunks"
+            :key="chunkIndex"
+          >
             <div class="song-list">
               <div 
                 v-for="(song, index) in chunk" 
@@ -55,15 +190,29 @@
                 class="song-item"
                 @click="handlePlaySong(song)"
               >
-                <div class="song-index" :class="{ 'top-three': (chunkIndex * 5 + index) < 3 }">
+                <div
+                  class="song-index"
+                  :class="{ 'top-three': (chunkIndex * 5 + index) < 3 }"
+                >
                   {{ chunkIndex * 5 + index + 1 }}
                 </div>
-                <img :src="song.cover || defaultCover" class="song-cover">
+                <img
+                  :src="song.cover || defaultCover"
+                  class="song-cover"
+                >
                 <div class="song-info">
-                  <div class="song-name">{{ song.title }}</div>
+                  <div class="song-name">
+                    {{ song.title }}
+                  </div>
                   <div class="song-artist">
-                    <template v-for="(artist, idx) in song.artists || []" :key="artist.id">
-                      <span class="clickable" @click.stop="goToArtist(artist.id)">{{ artist.name }}</span>
+                    <template
+                      v-for="(artist, idx) in song.artists || []"
+                      :key="artist.id"
+                    >
+                      <span
+                        class="clickable"
+                        @click.stop="goToArtist(artist.id)"
+                      >{{ artist.name }}</span>
                       <span v-if="idx < (song.artists?.length || 0) - 1"> / </span>
                     </template>
                     <span v-if="!song.artists || song.artists.length === 0">未知歌手</span>
@@ -74,16 +223,34 @@
                   {{ formatPlayCount(song.playCount) }}
                 </div>
                 <div class="song-actions">
-                  <el-button icon="CaretRight" circle size="small" @click.stop="handlePlaySong(song)" title="播放" />
-                  <el-button icon="Plus" circle size="small" @click.stop="handleAddToPlaylist(song)" title="添加到播放列表" />
-                  <el-button icon="FolderAdd" circle size="small" @click.stop="showAddToPlaylistDialog(song.id)" title="添加到歌单" />
+                  <el-button
+                    icon="CaretRight"
+                    circle
+                    size="small"
+                    title="播放"
+                    @click.stop="handlePlaySong(song)"
+                  />
+                  <el-button
+                    icon="Plus"
+                    circle
+                    size="small"
+                    title="添加到播放列表"
+                    @click.stop="handleAddToPlaylist(song)"
+                  />
+                  <el-button
+                    icon="FolderAdd"
+                    circle
+                    size="small"
+                    title="添加到歌单"
+                    @click.stop="showAddToPlaylistDialog(song.id)"
+                  />
                   <el-button 
                     :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'" 
                     circle 
                     size="small" 
                     :type="favoriteSongs[song.id] ? 'danger' : ''"
-                    @click.stop="handleToggleFavorite(song.id)" 
-                    title="收藏"
+                    title="收藏" 
+                    @click.stop="handleToggleFavorite(song.id)"
                   />
                 </div>
               </div>
@@ -91,7 +258,10 @@
           </el-carousel-item>
         </el-carousel>
       </div>
-      <div v-if="hotSongs.length === 0" class="empty-state">
+      <div
+        v-if="hotSongs.length === 0"
+        class="empty-state"
+      >
         <el-empty description="暂无热门歌曲" />
       </div>
     </section>
@@ -100,21 +270,35 @@
     <section class="content-section">
       <div class="section-header">
         <h3>🎵 新歌速递</h3>
-        <el-link type="primary" @click="goToRank('new')">查看更多 ›</el-link>
+        <el-link
+          type="primary"
+          @click="goToRank('new')"
+        >
+          查看更多 ›
+        </el-link>
       </div>
       <!-- 加载动画 -->
-      <div v-if="newSongsLoading" class="loader-wrap">
+      <div
+        v-if="newSongsLoading"
+        class="loader-wrap"
+      >
         <GalaxyLoader size="lg" />
       </div>
       
-      <div v-else-if="newSongs.length > 0" class="carousel-container">
+      <div
+        v-else-if="newSongs.length > 0"
+        class="carousel-container"
+      >
         <el-carousel 
           :interval="5000" 
           arrow="always" 
           height="400px"
           indicator-position="outside"
         >
-          <el-carousel-item v-for="(chunk, chunkIndex) in newSongsChunks" :key="chunkIndex">
+          <el-carousel-item
+            v-for="(chunk, chunkIndex) in newSongsChunks"
+            :key="chunkIndex"
+          >
             <div class="song-list">
               <div 
                 v-for="(song, index) in chunk" 
@@ -122,30 +306,63 @@
                 class="song-item"
                 @click="handlePlaySong(song)"
               >
-                <div class="song-index">{{ chunkIndex * 5 + index + 1 }}</div>
-                <img :src="song.cover || defaultCover" class="song-cover">
+                <div class="song-index">
+                  {{ chunkIndex * 5 + index + 1 }}
+                </div>
+                <img
+                  :src="song.cover || defaultCover"
+                  class="song-cover"
+                >
                 <div class="song-info">
-                  <div class="song-name">{{ song.title }}</div>
+                  <div class="song-name">
+                    {{ song.title }}
+                  </div>
                   <div class="song-artist">
-                    <template v-for="(artist, idx) in song.artists || []" :key="artist.id">
-                      <span class="clickable" @click.stop="goToArtist(artist.id)">{{ artist.name }}</span>
+                    <template
+                      v-for="(artist, idx) in song.artists || []"
+                      :key="artist.id"
+                    >
+                      <span
+                        class="clickable"
+                        @click.stop="goToArtist(artist.id)"
+                      >{{ artist.name }}</span>
                       <span v-if="idx < (song.artists?.length || 0) - 1"> / </span>
                     </template>
                     <span v-if="!song.artists || song.artists.length === 0">未知歌手</span>
                   </div>
                 </div>
-                <div class="song-time">{{ formatDuration(song.duration) }}</div>
+                <div class="song-time">
+                  {{ formatDuration(song.duration) }}
+                </div>
                 <div class="song-actions">
-                  <el-button icon="CaretRight" circle size="small" @click.stop="handlePlaySong(song)" title="播放" />
-                  <el-button icon="Plus" circle size="small" @click.stop="handleAddToPlaylist(song)" title="添加到播放列表" />
-                  <el-button icon="FolderAdd" circle size="small" @click.stop="showAddToPlaylistDialog(song.id)" title="添加到歌单" />
+                  <el-button
+                    icon="CaretRight"
+                    circle
+                    size="small"
+                    title="播放"
+                    @click.stop="handlePlaySong(song)"
+                  />
+                  <el-button
+                    icon="Plus"
+                    circle
+                    size="small"
+                    title="添加到播放列表"
+                    @click.stop="handleAddToPlaylist(song)"
+                  />
+                  <el-button
+                    icon="FolderAdd"
+                    circle
+                    size="small"
+                    title="添加到歌单"
+                    @click.stop="showAddToPlaylistDialog(song.id)"
+                  />
                   <el-button 
                     :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'" 
                     circle 
                     size="small" 
                     :type="favoriteSongs[song.id] ? 'danger' : ''"
-                    @click.stop="handleToggleFavorite(song.id)" 
-                    title="收藏"
+                    title="收藏" 
+                    @click.stop="handleToggleFavorite(song.id)"
                   />
                 </div>
               </div>
@@ -153,7 +370,10 @@
           </el-carousel-item>
         </el-carousel>
       </div>
-      <div v-if="newSongs.length === 0" class="empty-state">
+      <div
+        v-if="newSongs.length === 0"
+        class="empty-state"
+      >
         <el-empty description="暂无最新歌曲" />
       </div>
     </section>
@@ -168,27 +388,30 @@
 </template>
 
 <script>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { usePlayerStore } from '@/store/player'
 import { getHotSongs, getNewSongs } from '@/api/song'
 import { toggleFavorite, batchCheckFavorites } from '@/api/favorite'
 import { ElMessage } from 'element-plus'
-import { Headset, MagicStick, ArrowRight } from '@element-plus/icons-vue'
+import { Headset, MagicStick, ArrowRight, VideoPause, VideoPlay, Mute, Microphone } from '@element-plus/icons-vue'
 import PlaylistSelector from '@/components/PlaylistSelector.vue'
 import GalaxyButton from '@/components/GalaxyButton.vue'
-import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import GalaxyLoader from '@/components/GalaxyLoader.vue'
 
 export default {
+  // eslint-disable-next-line vue/multi-word-component-names
   name: 'Home',
   components: {
     Headset,
     MagicStick,
     ArrowRight,
+    VideoPause,
+    VideoPlay,
+    Mute,
+    Microphone,
     PlaylistSelector,
-    SkeletonLoader,
     GalaxyButton,
     GalaxyLoader
   },
@@ -208,16 +431,77 @@ export default {
     const selectedSongId = ref(null)
     const showWelcome = ref(true)
     const showBanner = ref(true)
+    const editorialVideo = ref(null)
+    const editorialIndex = ref(0)
+    const editorialPlaying = ref(true)
+    const editorialMuted = ref(true)
+    const editorialItems = [
+      {
+        id: 'night',
+        label: 'AFTER DARK',
+        caption: '夜色里，呼吸和鼓点保持同一个速度。',
+        image: '/editorial/night-portrait.jpg',
+        video: '/editorial/night-loop.mp4'
+      },
+      {
+        id: 'daylight',
+        label: 'DAYLIGHT',
+        caption: '走进竹林，声音会变得更轻，也更近。',
+        image: '/editorial/bamboo-portrait.jpg',
+        video: '/editorial/bamboo-loop.mp4'
+      }
+    ]
+    const currentEditorial = computed(() => editorialItems[editorialIndex.value])
+
+    const selectEditorial = async (index) => {
+      editorialIndex.value = index
+      await nextTick()
+      if (!editorialVideo.value) return
+      editorialVideo.value.muted = editorialMuted.value
+      if (editorialPlaying.value) {
+        try {
+          await editorialVideo.value.play()
+        } catch (error) {
+          editorialPlaying.value = false
+        }
+      }
+    }
+
+    const toggleEditorialPlayback = async () => {
+      if (!editorialVideo.value) return
+      if (editorialVideo.value.paused) {
+        try {
+          await editorialVideo.value.play()
+        } catch (error) {
+          editorialPlaying.value = false
+        }
+      } else {
+        editorialVideo.value.pause()
+      }
+    }
+
+    const toggleEditorialMute = () => {
+      editorialMuted.value = !editorialMuted.value
+      if (editorialVideo.value) editorialVideo.value.muted = editorialMuted.value
+    }
 
     const prefKey = (name) => `${userStore.userInfo?.id || 'guest'}:${name}`
 
     const hideWelcome = () => {
       showWelcome.value = false
-      try { sessionStorage.setItem(prefKey('hide_welcome_section'), '1') } catch (e) {}
+      try {
+        sessionStorage.setItem(prefKey('hide_welcome_section'), '1')
+      } catch (error) {
+        console.debug('无法保存欢迎区偏好', error)
+      }
     }
     const hideBanner = () => {
       showBanner.value = false
-      try { sessionStorage.setItem(prefKey('hide_recommend_banner'), '1') } catch (e) {}
+      try {
+        sessionStorage.setItem(prefKey('hide_recommend_banner'), '1')
+      } catch (error) {
+        console.debug('无法保存推荐区偏好', error)
+      }
     }
     
     // 加载热门歌曲
@@ -373,7 +657,9 @@ export default {
       try {
         showWelcome.value = sessionStorage.getItem(prefKey('hide_welcome_section')) !== '1'
         showBanner.value = sessionStorage.getItem(prefKey('hide_recommend_banner')) !== '1'
-      } catch (e) {}
+      } catch (error) {
+        console.debug('无法读取首页偏好', error)
+      }
       await loadHotSongs()
       await loadNewSongs()
       await loadFavoriteStatus()
@@ -402,7 +688,9 @@ export default {
             }
           }
           keys.forEach(k => sessionStorage.removeItem(k))
-        } catch (_) {}
+        } catch (error) {
+          console.debug('无法清理首页偏好', error)
+        }
       }
       showWelcome.value = true
       showBanner.value = true
@@ -433,7 +721,16 @@ export default {
       showWelcome,
       showBanner,
       hideWelcome,
-      hideBanner
+      hideBanner,
+      editorialVideo,
+      editorialIndex,
+      editorialPlaying,
+      editorialMuted,
+      editorialItems,
+      currentEditorial,
+      selectEditorial,
+      toggleEditorialPlayback,
+      toggleEditorialMute
     }
   }
 }
@@ -441,7 +738,242 @@ export default {
 
 <style scoped>
 .home {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding-bottom: 20px;
+}
+
+/* 影像电台首屏 */
+.editorial-hero {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(420px, 1.14fr);
+  min-height: 500px;
+  margin-bottom: 36px;
+  overflow: hidden;
+  background: #161c19;
+  color: #f5f0e7;
+  border-radius: 8px;
+  box-shadow: 0 18px 44px rgba(14, 21, 18, 0.16);
+}
+
+.editorial-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(32px, 5vw, 64px);
+  background:
+    radial-gradient(circle at 16% 28%, rgba(216, 255, 95, 0.14), transparent 33%),
+    #161c19;
+}
+
+.editorial-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #d8ff5f;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.7px;
+}
+
+.eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d8ff5f;
+  box-shadow: 0 0 0 5px rgba(216, 255, 95, 0.12);
+}
+
+.editorial-copy h1 {
+  margin: 30px 0 20px;
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: clamp(40px, 4vw, 64px);
+  line-height: 1.12;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.editorial-copy h1 em {
+  color: #d8ff5f;
+  font-style: normal;
+}
+
+.editorial-copy > p {
+  max-width: 370px;
+  margin: 0;
+  color: rgba(245, 240, 231, 0.65);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.editorial-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 34px;
+  color: rgba(245, 240, 231, 0.7);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+.meta-rule {
+  width: 38px;
+  height: 1px;
+  background: rgba(245, 240, 231, 0.34);
+}
+
+.editorial-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.editorial-control,
+.editorial-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(245, 240, 231, 0.18);
+  background: transparent;
+  color: rgba(245, 240, 231, 0.72);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.editorial-control {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-size: 16px;
+}
+
+.editorial-control-primary {
+  border-color: #d8ff5f;
+  background: #d8ff5f;
+  color: #161c19;
+}
+
+.editorial-control:hover,
+.editorial-switch:hover,
+.editorial-switch.active {
+  border-color: #d8ff5f;
+  color: #d8ff5f;
+}
+
+.editorial-control-primary:hover {
+  color: #161c19;
+  background: #c9ef50;
+}
+
+.editorial-switch {
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.editorial-switch span {
+  color: #d8ff5f;
+}
+
+.editorial-stage {
+  position: relative;
+  min-height: 500px;
+  overflow: hidden;
+  background: #0c100f;
+}
+
+.editorial-video,
+.editorial-video-tint {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.editorial-video {
+  object-fit: cover;
+  object-position: center 36%;
+  filter: saturate(0.72) contrast(1.1);
+}
+
+.editorial-video-tint {
+  background: linear-gradient(180deg, rgba(11, 16, 14, 0.08) 25%, rgba(11, 16, 14, 0.72) 100%);
+}
+
+.editorial-caption {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(245, 240, 231, 0.86);
+  font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
+  font-size: 14px;
+}
+
+.caption-index {
+  color: #d8ff5f;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 20px;
+  font-style: italic;
+}
+
+.editorial-photo {
+  position: absolute;
+  z-index: 2;
+  width: 112px;
+  padding: 6px 6px 8px;
+  border: 0;
+  background: #f1eee5;
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.32);
+  cursor: pointer;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.editorial-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.editorial-photo:hover {
+  z-index: 3;
+  box-shadow: 0 20px 38px rgba(0, 0, 0, 0.42);
+}
+
+.editorial-photo-back {
+  top: 30px;
+  right: 42px;
+  transform: rotate(7deg);
+}
+
+.editorial-photo-back:hover {
+  transform: rotate(3deg) translateY(-6px);
+}
+
+.editorial-photo-front {
+  top: 106px;
+  right: 124px;
+  transform: rotate(-7deg);
+}
+
+.editorial-photo-front:hover {
+  transform: rotate(-3deg) translateY(-6px);
 }
 
 /* 欢迎区域 */
@@ -760,7 +1292,53 @@ export default {
 /* 响应式 - 全局样式已覆盖，这里只保留页面特有的样式 */
 @media (max-width: 768px) {
   .home {
+    width: auto;
     padding: 0 10px 20px;
+  }
+
+  .editorial-hero {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .editorial-copy {
+    min-height: 430px;
+    padding: 32px 26px;
+    overflow: hidden;
+  }
+
+  .editorial-controls {
+    align-items: flex-start;
+  }
+
+  .editorial-switch {
+    padding: 0 9px;
+    letter-spacing: 0.6px;
+  }
+
+  .editorial-stage {
+    min-height: 380px;
+  }
+
+  .editorial-photo {
+    width: 88px;
+  }
+
+  .editorial-photo-back {
+    top: 20px;
+    right: 24px;
+  }
+
+  .editorial-photo-front {
+    top: 74px;
+    right: 82px;
+  }
+
+  .editorial-caption {
+    left: 20px;
+    right: 20px;
+    bottom: 18px;
+    font-size: 13px;
   }
   
   .content-section {

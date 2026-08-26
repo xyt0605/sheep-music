@@ -1,18 +1,33 @@
 <template>
   <transition name="lyric-fade">
-    <div v-if="visible" class="fullscreen-lyric" @click="handleClose">
+    <div
+      v-if="visible"
+      class="fullscreen-lyric"
+      @click="handleClose"
+    >
       <!-- 背景模糊层 -->
-      <div class="lyric-backdrop"></div>
+      <div class="lyric-backdrop" />
       
       <!-- 主内容区 -->
-      <div class="lyric-container" @click.stop>
+      <div
+        class="lyric-container"
+        @click.stop
+      >
         <!-- 顶部操作栏 -->
         <div class="lyric-header">
-          <el-button circle size="small" @click="handleClose">
+          <el-button
+            circle
+            size="small"
+            @click="handleClose"
+          >
             <el-icon><ArrowDown /></el-icon>
           </el-button>
           <span class="song-title">{{ currentSong?.title }}</span>
-          <el-button circle size="small" @click="toggleDesktopLyric">
+          <el-button
+            circle
+            size="small"
+            @click="toggleDesktopLyric"
+          >
             <el-icon><Monitor /></el-icon>
           </el-button>
         </div>
@@ -27,14 +42,20 @@
                 :class="['album-cover', { 'playing': isPlaying }]"
                 alt="专辑封面"
               >
-              <div class="album-shadow"></div>
+              <div class="album-shadow" />
             </div>
             
             <!-- 歌曲信息 -->
             <div class="song-meta">
-              <h2 class="song-name">{{ currentSong?.title || '暂无播放' }}</h2>
-              <p class="artist-name">{{ getArtistsName(currentSong) }}</p>
-              <p class="album-name">{{ currentSong?.albumName || '未知专辑' }}</p>
+              <h2 class="song-name">
+                {{ currentSong?.title || '暂无播放' }}
+              </h2>
+              <p class="artist-name">
+                {{ getArtistsName(currentSong) }}
+              </p>
+              <p class="album-name">
+                {{ currentSong?.albumName || '未知专辑' }}
+              </p>
             </div>
           </div>
           
@@ -48,9 +69,12 @@
               @touchmove="handleTouchMove"
               @touchend="handleTouchEnd"
             >
-              <div class="lyric-content" :style="{ transform: `translateY(${lyricOffset}px)` }">
+              <div
+                class="lyric-content"
+                :style="{ transform: `translateY(${lyricOffset}px)` }"
+              >
                 <!-- 顶部占位 -->
-                <div class="lyric-placeholder"></div>
+                <div class="lyric-placeholder" />
                 
                 <!-- 歌词行 -->
                 <div
@@ -65,19 +89,29 @@
                   ]"
                   @click="seekToLine(index)"
                 >
-                  <p class="lyric-text">{{ line.text }}</p>
-                  <p v-if="line.translation" class="lyric-translation">{{ line.translation }}</p>
+                  <p class="lyric-text">
+                    {{ line.text }}
+                  </p>
+                  <p
+                    v-if="line.translation"
+                    class="lyric-translation"
+                  >
+                    {{ line.translation }}
+                  </p>
                 </div>
                 
                 <!-- 底部占位 -->
-                <div class="lyric-placeholder"></div>
+                <div class="lyric-placeholder" />
               </div>
             </div>
             
             <!-- 时间轴指示器（拖动时显示） -->
             <transition name="fade">
-              <div v-if="isDragging" class="time-indicator">
-                <div class="time-line"></div>
+              <div
+                v-if="isDragging"
+                class="time-indicator"
+              >
+                <div class="time-line" />
                 <span class="time-text">{{ formatTime(dragTime) }}</span>
               </div>
             </transition>
@@ -92,15 +126,19 @@
             <el-slider 
               v-model="progressValue"
               :show-tooltip="false"
-              @change="handleSeek"
               class="progress-bar"
+              @change="handleSeek"
             />
             <span class="time">{{ formatTime(duration) }}</span>
           </div>
           
           <!-- 控制按钮 -->
           <div class="control-buttons">
-            <el-button circle class="control-btn" @click="togglePlayMode">
+            <el-button
+              circle
+              class="control-btn"
+              @click="togglePlayMode"
+            >
               <el-icon>
                 <Refresh v-if="playMode === 'list'" />
                 <Promotion v-if="playMode === 'random'" />
@@ -108,20 +146,42 @@
               </el-icon>
             </el-button>
             
-            <el-button circle class="control-btn" @click="playPrev" :disabled="!hasPrev">
+            <el-button
+              circle
+              class="control-btn"
+              :disabled="!hasPrev"
+              @click="playPrev"
+            >
               <el-icon><CaretLeft /></el-icon>
             </el-button>
             
-            <el-button circle class="play-btn" @click="togglePlay">
-              <el-icon v-if="isPlaying"><VideoPause /></el-icon>
-              <el-icon v-else><VideoPlay /></el-icon>
+            <el-button
+              circle
+              class="play-btn"
+              @click="togglePlay"
+            >
+              <el-icon v-if="isPlaying">
+                <VideoPause />
+              </el-icon>
+              <el-icon v-else>
+                <VideoPlay />
+              </el-icon>
             </el-button>
             
-            <el-button circle class="control-btn" @click="playNext" :disabled="!hasNext">
+            <el-button
+              circle
+              class="control-btn"
+              :disabled="!hasNext"
+              @click="playNext"
+            >
               <el-icon><CaretRight /></el-icon>
             </el-button>
             
-            <el-button circle class="control-btn" @click="toggleFavorite">
+            <el-button
+              circle
+              class="control-btn"
+              @click="toggleFavorite"
+            >
               <el-icon :style="{ color: isFavorite ? '#f56c6c' : '' }">
                 <Star v-if="!isFavorite" />
                 <StarFilled v-else />

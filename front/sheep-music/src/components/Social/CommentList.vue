@@ -26,12 +26,24 @@
     />
     
     <!-- 评论列表 -->
-    <div v-loading="loading" class="comments-wrapper">
-      <div v-if="comments.length === 0 && !loading" class="empty-state">
-        <el-empty description="暂无评论，快来发表第一条评论吧~" :image-size="120" />
+    <div
+      v-loading="loading"
+      class="comments-wrapper"
+    >
+      <div
+        v-if="comments.length === 0 && !loading"
+        class="empty-state"
+      >
+        <el-empty
+          description="暂无评论，快来发表第一条评论吧~"
+          :image-size="120"
+        />
       </div>
       
-      <div class="comments-container" v-else>
+      <div
+        v-else
+        class="comments-container"
+      >
         <CommentItem
           v-for="comment in comments"
           :key="comment.id"
@@ -44,7 +56,10 @@
     </div>
     
     <!-- 加载更多 -->
-    <div v-if="hasMore && comments.length > 0" class="load-more">
+    <div
+      v-if="hasMore && comments.length > 0"
+      class="load-more"
+    >
       <el-button
         text
         :loading="loading"

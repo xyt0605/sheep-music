@@ -1,51 +1,97 @@
 <template>
   <div class="app-layout">
-    <div class="galaxy-bg"></div>
+    <div class="galaxy-bg" />
     <!-- 顶部导航栏 -->
     <header class="app-header">
       <div class="header-content">
         <!-- Logo -->
-        <div class="logo" @click="goHome">
+        <div
+          class="logo"
+          @click="goHome"
+        >
           <span class="logo-icon">🎵</span>
           <span class="logo-text">Sheep Music</span>
         </div>
         
         <!-- 导航菜单（桌面端） -->
         <nav class="nav-menu desktop-menu">
-          <router-link 
-            v-for="item in menuItems" 
-            :key="item.path" 
-            :to="item.path"
-            class="nav-item"
-            active-class="active"
+          <template
+            v-for="item in menuItems"
+            :key="item.name"
           >
-            <span v-if="item.icon" class="menu-icon">{{ item.icon }}</span>
-            {{ item.name }}
-            <el-badge
-              v-if="item.badge && item.badge > 0"
-              :value="item.badge"
-              :max="99"
-              :is-dot="false"
-              class="menu-badge"
-            />
-          </router-link>
+            <!-- 独立链接 -->
+            <router-link 
+              v-if="item.type == 'link'" 
+              :to="item.path"
+              class="nav-item"
+              active-class="active"
+            >
+              <span
+                v-if="item.icon"
+                class="menu-icon"
+              >{{ item.icon }}</span>
+              <span class="menu-label">{{ item.name }}</span>
+            </router-link>
+            
+            <!-- 下拉菜单 -->
+            <div
+              v-else-if="item.type == 'dropdown'"
+              class="nav-dropdown"
+            >
+              <div class="nav-item dropdown-trigger">
+                <span
+                  v-if="item.icon"
+                  class="menu-icon"
+                >{{ item.icon }}</span>
+                <span class="menu-label">{{ item.name }}</span>
+                <span class="dropdown-arrow">▾</span>
+              </div>
+              <div class="dropdown-content">
+                <router-link
+                  v-for="child in item.children"
+                  :key="child.path"
+                  :to="child.path"
+                  class="dropdown-item"
+                  active-class="active"
+                >
+                  <span
+                    v-if="child.icon"
+                    class="menu-icon"
+                  >{{ child.icon }}</span>
+                  <span class="menu-label">{{ child.name }}</span>
+                  <el-badge
+                    v-if="child.badge && child.badge > 0"
+                    :value="child.badge"
+                    :max="99"
+                    class="menu-badge"
+                  />
+                </router-link>
+              </div>
+            </div>
+          </template>
         </nav>
         
         <!-- 移动端菜单按钮 -->
-        <div class="mobile-menu-btn" @click="toggleMobileMenu">
+        <div
+          class="mobile-menu-btn"
+          @click="toggleMobileMenu"
+        >
           <span class="menu-icon">☰</span>
         </div>
         
         <!-- 右侧用户信息 -->
         <div class="user-section">
           <!-- 桌面歌词按钮 -->
-          <el-tooltip content="桌面歌词" placement="bottom">
+          <el-tooltip
+            content="桌面歌词"
+            placement="bottom"
+          >
             <el-button 
               :icon="desktopLyricVisible ? 'ChatLineSquare' : 'ChatDotSquare'"
               circle 
-              @click="toggleDesktopLyric"
               :type="desktopLyricVisible ? 'primary' : ''"
               class="lyric-toggle-btn"
+              @click="toggleDesktopLyric"
             />
           </el-tooltip>
           
@@ -54,17 +100,32 @@
           
           <el-dropdown @command="handleCommand">
             <div class="user-info">
-              <el-avatar :src="userStore.userInfo?.avatar" size="default">
+              <el-avatar
+                :src="userStore.userInfo?.avatar"
+                size="default"
+              >
                 {{ userStore.userInfo?.nickname?.charAt(0) }}
               </el-avatar>
               <span class="username">{{ userStore.userInfo?.nickname }}</span>
-              <span v-if="userStore.isAdmin" class="admin-badge">管理员</span>
+              <span
+                v-if="userStore.isAdmin"
+                class="admin-badge"
+              >管理员</span>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-                <el-dropdown-item command="settings">设置</el-dropdown-item>
-                <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+                <el-dropdown-item command="profile">
+                  个人中心
+                </el-dropdown-item>
+                <el-dropdown-item command="settings">
+                  设置
+                </el-dropdown-item>
+                <el-dropdown-item
+                  divided
+                  command="logout"
+                >
+                  退出登录
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -74,29 +135,90 @@
     
     <!-- 移动端侧边栏菜单 -->
     <transition name="slide">
-      <div v-if="mobileMenuOpen" class="mobile-menu-overlay" @click="toggleMobileMenu">
-        <nav class="mobile-menu" @click.stop>
+      <div
+        v-if="mobileMenuOpen"
+        class="mobile-menu-overlay"
+        @click="toggleMobileMenu"
+      >
+        <nav
+          class="mobile-menu"
+          @click.stop
+        >
           <div class="mobile-menu-header">
             <span class="menu-title">菜单</span>
-            <span class="close-btn" @click="toggleMobileMenu">✕</span>
+            <span
+              class="close-btn"
+              @click="toggleMobileMenu"
+            >✕</span>
           </div>
-          <router-link 
-            v-for="item in menuItems" 
-            :key="item.path" 
-            :to="item.path"
-            class="mobile-nav-item"
-            active-class="active"
-            @click="toggleMobileMenu"
+          
+          <template
+            v-for="item in menuItems"
+            :key="item.name"
           >
-            <span v-if="item.icon" class="menu-icon">{{ item.icon }}</span>
-            {{ item.name }}
-            <el-badge
-              v-if="item.badge && item.badge > 0"
-              :value="item.badge"
-              :max="99"
-              class="mobile-menu-badge"
-            />
-          </router-link>
+            <!-- 独立链接 -->
+            <router-link 
+              v-if="item.type == 'link'" 
+              :to="item.path"
+              class="mobile-nav-item"
+              active-class="active"
+              @click="toggleMobileMenu"
+            >
+              <span
+                v-if="item.icon"
+                class="menu-icon"
+              >{{ item.icon }}</span>
+              {{ item.name }}
+            </router-link>
+            
+            <!-- 分组菜单 -->
+            <div
+              v-else-if="item.type == 'dropdown'"
+              class="mobile-group"
+            >
+              <div 
+                class="mobile-group-header" 
+                @click="toggleGroup(item.name)"
+              >
+                <span
+                  v-if="item.icon"
+                  class="menu-icon"
+                >{{ item.icon }}</span>
+                {{ item.name }}
+                <span
+                  class="expand-icon"
+                  :class="{ expanded: expandedGroups[item.name] }"
+                >▾</span>
+              </div>
+              <transition name="expand">
+                <div
+                  v-if="expandedGroups[item.name]"
+                  class="mobile-group-children"
+                >
+                  <router-link
+                    v-for="child in item.children"
+                    :key="child.path"
+                    :to="child.path"
+                    class="mobile-nav-item child"
+                    active-class="active"
+                    @click="toggleMobileMenu"
+                  >
+                    <span
+                      v-if="child.icon"
+                      class="menu-icon"
+                    >{{ child.icon }}</span>
+                    {{ child.name }}
+                    <el-badge
+                      v-if="child.badge && child.badge > 0"
+                      :value="child.badge"
+                      :max="99"
+                      class="mobile-menu-badge"
+                    />
+                  </router-link>
+                </div>
+              </transition>
+            </div>
+          </template>
         </nav>
       </div>
     </transition>
@@ -104,8 +226,14 @@
     <!-- 主内容区 -->
     <main class="app-main">
       <router-view v-slot="{ Component, route }">
-        <transition name="fade-slide" mode="out-in">
-          <component :is="Component" :key="route.path" />
+        <transition
+          name="fade-slide"
+          mode="out-in"
+        >
+          <component
+            :is="Component"
+            :key="route.path"
+          />
         </transition>
       </router-view>
     </main>
@@ -141,6 +269,14 @@ export default {
     const mobileMenuOpen = ref(false)
     const desktopLyricRef = ref(null)
     const desktopLyricVisible = ref(false)
+    
+    // 移动端分组展开状态
+    const expandedGroups = ref({})
+    
+    // 切换移动端分组展开状态
+    const toggleGroup = (groupName) => {
+      expandedGroups.value[groupName] = !expandedGroups.value[groupName]
+    }
     
     // 消息提示音
     const playNotificationSound = () => {
@@ -200,32 +336,57 @@ export default {
       }
     }
     
-    // 根据角色动态生成菜单
+    // 根据角色动态生成菜单（分组结构）
     const menuItems = computed(() => {
-      const baseMenu = [
-        { name: '首页', path: '/home', icon: '🏠' },
-        { name: '发现', path: '/discover', icon: '✨' },
-        { name: '搜索', path: '/search', icon: '🔍' },
-        { name: '歌手', path: '/artists', icon: '🎤' },
-        { name: '歌单广场', path: '/playlist', icon: '📃' },
-        { name: '排行榜', path: '/rank', icon: '📊' },
-        { name: '我的音乐', path: '/my-music' },
-        { name: '好友', path: '/friends', icon: '👥', badge: socialStore.friendRequestCount },
-        { name: '聊天', path: '/chat', icon: '💬', badge: socialStore.unreadMessageCount },
-        { name: '动态', path: '/moments', icon: '📱' },
-        { name: '分享广场', path: '/share-square', icon: '🔗' }
+      const menu = [
+        { 
+          name: '首页', 
+          path: '/home', 
+          icon: '🏠',
+          type: 'link'
+        },
+        {
+          name: '发现音乐',
+          icon: '✨',
+          type: 'dropdown',
+          children: [
+            { name: '推荐', path: '/discover', icon: '💫' },
+            { name: '排行榜', path: '/rank', icon: '📊' },
+            { name: '歌单广场', path: '/playlist', icon: '📃' },
+            { name: '歌手', path: '/artists', icon: '🎤' },
+            { name: '搜索', path: '/search', icon: '🔍' }
+          ]
+        },
+        {
+          name: '我的音乐',
+          path: '/my-music',
+          icon: '🎵',
+          type: 'link'
+        },
+        {
+          name: '社交互动',
+          icon: '💬',
+          type: 'dropdown',
+          children: [
+            { name: '好友', path: '/friends', icon: '👥', badge: socialStore.friendRequestCount },
+            { name: '聊天', path: '/chat', icon: '💬', badge: socialStore.unreadMessageCount },
+            { name: '动态', path: '/moments', icon: '📱' },
+            { name: '分享广场', path: '/share-square', icon: '🔗' }
+          ]
+        }
       ]
       
       // 如果是管理员，添加管理后台
       if (userStore.isAdmin) {
-        baseMenu.push({ 
+        menu.push({ 
           name: '管理后台', 
           path: '/admin', 
-          icon: '🔧' 
+          icon: '🔧',
+          type: 'link'
         })
       }
       
-      return baseMenu
+      return menu
     })
     
     // 初始化社交数据
@@ -263,29 +424,30 @@ export default {
                 // 更新未读消息数（导航栏的红点）
                 await socialStore.updateUnreadMessageCount()
                 
-                // 显示消息通知（仅当消息是发给自己的）
-                if (msg.receiverId === userStore.userInfo?.id) {
-                  const senderName = msg.senderName || '好友'
-                  let content = msg.content || ''
-                  
-                  // 根据消息类型显示不同内容
-                  if (msg.type === 'song') {
-                    content = '[分享了一首歌曲]'
-                  } else if (msg.type === 'playlist') {
-                    content = '[分享了一个歌单]'
-                  } else if (content.length > 20) {
-                    content = content.substring(0, 20) + '...'
-                  }
-                  
-                  // 显示应用内通知
-                  notifyInfo('新消息', `${senderName}：${content}`)
-                  
-                  // 显示桌面通知
-                  showDesktopNotification('新消息', `${senderName}：${content}`, msg.senderAvatar)
-                  
-                  // 播放提示音
-                  playNotificationSound()
-                }
+                // 聊天消息通知已禁用，只使用未读消息徽章提示
+                // 避免双重通知机制冲突
+                // if (msg.receiverId === userStore.userInfo?.id) {
+                //   const senderName = msg.senderName || '好友'
+                //   let content = msg.content || ''
+                //   
+                //   // 根据消息类型显示不同内容
+                //   if (msg.type === 'song') {
+                //     content = '[分享了一首歌曲]'
+                //   } else if (msg.type === 'playlist') {
+                //     content = '[分享了一个歌单]'
+                //   } else if (content.length > 20) {
+                //     content = content.substring(0, 20) + '...'
+                //   }
+                //   
+                //   // 显示应用内通知
+                //   notifyInfo('新消息', `${senderName}：${content}`)
+                //   
+                //   // 显示桌面通知
+                //   showDesktopNotification('新消息', `${senderName}：${content}`, msg.senderAvatar)
+                //   
+                //   // 播放提示音
+                //   playNotificationSound()
+                // }
               }
             } catch (e) {
               console.error('处理聊天消息失败:', e)
@@ -383,8 +545,10 @@ export default {
       mobileMenuOpen,
       desktopLyricRef,
       desktopLyricVisible,
+      expandedGroups,
       toggleMobileMenu,
       toggleDesktopLyric,
+      toggleGroup,
       goHome,
       handleCommand
     }
@@ -438,6 +602,7 @@ export default {
   right: 0;
   z-index: 1000;
   transition: all var(--transition-base);
+  overflow: visible;
 }
 
 .header-content {
@@ -456,14 +621,14 @@ export default {
   align-items: center;
   gap: 12px;
   color: var(--text-primary);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
   font-size: 22px;
   font-weight: 700;
   cursor: pointer;
   transition: all var(--transition-base);
   padding: 8px 16px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: var(--radius-md);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -477,11 +642,11 @@ export default {
 
 .logo-icon {
   font-size: 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.3));
+  filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.3));
 }
 
 /* 导航菜单 */
@@ -491,8 +656,8 @@ export default {
   flex: 1;
   margin-left: 24px;
   flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: visible;
+  align-items: center;
 }
 
 .nav-menu::-webkit-scrollbar {
@@ -522,6 +687,7 @@ export default {
   position: relative;
   white-space: nowrap;
   flex-shrink: 0;
+  height: 40px;
 }
 
 .nav-item:hover {
@@ -545,12 +711,22 @@ export default {
   font-size: 16px;
   opacity: 0.8;
   display: none;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-item:hover .menu-icon,
 .nav-item.active .menu-icon {
-  display: inline-block;
+  display: inline-flex;
   opacity: 1;
+}
+
+.menu-badge {
+  margin-left: 6px;
+  vertical-align: middle;
 }
 
 .menu-badge {
@@ -586,6 +762,121 @@ export default {
   50% {
     transform: scale(1.1);
   }
+}
+
+/* 下拉菜单容器 */
+.nav-dropdown {
+  position: relative;
+  flex-shrink: 0;
+  height: 40px; /* 强制高度与其他导航项一致 */
+  display: flex;
+  align-items: center;
+}
+
+/* 使用伪元素填充下拉菜单与触发器之间的间隙，防止鼠标离开时菜单消失 */
+.nav-dropdown::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: 8px;
+}
+
+.dropdown-trigger {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-arrow {
+  font-size: 12px;
+  margin-left: 4px;
+  transition: transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+}
+
+.nav-dropdown:hover .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* 下拉内容 */
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  margin-top: 8px;
+  left: 0;
+  min-width: 160px;
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color-light);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  padding: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2000;
+}
+
+.nav-dropdown:hover .dropdown-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* 下拉菜单项 */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  position: relative;
+}
+
+.dropdown-item .menu-icon {
+  font-size: 16px;
+  opacity: 0.8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  transform: translateX(2px);
+}
+
+.dropdown-item:hover .menu-icon {
+  opacity: 1;
+}
+
+.dropdown-item.active {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.dropdown-item.active .menu-icon {
+  opacity: 1;
 }
 
 /* 用户区域 */
@@ -799,6 +1090,78 @@ export default {
   transform: none;
 }
 
+/* 移动端分组 */
+.mobile-group {
+  margin: 6px 12px;
+}
+
+.mobile-group-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 16px 24px;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  background: var(--bg-secondary);
+  user-select: none;
+}
+
+.mobile-group-header:hover {
+  background: var(--bg-tertiary);
+}
+
+.mobile-group-header .menu-icon {
+  font-size: 22px;
+  opacity: 0.8;
+}
+
+.expand-icon {
+  margin-left: auto;
+  font-size: 14px;
+  transition: transform 0.3s ease;
+  display: inline-block;
+}
+
+.expand-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.mobile-group-children {
+  margin-top: 4px;
+  padding-left: 12px;
+}
+
+.mobile-nav-item.child {
+  padding-left: 40px;
+  margin: 4px 12px;
+  font-size: 15px;
+}
+
+/* 展开动画 */
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-10px);
+}
+
+.expand-enter-to,
+.expand-leave-from {
+  opacity: 1;
+  max-height: 500px;
+  transform: translateY(0);
+}
+
 /* 移动端菜单动画 */
 .slide-enter-active,
 .slide-leave-active {
@@ -937,3 +1300,7 @@ export default {
   }
 }
 </style>
+.menu-label {
+  display: inline-block;
+  line-height: 18px;
+}

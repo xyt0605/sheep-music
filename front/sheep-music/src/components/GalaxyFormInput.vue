@@ -1,5 +1,8 @@
 <template>
-  <div class="gfi" :class="[{ focused, filled: !!innerValue }, size]">
+  <div
+    class="gfi"
+    :class="[{ focused, filled: !!innerValue }, size]"
+  >
     <input
       :type="type"
       class="gfi-input"
@@ -9,9 +12,14 @@
       @input="onInput"
       @focus="onFocus"
       @blur="onBlur"
-    />
+    >
     <label class="gfi-label">{{ label }}</label>
-    <div v-if="message" class="gfi-message">{{ message }}</div>
+    <div
+      v-if="message"
+      class="gfi-message"
+    >
+      {{ message }}
+    </div>
   </div>
 </template>
 

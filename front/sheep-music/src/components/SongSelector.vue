@@ -18,10 +18,22 @@
       </div>
       
       <!-- 标签页 -->
-      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-        <el-tab-pane label="当前播放" name="current">
-          <div v-if="currentSong" class="current-song">
-            <div class="song-item" @click="selectSong(currentSong)">
+      <el-tabs
+        v-model="activeTab"
+        @tab-change="handleTabChange"
+      >
+        <el-tab-pane
+          label="当前播放"
+          name="current"
+        >
+          <div
+            v-if="currentSong"
+            class="current-song"
+          >
+            <div
+              class="song-item"
+              @click="selectSong(currentSong)"
+            >
               <el-image 
                 :src="currentSong.cover" 
                 fit="cover"
@@ -34,20 +46,41 @@
                 </template>
               </el-image>
               <div class="song-info">
-                <div class="song-name">{{ currentSong.name }}</div>
-                <div class="song-artist">{{ currentSong.artist }}</div>
+                <div class="song-name">
+                  {{ currentSong.name }}
+                </div>
+                <div class="song-artist">
+                  {{ currentSong.artist }}
+                </div>
               </div>
-              <el-button type="primary" size="small">选择</el-button>
+              <el-button
+                type="primary"
+                size="small"
+              >
+                选择
+              </el-button>
             </div>
           </div>
-          <div v-else class="empty-state">
+          <div
+            v-else
+            class="empty-state"
+          >
             <el-empty description="当前没有播放歌曲" />
           </div>
         </el-tab-pane>
         
-        <el-tab-pane label="播放列表" name="playlist">
-          <div v-loading="loading" class="song-list">
-            <div v-if="playlistSongs.length === 0 && !loading" class="empty-state">
+        <el-tab-pane
+          label="播放列表"
+          name="playlist"
+        >
+          <div
+            v-loading="loading"
+            class="song-list"
+          >
+            <div
+              v-if="playlistSongs.length === 0 && !loading"
+              class="empty-state"
+            >
               <el-empty description="播放列表为空" />
             </div>
             <div
@@ -68,17 +101,35 @@
                 </template>
               </el-image>
               <div class="song-info">
-                <div class="song-name">{{ song.name }}</div>
-                <div class="song-artist">{{ song.artist }}</div>
+                <div class="song-name">
+                  {{ song.name }}
+                </div>
+                <div class="song-artist">
+                  {{ song.artist }}
+                </div>
               </div>
-              <el-button type="primary" size="small">选择</el-button>
+              <el-button
+                type="primary"
+                size="small"
+              >
+                选择
+              </el-button>
             </div>
           </div>
         </el-tab-pane>
         
-        <el-tab-pane label="搜索" name="search">
-          <div v-loading="loading" class="song-list">
-            <div v-if="searchResults.length === 0 && !loading" class="empty-state">
+        <el-tab-pane
+          label="搜索"
+          name="search"
+        >
+          <div
+            v-loading="loading"
+            class="song-list"
+          >
+            <div
+              v-if="searchResults.length === 0 && !loading"
+              class="empty-state"
+            >
               <el-empty :description="searchKeyword ? '没有找到相关歌曲' : '请输入关键词搜索'" />
             </div>
             <div
@@ -99,10 +150,19 @@
                 </template>
               </el-image>
               <div class="song-info">
-                <div class="song-name">{{ song.name }}</div>
-                <div class="song-artist">{{ song.artist }}</div>
+                <div class="song-name">
+                  {{ song.name }}
+                </div>
+                <div class="song-artist">
+                  {{ song.artist }}
+                </div>
               </div>
-              <el-button type="primary" size="small">选择</el-button>
+              <el-button
+                type="primary"
+                size="small"
+              >
+                选择
+              </el-button>
             </div>
           </div>
         </el-tab-pane>
