@@ -13,7 +13,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 公共歌手接口（所有登录用户可访问）
@@ -97,14 +96,7 @@ public class PublicArtistController {
     @GetMapping("/search")
     public Result<List<Artist>> searchArtists(@RequestParam String keyword) {
         try {
-            // 这里假设 ArtistService 有搜索方法，如果没有则需要添加
-            List<Artist> artists = artistService.getAllArtists()
-                .stream()
-                .filter(artist -> 
-                    artist.getName().contains(keyword) || 
-                    (artist.getDescription() != null && artist.getDescription().contains(keyword))
-                )
-                .collect(Collectors.toList());
+            List<Artist> artists = artistService.searchArtists(keyword);
             return Result.success("查询成功", artists);
         } catch (Exception e) {
             return Result.error(e.getMessage());

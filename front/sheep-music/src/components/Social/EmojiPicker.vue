@@ -4,7 +4,6 @@
     <div class="picker-container">
       <emoji-picker
         ref="pickerRef"
-        :data-source="dataSource"
         :skin-tone-emoji="skinToneEmoji"
         class="custom-picker"
         @emoji-click="handleEmojiPick"
@@ -36,8 +35,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+// 本地 import 才会注册 emoji-picker 自定义元素；
+// 不再额外引入 emoji-picker-element-data 的 CLDR 数据集（426KB），
+// 组件内置的默认数据库功能相同，避免两份 emoji 数据同时打进产物。
 import 'emoji-picker-element'
-import data from 'emoji-picker-element-data/en/cldr/data.json'
 
 const emit = defineEmits(['pick'])
 
@@ -45,9 +46,6 @@ const pickerRef = ref(null)
 const recentEmojis = ref([])
 
 // emoji-picker-element 配置
-const dataSource = URL.createObjectURL(
-  new Blob([JSON.stringify(data)], { type: 'application/json' })
-)
 const skinToneEmoji = '🖐️'
 
 // 处理 emoji 选择

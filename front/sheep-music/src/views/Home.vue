@@ -191,7 +191,7 @@
           >
             <div class="shelf-cover">
               <img
-                :src="song.cover || defaultCover"
+                :src="ossThumb(song.cover, 300) || defaultCover"
                 :alt="song.title"
                 loading="lazy"
               >
@@ -259,7 +259,7 @@
           >
             <div class="shelf-cover">
               <img
-                :src="song.cover || defaultCover"
+                :src="ossThumb(song.cover, 300) || defaultCover"
                 :alt="song.title"
                 loading="lazy"
               >
@@ -337,7 +337,7 @@
           >
             <div class="shelf-cover">
               <img
-                :src="song.cover || defaultCover"
+                :src="ossThumb(song.cover, 300) || defaultCover"
                 :alt="song.title"
                 loading="lazy"
               >
@@ -391,6 +391,8 @@ import { ArrowRight, Bell, Clock, Headset, MagicStick, Microphone, Mute, TrendCh
 import PlaylistSelector from '@/components/PlaylistSelector.vue'
 import GalaxyButton from '@/components/GalaxyButton.vue'
 import GalaxyLoader from '@/components/GalaxyLoader.vue'
+
+import { ossThumb } from '@/utils/image'
 
 export default {
   // eslint-disable-next-line vue/multi-word-component-names

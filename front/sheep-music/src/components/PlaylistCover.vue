@@ -5,7 +5,7 @@
   >
     <!-- 显示封面（使用最新添加的歌曲封面，类似QQ音乐） -->
     <img
-      :src="coverUrl || defaultCover"
+      :src="ossThumb(coverUrl, 300) || defaultCover"
       alt="歌单封面"
       class="cover-image"
       @error="handleImageError"
@@ -14,6 +14,7 @@
 </template>
 
 <script setup>
+import { ossThumb } from '@/utils/image'
 import { computed } from 'vue'
 
 const props = defineProps({

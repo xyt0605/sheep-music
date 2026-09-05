@@ -35,7 +35,7 @@
               @click="selectSong(currentSong)"
             >
               <el-image 
-                :src="currentSong.cover" 
+                :src="ossThumb(currentSong.cover, 100)" 
                 fit="cover"
                 class="song-cover"
               >
@@ -90,7 +90,7 @@
               @click="selectSong(song)"
             >
               <el-image 
-                :src="song.cover" 
+                :src="ossThumb(song.cover, 100)" 
                 fit="cover"
                 class="song-cover"
               >
@@ -139,7 +139,7 @@
               @click="selectSong(song)"
             >
               <el-image 
-                :src="song.cover" 
+                :src="ossThumb(song.cover, 100)" 
                 fit="cover"
                 class="song-cover"
               >
@@ -172,6 +172,7 @@
 </template>
 
 <script setup>
+import { ossThumb } from '@/utils/image'
 import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'

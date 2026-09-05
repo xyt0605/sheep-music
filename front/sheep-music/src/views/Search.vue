@@ -139,7 +139,7 @@
                 {{ (currentPage - 1) * pageSize + index + 1 }}
               </div>
               <img
-                :src="song.cover || defaultCover"
+                :src="ossThumb(song.cover, 200) || defaultCover"
                 class="song-cover"
               >
               <div class="song-info">
@@ -250,7 +250,7 @@
             >
               <div class="artist-avatar-wrapper">
                 <img
-                  :src="artist.avatar || defaultAvatar"
+                  :src="ossThumb(artist.avatar, 100) || defaultAvatar"
                   class="artist-avatar"
                 >
                 <div class="artist-overlay">
@@ -298,6 +298,7 @@
 </template>
 
 <script setup>
+import { ossThumb } from '@/utils/image'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePlayerStore } from '@/store/player'

@@ -40,7 +40,7 @@
         >
           <div class="song-cover-wrapper">
             <img
-              :src="item.song.cover || defaultCover"
+              :src="ossThumb(item.song.cover, 200) || defaultCover"
               class="song-cover"
               alt="封面"
             >
@@ -144,7 +144,7 @@
             {{ index + 1 }}
           </div>
           <img
-            :src="item.song.cover || defaultCover"
+            :src="ossThumb(item.song.cover, 200) || defaultCover"
             class="song-cover-small"
             alt="封面"
           >
@@ -246,7 +246,7 @@
         >
           <div class="playlist-cover-wrapper">
             <img
-              :src="playlist.cover || defaultPlaylistCover"
+              :src="ossThumb(playlist.cover, 300) || defaultPlaylistCover"
               class="playlist-cover"
               alt="封面"
             >
@@ -295,6 +295,7 @@
 </template>
 
 <script setup>
+import { ossThumb } from '@/utils/image'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePlayerStore } from '@/store/player'

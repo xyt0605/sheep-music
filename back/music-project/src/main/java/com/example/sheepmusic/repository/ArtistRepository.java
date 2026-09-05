@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -23,7 +24,12 @@ public interface ArtistRepository extends JpaRepository<Artist, Long> {
     Optional<Artist> findByNameIgnoreCase(String name);
 
     Page<Artist> findByNameContainingIgnoreCase(String keyword, Pageable pageable);
-    
+
+    /**
+     * 公开搜索：名称或简介命中关键字（数据库端过滤，替代旧的全表加载 + 内存过滤）。
+     */
+    List<Artist> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String name, String description);
+
     /**
      * 按歌曲数量排序获取歌手列表（降序）
      */

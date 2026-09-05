@@ -28,7 +28,7 @@
       <el-table-column label="歌曲" min-width="300">
         <template #default="{ row }">
           <div class="song-cell">
-            <el-image :src="row.cover" fit="cover" class="song-cover">
+            <el-image :src="ossThumb(row.cover, 100)" fit="cover" class="song-cover">
               <template #error><div class="cover-fallback"><el-icon><Headset /></el-icon></div></template>
             </el-image>
             <div class="song-copy">
@@ -110,6 +110,7 @@
 </template>
 
 <script setup>
+import { ossThumb } from '@/utils/image'
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Close, Headset, Refresh, Search } from '@element-plus/icons-vue'

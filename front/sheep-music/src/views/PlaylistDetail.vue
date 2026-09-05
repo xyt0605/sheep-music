@@ -134,7 +134,7 @@
               {{ index + 1 }}
             </div>
             <img
-              :src="item.song?.cover || defaultCover"
+              :src="ossThumb(item.song?.cover, 200) || defaultCover"
               class="song-cover"
             >
             <div class="song-info">
@@ -253,7 +253,7 @@
         <div v-if="commentSong">
           <div class="comment-song-info">
             <img
-              :src="commentSong.cover || defaultCover"
+              :src="ossThumb(commentSong.cover, 200) || defaultCover"
               class="comment-song-cover"
             >
             <div class="comment-song-text">
@@ -312,6 +312,8 @@ import PlaylistCover from '@/components/PlaylistCover.vue'
 import PlaylistSelector from '@/components/PlaylistSelector.vue'
 import CommentList from '@/components/Social/CommentList.vue'
 import ShareDialog from '@/components/ShareDialog.vue'
+
+import { ossThumb } from '@/utils/image'
 
 export default {
   name: 'PlaylistDetail',

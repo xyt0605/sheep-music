@@ -19,7 +19,7 @@
           @click="showFullscreenLyric"
         >
           <img 
-            :src="processImageUrl(playerStore.currentSong?.cover) || defaultCover" 
+            :src="ossThumb(processImageUrl(playerStore.currentSong?.cover), 200) || defaultCover" 
             alt="封面" 
             :class="['song-cover', { 'playing': playerStore.isPlaying }]"
             @error="handleCoverError"
@@ -337,8 +337,9 @@
       </template>
     </el-dialog>
     
-    <!-- 分享弹窗 -->
+    <!-- 分享弹窗：首次打开才挂载，届时才拉取异步代码块 -->
     <ShareDialog
+      v-if="shareDialogRendered"
       v-model="showShareDialog"
       type="song"
       :share-data="shareData"
@@ -348,7 +349,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, nextTick, inject } from 'vue'
+import { ossThumb } from '@/utils/image'
+import { ref, computed, watch, onMounted, nextTick, inject, defineAsyncComponent } from 'vue'
 import { usePlayerStore } from '@/store/player'
 import { 
   VideoPlay, 
@@ -371,8 +373,9 @@ import {
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
-import CommentList from '@/components/Social/CommentList.vue'
-import ShareDialog from '@/components/ShareDialog.vue'
+// 评论与分享弹窗首次打开才加载（内部含 emoji 选择器及其数据包，避免挤占首屏）
+const CommentList = defineAsyncComponent(() => import('@/components/Social/CommentList.vue'))
+const ShareDialog = defineAsyncComponent(() => import('@/components/ShareDialog.vue'))
 
 const playerStore = usePlayerStore()
 const userStore = useUserStore()
@@ -382,6 +385,7 @@ const lyricContentRef = ref(null)
 const showPlaylistDialog = ref(false)
 const showCommentsDialog = ref(false)
 const showShareDialog = ref(false)
+const shareDialogRendered = ref(false) // 首次点分享时才真正加载 ShareDialog
 const shareData = ref({})
 const defaultCover = '/default-cover.svg'
 
@@ -562,6 +566,7 @@ const handleShareSong = () => {
     subtitle: getArtistsName(song)
   }
   showShareDialog.value = true
+  shareDialogRendered.value = true
 }
 
 // 分享成功回调

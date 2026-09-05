@@ -191,7 +191,7 @@
           <el-dropdown @command="handleCommand">
             <div class="user-info">
               <el-avatar
-                :src="userStore.userInfo?.avatar"
+                :src="ossThumb(userStore.userInfo?.avatar, 100)"
                 size="default"
               >
                 {{ userStore.userInfo?.nickname?.charAt(0) }}
@@ -350,6 +350,8 @@ import ThemeToggle from '@/components/ThemeToggle.vue'
 import DesktopLyric from '@/components/DesktopLyric.vue'
 import wsClient from '@/ws/client'
 import { notifyInfo } from '@/utils/message'
+
+import { ossThumb } from '@/utils/image'
 
 export default {
   name: 'Layout',

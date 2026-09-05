@@ -1,16 +1,17 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import { ElLoadingDirective } from 'element-plus'
 import App from './App.vue'
 import router from './router'
+// Element Plus 按需引入：模板中的 <el-xxx> 组件由 unplugin-vue-components 按文件自动引入
+// （见 vite.config.js 的 Components 插件），此处补充指令注册、服务式组件样式与图标按需注册
+import '@/plugins/element-styles'
+import { registerElementIcons } from '@/plugins/element-icons'
 import '@/styles/responsive.css' // 导入响应式样式
 import '@/styles/theme.css' // 导入主题样式
 import '@/styles/mobile-fix.css' // 导入移动端修复样式
 import '@/styles/studio.css' // UI v3：全站音乐编辑台视觉覆盖
 import { useTheme } from '@/composables/useTheme'
-import 'emoji-picker-element' // 注册 emoji-picker-element Web Component
 
 // 初始化主题
 const { initTheme } = useTheme()
@@ -31,13 +32,11 @@ window.addEventListener('error', resizeObserverErrorHandler)
 const app = createApp(App)
 const pinia = createPinia()
 
-// 注册所有图标
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, component)
-}
+// Element Plus 按需注册：v-loading 指令 + 模板/字符串引用到的图标
+app.directive('loading', ElLoadingDirective)
+registerElementIcons(app)
 
 app.use(pinia)
-app.use(ElementPlus)
 app.use(router)
 app.mount('#app')
 

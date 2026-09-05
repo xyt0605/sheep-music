@@ -6,6 +6,8 @@ import com.example.sheepmusic.entity.Artist;
 import com.example.sheepmusic.repository.ArtistRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ public class ArtistService {
     /**
      * 创建歌手
      */
+    @CacheEvict(cacheNames = "artist:all", allEntries = true)
     public Artist createArtist(ArtistRequest request) {
         // 检查歌手名是否已存在
         String name = request.getName().trim();
@@ -44,6 +47,7 @@ public class ArtistService {
     /**
      * 更新歌手
      */
+    @CacheEvict(cacheNames = "artist:all", allEntries = true)
     public Artist updateArtist(Long id, ArtistRequest request) {
         Artist artist = artistRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("歌手不存在"));
@@ -64,6 +68,7 @@ public class ArtistService {
     /**
      * 删除歌手
      */
+    @CacheEvict(cacheNames = "artist:all", allEntries = true)
     public void deleteArtist(Long id) {
         if (!artistRepository.existsById(id)) {
             throw new RuntimeException("歌手不存在");
@@ -97,16 +102,29 @@ public class ArtistService {
     }
     
     /**
-     * 获取所有歌手（不分页）
+     * 获取所有歌手（不分页）。
+     * 下拉选择等高频场景，进程内缓存；歌手只能经本类的增删改/导入变更，均有 @CacheEvict 兜底，
+     * 因此无需 TTL。
      */
+    @Cacheable(cacheNames = "artist:all")
     public List<Artist> getAllArtists() {
         return artistRepository.findAll();
+    }
+
+    /**
+     * 公开搜索歌手：名称或简介命中关键字。
+     * 旧实现把全表加载进内存再 stream 过滤，现改为数据库端条件查询。
+     */
+    public List<Artist> searchArtists(String keyword) {
+        String key = keyword == null ? "" : keyword.trim();
+        return artistRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(key, key);
     }
 
     /**
      * 按名称批量导入歌手，重复项直接复用已有记录。
      */
     @Transactional
+    @CacheEvict(cacheNames = "artist:all", allEntries = true)
     public ArtistImportResult importArtists(List<String> names) {
         Map<String, Artist> unique = new LinkedHashMap<>();
         int createdCount = 0;
@@ -150,6 +168,7 @@ public class ArtistService {
      * 导入歌曲时解析歌手名称，不存在则自动创建。
      */
     @Transactional
+    @CacheEvict(cacheNames = "artist:all", allEntries = true)
     public Artist getOrCreateByName(String rawName) {
         if (rawName == null || rawName.trim().isEmpty()) {
             throw new RuntimeException("歌手名称不能为空");
