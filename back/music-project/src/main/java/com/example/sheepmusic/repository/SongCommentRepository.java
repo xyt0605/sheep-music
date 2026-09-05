@@ -4,6 +4,7 @@ import com.example.sheepmusic.entity.SongComment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -31,6 +32,11 @@ public interface SongCommentRepository extends JpaRepository<SongComment, Long> 
      * 根据父评论ID查询回复
      */
     List<SongComment> findByParentIdOrderByCreateTimeAsc(Long parentId);
+
+    /**
+     * 根据一批父评论ID查询子回复
+     */
+    List<SongComment> findByParentIdIn(java.util.Collection<Long> parentIds);
     
     /**
      * 根据用户ID查询评论
@@ -53,5 +59,19 @@ public interface SongCommentRepository extends JpaRepository<SongComment, Long> 
     @Query("SELECT c FROM SongComment c WHERE c.songId = :songId AND c.parentId IS NULL " +
            "ORDER BY c.pinned DESC, c.likeCount DESC, c.createTime DESC")
     Page<SongComment> findHotComments(@Param("songId") Long songId, Pageable pageable);
+
+    /**
+     * 原子递增点赞数
+     */
+    @Modifying
+    @Query("UPDATE SongComment c SET c.likeCount = c.likeCount + 1 WHERE c.id = :commentId")
+    void incrementLikeCount(@Param("commentId") Long commentId);
+
+    /**
+     * 原子递减点赞数（likeCount > 0 才递减，保证不为负）
+     */
+    @Modifying
+    @Query("UPDATE SongComment c SET c.likeCount = c.likeCount - 1 WHERE c.id = :commentId AND c.likeCount > 0")
+    void decrementLikeCount(@Param("commentId") Long commentId);
 }
 

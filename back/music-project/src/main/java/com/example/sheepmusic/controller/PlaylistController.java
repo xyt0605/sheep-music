@@ -200,13 +200,14 @@ public class PlaylistController {
     @ApiOperation("获取歌单的歌曲列表")
     @GetMapping("/{playlistId}/songs")
     public Result<Page<PlaylistSong>> getPlaylistSongs(
+            @AuthenticationPrincipal User user,
             @PathVariable Long playlistId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size
     ) {
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<PlaylistSong> songs = playlistService.getPlaylistSongs(playlistId, pageable);
+            Page<PlaylistSong> songs = playlistService.getPlaylistSongs(playlistId, pageable, user.getId());
             return Result.success("查询成功", songs);
         } catch (Exception e) {
             return Result.error("查询失败: " + e.getMessage());
@@ -221,10 +222,11 @@ public class PlaylistController {
     @ApiOperation("获取歌单详情")
     @GetMapping("/{id}")
     public Result<Playlist> getPlaylistDetail(
+            @AuthenticationPrincipal User user,
             @PathVariable Long id
     ) {
         try {
-            Playlist playlist = playlistService.getPlaylistById(id);
+            Playlist playlist = playlistService.getPlaylistById(id, user.getId());
             return Result.success("查询成功", playlist);
         } catch (Exception e) {
             return Result.error("查询失败: " + e.getMessage());

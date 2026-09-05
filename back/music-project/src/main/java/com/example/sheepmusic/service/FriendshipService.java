@@ -119,18 +119,21 @@ public class FriendshipService {
         // 创建双向好友关系（为对方也创建一条记录）
         User currentUser = userRepository.findById(currentUserId)
             .orElseThrow(() -> new RuntimeException("用户不存在"));
-        
+
         // 获取发起请求的用户信息
         User requester = userRepository.findById(friendship.getUserId())
             .orElseThrow(() -> new RuntimeException("用户不存在"));
-        
-        Friendship reverse = new Friendship();
+
+        // 对方可能也给我发过请求（互发场景已存在反向记录），此时只更新状态，避免唯一约束冲突
+        Friendship reverse = friendshipRepository
+            .findByUserIdAndFriendId(currentUserId, friendship.getUserId())
+            .orElseGet(Friendship::new);
         reverse.setUserId(currentUserId);
         reverse.setFriendId(friendship.getUserId());
         reverse.setStatus("accepted");
         reverse.setFriendName(requester.getNickname());
         reverse.setFriendAvatar(requester.getAvatar());
-        
+
         friendshipRepository.save(reverse);
         
         // 创建会话记录

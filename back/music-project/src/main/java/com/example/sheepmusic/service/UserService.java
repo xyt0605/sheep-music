@@ -53,14 +53,16 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setStatus(1);  // 正常状态
         
-        // 如果用户名是 admin，自动设为管理员
-        if ("admin".equals(request.getUsername())) {
-            user.setRole("admin");
-        } else {
-            user.setRole("user");
+        // 角色固定为普通用户，管理员账号由 AdminInitializer 在启动时创建
+        user.setRole("user");
+
+        try {
+            return userRepository.save(user);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // 并发重复注册的兜底：前置的 existsByUsername 检查存在竞态，
+            // 撞到 username 唯一约束时返回与顺序校验一致的幂等提示
+            throw new RuntimeException("用户名已存在，请换一个用户名");
         }
-        
-        return userRepository.save(user);
     }
     
     /**

@@ -29,6 +29,9 @@ public class PlayHistoryService {
     @Autowired
     private SongRepository songRepository;
 
+    @Autowired
+    private RecommendationService recommendationService;
+
     /**
      * 添加播放历史记录
      * 每次播放歌曲时调用
@@ -38,14 +41,15 @@ public class PlayHistoryService {
         // 验证歌曲是否存在
         songRepository.findById(songId)
                 .orElseThrow(() -> new RuntimeException("歌曲不存在"));
-        
+
         // 创建播放历史记录
         PlayHistory playHistory = new PlayHistory();
         playHistory.setUserId(userId);
         playHistory.setSongId(songId);
         playHistory.setPlayDuration(playDuration);
-        
+
         playHistoryRepository.save(playHistory);
+        recommendationService.evictUserCache(userId); // 行为变化，失效推荐缓存
     }
 
     /**

@@ -97,19 +97,35 @@ public class CommentService {
     public void deleteComment(Long commentId, Long userId) {
         SongComment comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new RuntimeException("评论不存在"));
-        
+
         // 只能删除自己的评论
         if (!comment.getUserId().equals(userId)) {
             throw new RuntimeException("无权删除该评论");
         }
-        
+
+        // 收集所有层级的回复（回复的回复也要一并删除）
+        List<Long> allIds = new java.util.ArrayList<>();
+        allIds.add(commentId);
+        List<SongComment> allReplies = new java.util.ArrayList<>();
+        List<Long> frontier = new java.util.ArrayList<>();
+        frontier.add(commentId);
+        while (!frontier.isEmpty()) {
+            List<SongComment> children = commentRepository.findByParentIdIn(frontier);
+            if (children.isEmpty()) {
+                break;
+            }
+            allReplies.addAll(children);
+            frontier = children.stream().map(SongComment::getId)
+                .collect(java.util.stream.Collectors.toList());
+            allIds.addAll(frontier);
+        }
+
         // 删除评论及其所有回复
         commentRepository.delete(comment);
-        List<SongComment> replies = commentRepository.findByParentIdOrderByCreateTimeAsc(commentId);
-        commentRepository.deleteAll(replies);
-        
-        // 删除相关点赞记录
-        commentLikeRepository.findByCommentId(commentId)
+        commentRepository.deleteAll(allReplies);
+
+        // 删除所有相关点赞记录（含回复的点赞）
+        commentLikeRepository.findByCommentIdIn(allIds)
             .forEach(like -> commentLikeRepository.delete(like));
     }
     
@@ -125,10 +141,9 @@ public class CommentService {
         boolean exists = commentLikeRepository.existsByCommentIdAndUserId(commentId, userId);
         
         if (exists) {
-            // 取消点赞
+            // 取消点赞（计数用原子更新，避免并发丢失）
             commentLikeRepository.deleteByCommentIdAndUserId(commentId, userId);
-            comment.setLikeCount(Math.max(0, comment.getLikeCount() - 1));
-            commentRepository.save(comment);
+            commentRepository.decrementLikeCount(commentId);
             return false;
         } else {
             // 点赞
@@ -136,9 +151,8 @@ public class CommentService {
             like.setCommentId(commentId);
             like.setUserId(userId);
             commentLikeRepository.save(like);
-            
-            comment.setLikeCount(comment.getLikeCount() + 1);
-            commentRepository.save(comment);
+
+            commentRepository.incrementLikeCount(commentId);
             
             // 创建通知（不给自己发通知）
             if (!comment.getUserId().equals(userId)) {

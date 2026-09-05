@@ -1,5 +1,6 @@
 package com.example.sheepmusic.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -26,8 +27,9 @@ public class User {
     private String username;
     
     /**
-     * 密码（加密后）
+     * 密码（加密后，任何接口不得返回该字段）
      */
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
     

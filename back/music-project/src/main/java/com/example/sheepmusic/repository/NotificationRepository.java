@@ -34,22 +34,24 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     long countByUserIdAndIsReadFalse(Long userId);
     
     /**
-     * 标记通知为已读
+     * 标记通知为已读（仅限通知归属者本人）
      */
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true, n.readTime = :readTime " +
-           "WHERE n.id = :notificationId")
-    void markAsRead(@Param("notificationId") Long notificationId, 
-                    @Param("readTime") LocalDateTime readTime);
-    
+           "WHERE n.id = :notificationId AND n.userId = :userId")
+    int markAsRead(@Param("notificationId") Long notificationId,
+                   @Param("userId") Long userId,
+                   @Param("readTime") LocalDateTime readTime);
+
     /**
-     * 批量标记通知为已读
+     * 批量标记通知为已读（仅限通知归属者本人）
      */
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true, n.readTime = :readTime " +
-           "WHERE n.id IN :notificationIds")
-    void markBatchAsRead(@Param("notificationIds") List<Long> notificationIds,
-                         @Param("readTime") LocalDateTime readTime);
+           "WHERE n.id IN :notificationIds AND n.userId = :userId")
+    int markBatchAsRead(@Param("notificationIds") List<Long> notificationIds,
+                        @Param("userId") Long userId,
+                        @Param("readTime") LocalDateTime readTime);
     
     /**
      * 标记所有通知为已读

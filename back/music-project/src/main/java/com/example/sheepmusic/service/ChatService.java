@@ -138,12 +138,12 @@ public class ChatService {
     }
     
     /**
-     * 批量标记消息为已读
+     * 批量标记消息为已读（仅限当前用户收到的消息）
      */
     @Transactional
-    public void markBatchAsRead(List<Long> messageIds) {
+    public void markBatchAsRead(List<Long> messageIds, Long userId) {
         if (messageIds != null && !messageIds.isEmpty()) {
-            chatMessageRepository.markAsRead(messageIds, LocalDateTime.now());
+            chatMessageRepository.markAsRead(messageIds, userId, LocalDateTime.now());
         }
     }
     

@@ -2,6 +2,7 @@ package com.example.sheepmusic.controller;
 
 import com.example.sheepmusic.common.Result;
 import com.example.sheepmusic.dto.SongRequest;
+import com.example.sheepmusic.dto.SongImportRequest;
 import com.example.sheepmusic.entity.Song;
 import com.example.sheepmusic.service.SongService;
 import io.swagger.annotations.Api;
@@ -38,6 +39,20 @@ public class SongController {
         try {
             Song song = songService.createSong(request);
             return Result.success("创建成功", song);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 一站式导入歌曲，支持按歌手名称自动创建歌手。
+     */
+    @ApiOperation("导入歌曲")
+    @PostMapping("/import")
+    public Result<Song> importSong(@Valid @RequestBody SongImportRequest request) {
+        try {
+            Song song = songService.importSong(request);
+            return Result.success("导入成功", song);
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }
@@ -96,14 +111,16 @@ public class SongController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createTime") String sortBy,
-            @RequestParam(defaultValue = "desc") String order
+            @RequestParam(defaultValue = "desc") String order,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer status
     ) {
         try {
             Sort sort = order.equalsIgnoreCase("asc") 
                     ? Sort.by(sortBy).ascending() 
                     : Sort.by(sortBy).descending();
             Pageable pageable = PageRequest.of(page, size, sort);
-            Page<Song> songs = songService.getSongs(pageable);
+            Page<Song> songs = songService.getSongs(keyword, status, pageable);
             return Result.success("查询成功", songs);
         } catch (Exception e) {
             return Result.error(e.getMessage());

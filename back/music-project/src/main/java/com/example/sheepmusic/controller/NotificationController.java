@@ -81,9 +81,11 @@ public class NotificationController {
      */
     @ApiOperation("标记通知为已读")
     @PutMapping("/read/{notificationId}")
-    public Result<Void> markAsRead(@PathVariable Long notificationId) {
+    public Result<Void> markAsRead(@PathVariable Long notificationId,
+                                   HttpServletRequest request) {
         try {
-            notificationService.markAsRead(notificationId);
+            Long userId = jwtUtil.getUserIdFromRequest(request);
+            notificationService.markAsRead(notificationId, userId);
             
             Result<Void> result = Result.success();
             result.setMessage("操作成功");
@@ -98,9 +100,11 @@ public class NotificationController {
      */
     @ApiOperation("批量标记通知为已读")
     @PutMapping("/read/batch")
-    public Result<Void> markBatchAsRead(@RequestBody List<Long> notificationIds) {
+    public Result<Void> markBatchAsRead(@RequestBody List<Long> notificationIds,
+                                        HttpServletRequest request) {
         try {
-            notificationService.markBatchAsRead(notificationIds);
+            Long userId = jwtUtil.getUserIdFromRequest(request);
+            notificationService.markBatchAsRead(notificationIds, userId);
             
             Result<Void> result = Result.success();
             result.setMessage("操作成功");

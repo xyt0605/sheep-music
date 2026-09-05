@@ -4,10 +4,12 @@ import com.example.sheepmusic.entity.Playlist;
 import com.example.sheepmusic.entity.PlaylistShare;
 import com.example.sheepmusic.entity.Song;
 import com.example.sheepmusic.entity.SongShare;
+import com.example.sheepmusic.entity.SongShareLike;
 import com.example.sheepmusic.entity.User;
 import com.example.sheepmusic.repository.PlaylistRepository;
 import com.example.sheepmusic.repository.PlaylistShareRepository;
 import com.example.sheepmusic.repository.SongRepository;
+import com.example.sheepmusic.repository.SongShareLikeRepository;
 import com.example.sheepmusic.repository.SongShareRepository;
 import com.example.sheepmusic.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,9 @@ public class ShareService {
     
     @Autowired
     private SongShareRepository songShareRepository;
+
+    @Autowired
+    private SongShareLikeRepository songShareLikeRepository;
     
     @Autowired
     private PlaylistRepository playlistRepository;
@@ -251,18 +256,25 @@ public class ShareService {
     }
     
     /**
-     * 点赞歌曲分享
+     * 点赞歌曲分享（每个用户对同一分享仅可点赞一次）
      */
     @Transactional
     public void likeSongShare(Long shareId, Long userId) {
         SongShare share = songShareRepository.findById(shareId)
             .orElseThrow(() -> new RuntimeException("分享不存在"));
-        
+
+        // 记录点赞关系，防止同一用户重复刷赞
+        if (songShareLikeRepository.existsByShareIdAndUserId(shareId, userId)) {
+            throw new RuntimeException("已点赞过该分享");
+        }
+        SongShareLike like = new SongShareLike();
+        like.setShareId(shareId);
+        like.setUserId(userId);
+        songShareLikeRepository.save(like);
+
         // 增加点赞次数
         share.setLikeCount(share.getLikeCount() + 1);
         songShareRepository.save(share);
-        
-        // TODO: 记录用户点赞关系，避免重复点赞
     }
     
     /**

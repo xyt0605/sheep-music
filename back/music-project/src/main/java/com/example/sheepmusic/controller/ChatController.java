@@ -113,9 +113,11 @@ public class ChatController {
      */
     @ApiOperation("批量标记消息为已读")
     @PutMapping("/read/batch")
-    public Result<Void> markBatchAsRead(@RequestBody List<Long> messageIds) {
+    public Result<Void> markBatchAsRead(@RequestBody List<Long> messageIds,
+                                        HttpServletRequest request) {
         try {
-            chatService.markBatchAsRead(messageIds);
+            Long userId = jwtUtil.getUserIdFromRequest(request);
+            chatService.markBatchAsRead(messageIds, userId);
             
             Result<Void> result = Result.success();
             result.setMessage("操作成功");

@@ -1,6 +1,7 @@
 package com.example.sheepmusic.service;
 
 import com.example.sheepmusic.controller.SongController;
+import com.example.sheepmusic.dto.SongImportRequest;
 import com.example.sheepmusic.dto.SongRequest;
 import com.example.sheepmusic.entity.Artist;
 import com.example.sheepmusic.entity.Song;
@@ -14,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 歌曲服务类
@@ -27,6 +30,9 @@ public class SongService {
     
     @Autowired
     private ArtistRepository artistRepository;
+
+    @Autowired
+    private ArtistService artistService;
     
     /**
      * 创建歌曲（支持多歌手）
@@ -54,6 +60,41 @@ public class SongService {
         
         return songRepository.save(song);
     }
+
+    /**
+     * 管理端一站式导入歌曲：已有歌手按 ID 关联，不存在的歌手按名称自动创建。
+     */
+    @Transactional
+    public Song importSong(SongImportRequest request) {
+        Song song = new Song();
+        BeanUtils.copyProperties(request, song, "artistIds", "artistNames");
+        if (song.getStatus() == null) {
+            song.setStatus(1);
+        }
+
+        Map<Long, Artist> resolvedArtists = new LinkedHashMap<>();
+        if (request.getArtistIds() != null) {
+            for (Long artistId : request.getArtistIds()) {
+                if (artistId == null) {
+                    continue;
+                }
+                Artist artist = artistRepository.findById(artistId)
+                        .orElseThrow(() -> new RuntimeException("歌手ID " + artistId + " 不存在"));
+                resolvedArtists.put(artist.getId(), artist);
+            }
+        }
+        if (request.getArtistNames() != null) {
+            for (String name : request.getArtistNames()) {
+                Artist artist = artistService.getOrCreateByName(name);
+                resolvedArtists.put(artist.getId(), artist);
+            }
+        }
+        if (resolvedArtists.isEmpty()) {
+            throw new RuntimeException("至少需要选择或填写一位歌手");
+        }
+        song.setArtists(new ArrayList<>(resolvedArtists.values()));
+        return songRepository.save(song);
+    }
     
     /**
      * 更新歌曲（支持多歌手）
@@ -62,9 +103,14 @@ public class SongService {
     public Song updateSong(Long id, SongRequest request) {
         Song song = songRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("歌曲不存在"));
-        
+
         BeanUtils.copyProperties(request, song, "id", "playCount", "createTime", "updateTime", "artistIds", "artists");
-        
+
+        // status 为可选字段，请求未携带时保留原值，避免违反非空约束
+        if (song.getStatus() == null) {
+            song.setStatus(1);
+        }
+
         // 更新歌手关联
         if (request.getArtistIds() != null && !request.getArtistIds().isEmpty()) {
             List<Artist> artists = new ArrayList<>();
@@ -101,6 +147,23 @@ public class SongService {
      * 获取所有歌曲（分页）
      */
     public Page<Song> getSongs(Pageable pageable) {
+        return songRepository.findAll(pageable);
+    }
+
+    /**
+     * 管理端歌曲查询，支持关键词和状态组合筛选。
+     */
+    public Page<Song> getSongs(String keyword, Integer status, Pageable pageable) {
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        if (hasKeyword && status != null) {
+            return songRepository.searchByKeywordAndStatus(keyword.trim(), status, pageable);
+        }
+        if (hasKeyword) {
+            return songRepository.searchByKeyword(keyword.trim(), pageable);
+        }
+        if (status != null) {
+            return songRepository.findByStatus(status, pageable);
+        }
         return songRepository.findAll(pageable);
     }
     
@@ -140,13 +203,14 @@ public class SongService {
     }
     
     /**
-     * 增加播放次数
+     * 增加播放次数（原子更新，避免并发丢失）
      */
+    @Transactional
     public void incrementPlayCount(Long id) {
-        Song song = songRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("歌曲不存在"));
-        song.setPlayCount(song.getPlayCount() + 1);
-        songRepository.save(song);
+        if (!songRepository.existsById(id)) {
+            throw new RuntimeException("歌曲不存在");
+        }
+        songRepository.incrementPlayCount(id);
     }
     
     /**

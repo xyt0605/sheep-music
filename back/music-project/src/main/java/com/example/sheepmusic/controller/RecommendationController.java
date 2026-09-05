@@ -1,6 +1,7 @@
 package com.example.sheepmusic.controller;
 
 import com.example.sheepmusic.common.Result;
+import com.example.sheepmusic.dto.RecommendItemVO;
 import com.example.sheepmusic.entity.Playlist;
 import com.example.sheepmusic.entity.Song;
 import com.example.sheepmusic.service.RecommendationService;
@@ -15,61 +16,65 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
- * 推荐系统控制器
+ * 推荐系统控制器（v2：多路召回融合，响应携带推荐理由，见 docs/specs/推荐系统v2/）
  */
 @Api(tags = "推荐系统")
 @RestController
 @RequestMapping("/music/recommend")
 @CrossOrigin
 public class RecommendationController {
-    
+
     @Autowired
     private RecommendationService recommendationService;
-    
+
     @Autowired
     private JwtUtil jwtUtil;
-    
+
     /**
-     * 获取个性化推荐歌曲（基于用户协同过滤）
+     * 获取个性化推荐歌曲（多路召回融合，携带推荐理由）
      */
     @ApiOperation("获取个性化推荐歌曲")
     @GetMapping("/personalized")
-    public Result<List<Song>> getPersonalizedSongs(
+    public Result<List<RecommendItemVO>> getPersonalizedSongs(
             HttpServletRequest request,
             @ApiParam(value = "推荐数量", defaultValue = "20")
-            @RequestParam(defaultValue = "20") int limit
+            @RequestParam(defaultValue = "20") int limit,
+            @ApiParam(value = "绕过缓存并采样换一批", example = "true")
+            @RequestParam(defaultValue = "false") boolean refresh
     ) {
         try {
             Long userId = getUserIdFromToken(request);
             if (userId == null) {
                 return Result.error("请先登录");
             }
-            
-            List<Song> recommendations = recommendationService.getPersonalizedSongs(userId, limit);
+
+            List<RecommendItemVO> recommendations = recommendationService.getPersonalizedSongs(userId, limit, refresh);
             return Result.success("推荐成功", recommendations);
         } catch (Exception e) {
             e.printStackTrace();
             return Result.error("获取推荐失败: " + e.getMessage());
         }
     }
-    
+
     /**
-     * 猜你喜欢（混合推荐策略）
+     * 猜你喜欢（混合推荐策略，携带推荐理由）
      */
     @ApiOperation("猜你喜欢")
     @GetMapping("/guess-you-like")
-    public Result<List<Song>> getGuessYouLike(
+    public Result<List<RecommendItemVO>> getGuessYouLike(
             HttpServletRequest request,
             @ApiParam(value = "推荐数量", defaultValue = "30")
-            @RequestParam(defaultValue = "30") int limit
+            @RequestParam(defaultValue = "30") int limit,
+            @ApiParam(value = "绕过缓存并采样换一批", example = "true")
+            @RequestParam(defaultValue = "false") boolean refresh
     ) {
         try {
             Long userId = getUserIdFromToken(request);
             if (userId == null) {
                 return Result.error("请先登录");
             }
-            
-            List<Song> recommendations = recommendationService.getGuessYouLike(userId, limit);
+
+            List<RecommendItemVO> recommendations = recommendationService.getGuessYouLike(userId, limit, refresh);
             return Result.success("推荐成功", recommendations);
         } catch (Exception e) {
             e.printStackTrace();

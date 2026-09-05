@@ -22,6 +22,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Autowired
+    private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+
     /*密码加密器 Bean*/
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -61,6 +64,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // 其他请求需要认证
             .anyRequest().authenticated()
             
+            .and()
+            // 未认证时返回401（区别于已认证但无权限的403），便于前端跳转登录
+            .exceptionHandling()
+            .authenticationEntryPoint(restAuthenticationEntryPoint)
+
             .and()
             // 添加JWT过滤器
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

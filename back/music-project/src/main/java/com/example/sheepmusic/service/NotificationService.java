@@ -186,20 +186,23 @@ public class NotificationService {
     }
     
     /**
-     * 标记通知为已读
+     * 标记通知为已读（仅限通知归属者本人）
      */
     @Transactional
-    public void markAsRead(Long notificationId) {
-        notificationRepository.markAsRead(notificationId, LocalDateTime.now());
+    public void markAsRead(Long notificationId, Long userId) {
+        int updated = notificationRepository.markAsRead(notificationId, userId, LocalDateTime.now());
+        if (updated == 0) {
+            throw new RuntimeException("通知不存在或无权操作");
+        }
     }
-    
+
     /**
-     * 批量标记通知为已读
+     * 批量标记通知为已读（仅限通知归属者本人）
      */
     @Transactional
-    public void markBatchAsRead(List<Long> notificationIds) {
+    public void markBatchAsRead(List<Long> notificationIds, Long userId) {
         if (notificationIds != null && !notificationIds.isEmpty()) {
-            notificationRepository.markBatchAsRead(notificationIds, LocalDateTime.now());
+            notificationRepository.markBatchAsRead(notificationIds, userId, LocalDateTime.now());
         }
     }
     

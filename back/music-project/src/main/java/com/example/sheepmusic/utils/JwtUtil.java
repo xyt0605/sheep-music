@@ -129,5 +129,17 @@ public class JwtUtil {
         }
         return null;
     }
+
+    /**
+     * 从HttpServletRequest中获取用户角色（实例方法）
+     */
+    public String getRoleFromRequest(javax.servlet.http.HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            return getRoleFromToken(token);
+        }
+        return null;
+    }
 }
 
