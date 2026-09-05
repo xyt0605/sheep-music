@@ -2,6 +2,8 @@ package com.example.sheepmusic.controller;
 
 import com.example.sheepmusic.common.Result;
 import com.example.sheepmusic.dto.ArtistRequest;
+import com.example.sheepmusic.dto.ArtistImportRequest;
+import com.example.sheepmusic.dto.ArtistImportResult;
 import com.example.sheepmusic.entity.Artist;
 import com.example.sheepmusic.service.ArtistService;
 import io.swagger.annotations.Api;
@@ -37,6 +39,20 @@ public class ArtistController {
         try {
             Artist artist = artistService.createArtist(request);
             return Result.success("创建成功", artist);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 批量导入歌手名称，重复名称自动跳过。
+     */
+    @ApiOperation("批量导入歌手")
+    @PostMapping("/import")
+    public Result<ArtistImportResult> importArtists(@RequestBody ArtistImportRequest request) {
+        try {
+            ArtistImportResult result = artistService.importArtists(request.getNames());
+            return Result.success("导入完成", result);
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }
@@ -95,14 +111,15 @@ public class ArtistController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createTime") String sortBy,
-            @RequestParam(defaultValue = "desc") String order
+            @RequestParam(defaultValue = "desc") String order,
+            @RequestParam(required = false) String keyword
     ) {
         try {
             Sort sort = order.equalsIgnoreCase("asc") 
                     ? Sort.by(sortBy).ascending() 
                     : Sort.by(sortBy).descending();
             Pageable pageable = PageRequest.of(page, size, sort);
-            Page<Artist> artists = artistService.getArtists(pageable);
+            Page<Artist> artists = artistService.getArtists(keyword, pageable);
             return Result.success("查询成功", artists);
         } catch (Exception e) {
             return Result.error(e.getMessage());

@@ -21,10 +21,13 @@ public class FavoriteService {
     
     @Autowired
     private FavoriteRepository favoriteRepository;
-    
+
     @Autowired
     private SongRepository songRepository;
-    
+
+    @Autowired
+    private RecommendationService recommendationService;
+
     /**
      * 添加收藏
      */
@@ -34,26 +37,29 @@ public class FavoriteService {
         if (!songRepository.existsById(songId)) {
             throw new RuntimeException("歌曲不存在");
         }
-        
+
         // 检查是否已经收藏
         if (favoriteRepository.existsByUserIdAndSongId(userId, songId)) {
             throw new RuntimeException("已经收藏过该歌曲");
         }
-        
+
         // 创建收藏
         Favorite favorite = new Favorite();
         favorite.setUserId(userId);
         favorite.setSongId(songId);
-        
-        return favoriteRepository.save(favorite);
+
+        Favorite saved = favoriteRepository.save(favorite);
+        recommendationService.evictUserCache(userId); // 收藏变化，失效推荐缓存
+        return saved;
     }
-    
+
     /**
      * 取消收藏
      */
     @Transactional
     public void removeFavorite(Long userId, Long songId) {
         favoriteRepository.deleteByUserIdAndSongId(userId, songId);
+        recommendationService.evictUserCache(userId); // 收藏变化，失效推荐缓存
     }
     
     /**

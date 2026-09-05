@@ -1,102 +1,53 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="admin-page">
-    <div class="page-header">
-      <h2>🔧 管理后台</h2>
-      <p class="subtitle">
-        系统管理与数据维护
-      </p>
-    </div>
-    
-    <el-alert
-      title="管理员专属区域"
-      type="success"
-      :closable="false"
-      show-icon
-      style="margin-bottom: 30px;"
-    >
-      <template #default>
-        欢迎 <strong>{{ userStore.userInfo?.nickname }}</strong>，你当前拥有管理员权限
-      </template>
-    </el-alert>
-    
-    <!-- Tab 切换 -->
-    <el-tabs
-      v-model="activeTab"
-      type="card"
-    >
-      <!-- 歌手管理 -->
-      <el-tab-pane
-        label="🎤 歌手管理"
-        name="artist"
-      >
+    <header class="page-header">
+      <div>
+        <span class="eyebrow">LIBRARY OPERATIONS</span>
+        <h2>内容后台</h2>
+        <p class="subtitle">集中处理歌手、歌曲与发布状态，导入流程已合并为一个入口。</p>
+      </div>
+      <div class="admin-user">
+        <span>当前管理员</span>
+        <strong>{{ userStore.userInfo?.nickname || userStore.userInfo?.username || '管理员' }}</strong>
+      </div>
+    </header>
+
+    <el-tabs v-model="activeTab" class="admin-tabs" stretch>
+      <el-tab-pane name="import">
+        <template #label><span class="tab-label"><el-icon><Upload /></el-icon>导入中心</span></template>
+        <ContentImport />
+      </el-tab-pane>
+      <el-tab-pane name="artists">
+        <template #label><span class="tab-label"><el-icon><Microphone /></el-icon>歌手管理</span></template>
         <ArtistManagement />
       </el-tab-pane>
-      
-      <!-- 歌曲管理 -->
-      <el-tab-pane
-        label="🎵 歌曲管理"
-        name="song"
-      >
+      <el-tab-pane name="songs">
+        <template #label><span class="tab-label"><el-icon><Headset /></el-icon>歌曲管理</span></template>
         <SongManagement />
       </el-tab-pane>
     </el-tabs>
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue'
+import { Headset, Microphone, Upload } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
 import ArtistManagement from '@/components/admin/ArtistManagement.vue'
+import ContentImport from '@/components/admin/ContentImport.vue'
 import SongManagement from '@/components/admin/SongManagement.vue'
 
-export default {
-  name: 'Admin',
-  components: {
-    ArtistManagement,
-    SongManagement
-  },
-  setup() {
-    const userStore = useUserStore()
-    const activeTab = ref('artist')
-    
-    return {
-      userStore,
-      activeTab
-    }
-  }
-}
+const userStore = useUserStore()
+const activeTab = ref('import')
 </script>
 
 <style scoped>
-.admin-page {
-  padding: 30px;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.page-header {
-  margin-bottom: 30px;
-}
-
-.page-header h2 {
-  font-size: 28px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.subtitle {
-  color: #666;
-  font-size: 14px;
-}
-
-/* 响应式 - 全局样式已覆盖 */
-@media (max-width: 768px) {
-  .admin-page {
-    padding: 15px 10px;
-  }
-  
-  .el-tabs {
-    font-size: 14px;
-  }
-}
+.admin-page { width: 100%; }
+.eyebrow { color: var(--text-tertiary); font-family: var(--font-mono); font-size: 10px; letter-spacing: .16em; }
+.subtitle { max-width: 620px; }
+.admin-user { display: grid; gap: 4px; align-self: flex-end; padding: 9px 0 0 20px; border-left: 1px solid var(--border-color); color: var(--text-tertiary); font-size: 11px; }
+.admin-user strong { color: var(--text-primary); font-size: 13px; }
+.tab-label { display: inline-flex; align-items: center; gap: 7px; }
+@media (max-width: 680px) { .admin-user { display: none; } }
 </style>

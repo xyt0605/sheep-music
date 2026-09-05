@@ -19,6 +19,10 @@ public interface ArtistRepository extends JpaRepository<Artist, Long> {
      * 根据歌手名称查找
      */
     Optional<Artist> findByName(String name);
+
+    Optional<Artist> findByNameIgnoreCase(String name);
+
+    Page<Artist> findByNameContainingIgnoreCase(String keyword, Pageable pageable);
     
     /**
      * 按歌曲数量排序获取歌手列表（降序）

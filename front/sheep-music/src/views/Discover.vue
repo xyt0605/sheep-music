@@ -2,7 +2,7 @@
   <div class="discover-page">
     <!-- 页面标题 -->
     <div class="page-header">
-      <h2>🎵 发现音乐</h2>
+      <h2>发现音乐</h2>
       <p class="subtitle">
         基于你的喜好，为你推荐精选内容
       </p>
@@ -32,15 +32,15 @@
         v-loading="guessYouLikeLoading"
         class="song-grid"
       >
-        <div 
-          v-for="song in guessYouLikeSongs" 
-          :key="song.id"
+        <div
+          v-for="item in guessYouLikeSongs"
+          :key="item.song.id"
           class="song-card"
-          @click="handlePlaySong(song)"
+          @click="handlePlaySong(item)"
         >
           <div class="song-cover-wrapper">
             <img
-              :src="song.cover || defaultCover"
+              :src="item.song.cover || defaultCover"
               class="song-cover"
               alt="封面"
             >
@@ -51,39 +51,46 @@
             </div>
             <div class="song-play-count">
               <el-icon><Headset /></el-icon>
-              {{ formatCount(song.playCount) }}
+              {{ formatCount(item.song.playCount) }}
             </div>
           </div>
           <div class="song-info">
             <div class="song-title">
-              {{ song.title }}
+              {{ item.song.title }}
             </div>
             <div class="song-artist">
-              {{ getArtistNames(song) }}
+              {{ getArtistNames(item.song) }}
             </div>
+            <span
+              class="reason-tag"
+              :class="'s-' + item.strategy"
+              :title="item.reason"
+            >
+              {{ item.reason }}
+            </span>
           </div>
           <div class="song-actions-hover">
-            <el-button 
-              icon="Plus" 
-              circle 
+            <el-button
+              icon="Plus"
+              circle
               size="small"
               title="添加到播放列表"
-              @click.stop="handleAddToPlaylist(song)"
+              @click.stop="handleAddToPlaylist(item.song)"
             />
-            <el-button 
-              icon="FolderAdd" 
-              circle 
+            <el-button
+              icon="FolderAdd"
+              circle
               size="small"
               title="添加到歌单"
-              @click.stop="showAddToPlaylistDialog(song.id)"
+              @click.stop="showAddToPlaylistDialog(item.song.id)"
             />
-            <el-button 
-              :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'"
-              circle 
+            <el-button
+              :icon="favoriteSongs[item.song.id] ? 'StarFilled' : 'Star'"
+              circle
               size="small"
-              :type="favoriteSongs[song.id] ? 'danger' : ''"
+              :type="favoriteSongs[item.song.id] ? 'danger' : ''"
               title="收藏"
-              @click.stop="handleToggleFavorite(song.id)"
+              @click.stop="handleToggleFavorite(item.song.id)"
             />
           </div>
         </div>
@@ -127,60 +134,67 @@
         v-loading="personalizedLoading"
         class="song-list"
       >
-        <div 
-          v-for="(song, index) in personalizedSongs" 
-          :key="song.id"
+        <div
+          v-for="(item, index) in personalizedSongs"
+          :key="item.song.id"
           class="song-item"
-          @click="handlePlaySong(song)"
+          @click="handlePlaySong(item)"
         >
           <div class="song-index">
             {{ index + 1 }}
           </div>
           <img
-            :src="song.cover || defaultCover"
+            :src="item.song.cover || defaultCover"
             class="song-cover-small"
             alt="封面"
           >
           <div class="song-info-inline">
             <div class="song-name">
-              {{ song.title }}
+              {{ item.song.title }}
             </div>
             <div class="song-artist-name">
-              {{ getArtistNames(song) }}
+              {{ getArtistNames(item.song) }}
             </div>
+            <span
+              class="reason-tag"
+              :class="'s-' + item.strategy"
+              :title="item.reason"
+            >
+              {{ item.reason }}
+            </span>
           </div>
           <div class="song-stats">
             <el-icon><Headset /></el-icon>
-            {{ formatCount(song.playCount) }}
+            {{ formatCount(item.song.playCount) }}
           </div>
           <div class="song-duration">
-            {{ formatDuration(song.duration) }}
+            {{ formatDuration(item.song.duration) }}
           </div>
           <div class="song-actions">
-            <el-button 
-              icon="CaretRight" 
-              circle 
+            <el-button
+              icon="CaretRight"
+              circle
               size="small"
-              @click.stop="handlePlaySong(song)"
+              @click.stop="handlePlaySong(item)"
             />
-            <el-button 
-              icon="Plus" 
-              circle 
+            <el-button
+              icon="Plus"
+              circle
               size="small"
-              @click.stop="handleAddToPlaylist(song)"
+              @click.stop="handleAddToPlaylist(item.song)"
             />
-            <el-button 
-              icon="FolderAdd" 
-              circle 
+            <el-button
+              icon="FolderAdd"
+              circle
               size="small"
-              @click.stop="showAddToPlaylistDialog(song.id)"
+              @click.stop="showAddToPlaylistDialog(item.song.id)"
             />
-            <el-button 
-              :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'"
-              circle 
+            <el-button
+              :icon="favoriteSongs[item.song.id] ? 'StarFilled' : 'Star'"
+              circle
               size="small"
-              :type="favoriteSongs[song.id] ? 'danger' : ''"
-              @click.stop="handleToggleFavorite(song.id)"
+              :type="favoriteSongs[item.song.id] ? 'danger' : ''"
+              @click.stop="handleToggleFavorite(item.song.id)"
             />
           </div>
         </div>
@@ -335,7 +349,7 @@ onMounted(() => {
 // ========== 加载推荐数据 ==========
 
 // 加载猜你喜欢
-const loadGuessYouLike = async () => {
+const loadGuessYouLike = async (refresh = false) => {
   if (!userStore.isLogin) {
     ElMessage.warning('请先登录查看推荐')
     return
@@ -343,7 +357,7 @@ const loadGuessYouLike = async () => {
 
   guessYouLikeLoading.value = true
   try {
-    const res = await getGuessYouLike({ limit: 12 })
+    const res = await getGuessYouLike({ limit: 12, refresh })
     if (res.code === 200) {
       guessYouLikeSongs.value = res.data || []
       await loadFavoriteStatus()
@@ -359,14 +373,14 @@ const loadGuessYouLike = async () => {
 }
 
 // 加载个性化推荐
-const loadPersonalized = async () => {
+const loadPersonalized = async (refresh = false) => {
   if (!userStore.isLogin) {
     return
   }
 
   personalizedLoading.value = true
   try {
-    const res = await getPersonalizedSongs({ limit: 20 })
+    const res = await getPersonalizedSongs({ limit: 20, refresh })
     if (res.code === 200) {
       personalizedSongs.value = res.data || []
       await loadFavoriteStatus()
@@ -403,7 +417,7 @@ const loadRecommendedPlaylists = async () => {
 
 // 加载收藏状态
 const loadFavoriteStatus = async () => {
-  const allSongs = [...guessYouLikeSongs.value, ...personalizedSongs.value]
+  const allSongs = allRecommendSongs()
   if (allSongs.length === 0) return
 
   try {
@@ -417,14 +431,21 @@ const loadFavoriteStatus = async () => {
   }
 }
 
+// 所有推荐条目对应的歌曲实体（VO → Song）
+const allRecommendSongs = () => {
+  return [...guessYouLikeSongs.value, ...personalizedSongs.value]
+    .map(item => item.song)
+    .filter(Boolean)
+}
+
 // ========== 刷新操作 ==========
 
 const refreshGuessYouLike = () => {
-  loadGuessYouLike()
+  loadGuessYouLike(true)
 }
 
 const refreshPersonalized = () => {
-  loadPersonalized()
+  loadPersonalized(true)
 }
 
 const refreshPlaylists = () => {
@@ -433,10 +454,11 @@ const refreshPlaylists = () => {
 
 // ========== 歌曲操作 ==========
 
-// 播放歌曲
-const handlePlaySong = (song) => {
-  const allSongs = [...guessYouLikeSongs.value, ...personalizedSongs.value]
-  playerStore.play(song, allSongs)
+// 播放歌曲（入参为推荐条目 VO）
+const handlePlaySong = (item) => {
+  const song = item?.song || item
+  if (!song) return
+  playerStore.play(song, allRecommendSongs())
 }
 
 // 添加到播放列表
@@ -864,6 +886,48 @@ const formatDuration = (seconds) => {
 .empty-hint {
   padding: 60px 20px;
   text-align: center;
+}
+
+/* ========== 推荐理由徽标（策略着色） ========== */
+.reason-tag {
+  display: inline-block;
+  max-width: 100%;
+  margin-top: 6px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #f4f5fa;
+  color: #667eea;
+  cursor: default;
+}
+
+.reason-tag.s-cf {
+  background: rgba(124, 92, 231, 0.12);
+  color: #7c5ce7;
+}
+
+.reason-tag.s-content {
+  background: rgba(102, 126, 234, 0.12);
+  color: #5a6fd6;
+}
+
+.reason-tag.s-artist {
+  background: rgba(46, 178, 128, 0.12);
+  color: #27ae60;
+}
+
+.reason-tag.s-hot {
+  background: rgba(245, 138, 30, 0.14);
+  color: #e67e22;
+}
+
+.reason-tag.s-fresh {
+  background: rgba(26, 168, 190, 0.12);
+  color: #16a085;
 }
 
 /* ========== 响应式 - 全局样式已覆盖 ========== */

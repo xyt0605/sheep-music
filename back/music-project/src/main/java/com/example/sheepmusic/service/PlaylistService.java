@@ -111,11 +111,25 @@ public class PlaylistService {
     }
     
     /**
-     * 获取歌单详情
+     * 获取歌单详情（私有歌单仅属主可见）
      */
-    public Playlist getPlaylistById(Long playlistId) {
-        return playlistRepository.findById(playlistId)
+    public Playlist getPlaylistById(Long playlistId, Long viewerId) {
+        Playlist playlist = playlistRepository.findById(playlistId)
             .orElseThrow(() -> new RuntimeException("歌单不存在"));
+        checkPlaylistVisible(playlist, viewerId);
+        return playlist;
+    }
+
+    /**
+     * 校验歌单对查看者是否可见（私有歌单仅属主可见）
+     */
+    private void checkPlaylistVisible(Playlist playlist, Long viewerId) {
+        if (Boolean.TRUE.equals(playlist.getIsPublic())) {
+            return;
+        }
+        if (viewerId == null || !playlist.getUserId().equals(viewerId)) {
+            throw new RuntimeException("无权查看该歌单");
+        }
     }
     
     /**
@@ -239,16 +253,20 @@ public class PlaylistService {
     }
     
     /**
-     * 获取歌单的歌曲列表
+     * 获取歌单的歌曲列表（私有歌单仅属主可见）
      */
-    public List<PlaylistSong> getPlaylistSongs(Long playlistId) {
+    public List<PlaylistSong> getPlaylistSongs(Long playlistId, Long viewerId) {
+        checkPlaylistVisible(playlistRepository.findById(playlistId)
+            .orElseThrow(() -> new RuntimeException("歌单不存在")), viewerId);
         return playlistSongRepository.findByPlaylistIdOrderByAddTimeDesc(playlistId);
     }
-    
+
     /**
-     * 分页获取歌单的歌曲列表
+     * 分页获取歌单的歌曲列表（私有歌单仅属主可见）
      */
-    public Page<PlaylistSong> getPlaylistSongs(Long playlistId, Pageable pageable) {
+    public Page<PlaylistSong> getPlaylistSongs(Long playlistId, Pageable pageable, Long viewerId) {
+        checkPlaylistVisible(playlistRepository.findById(playlistId)
+            .orElseThrow(() -> new RuntimeException("歌单不存在")), viewerId);
         return playlistSongRepository.findByPlaylistIdOrderByAddTimeDesc(playlistId, pageable);
     }
     

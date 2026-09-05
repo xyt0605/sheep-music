@@ -22,6 +22,7 @@
             :src="processImageUrl(playerStore.currentSong?.cover) || defaultCover" 
             alt="封面" 
             :class="['song-cover', { 'playing': playerStore.isPlaying }]"
+            @error="handleCoverError"
           >
           <div class="cover-overlay">
             <el-icon class="expand-icon">
@@ -92,11 +93,18 @@
       
       <!-- 右侧：其他控制 -->
       <div class="player-right">
-        <!-- 音量控制 -->
+        <!-- 音量控制（图标随音量分级，点击静音/恢复，借鉴 Spotify） -->
         <div class="volume-control">
-          <el-icon><Headset /></el-icon>
-          <el-slider 
-            v-model="volumeValue" 
+          <el-icon
+            class="volume-icon"
+            :title="isMuted ? '取消静音' : '静音'"
+            @click="toggleMute"
+          >
+            <Mute v-if="isMuted" />
+            <Headset v-else />
+          </el-icon>
+          <el-slider
+            v-model="volumeValue"
             :show-tooltip="false"
             class="volume-slider"
             @input="handleVolumeChange"
@@ -222,43 +230,33 @@
       </div>
     </transition>
     
-    <!-- 播放列表对话框 -->
-    <el-dialog 
-      v-model="showPlaylistDialog" 
-      width="480px"
+    <!-- 播放队列抽屉（借鉴 Spotify / 网易云：当前高亮、点行切歌、行内移除、一键清空） -->
+    <el-drawer
+      v-model="showPlaylistDialog"
+      direction="rtl"
+      size="380px"
       append-to-body
-      class="playlist-dialog"
-      :show-close="false"
+      class="queue-drawer"
+      :with-header="false"
     >
-      <template #header="{ close, titleId, titleClass }">
-        <div class="playlist-header">
-          <div class="playlist-title">
-            <span>播放列表</span>
-            <span class="playlist-count">({{ playerStore.playlist.length }})</span>
-          </div>
-          <div class="header-actions">
-            <el-button
-              link
-              type="info"
-              :disabled="!playerStore.playlist.length"
-              @click="clearPlaylist"
-            >
-              <el-icon><Delete /></el-icon> 清空
-            </el-button>
-            <el-button
-              link
-              class="close-btn"
-              @click="close"
-            >
-              <el-icon><Close /></el-icon>
-            </el-button>
-          </div>
+      <div class="queue-header">
+        <div class="playlist-title">
+          <span>播放队列</span>
+          <span class="playlist-count">({{ playerStore.playlist.length }})</span>
         </div>
-      </template>
-      
+        <el-button
+          link
+          type="info"
+          :disabled="!playerStore.playlist.length"
+          @click="clearPlaylist"
+        >
+          <el-icon><Delete /></el-icon> 清空
+        </el-button>
+      </div>
+
       <div class="playlist-content">
-        <div 
-          v-for="(song, index) in playerStore.playlist" 
+        <div
+          v-for="(song, index) in playerStore.playlist"
           :key="song.id"
           class="playlist-item"
           :class="{ active: index === playerStore.currentIndex }"
@@ -277,7 +275,7 @@
               class="index-num"
             >{{ index + 1 }}</span>
           </div>
-          
+
           <!-- 信息 -->
           <div class="song-info-col">
             <div
@@ -293,12 +291,12 @@
               {{ getArtistsName(song) }}
             </div>
           </div>
-          
+
           <!-- 操作 -->
           <div class="song-actions-col">
-            <el-button 
-              link 
-              type="danger" 
+            <el-button
+              link
+              type="danger"
               class="delete-btn"
               @click.stop="playerStore.removeFromPlaylist(song.id)"
             >
@@ -306,18 +304,18 @@
             </el-button>
           </div>
         </div>
-        
+
         <div
           v-if="playerStore.playlist.length === 0"
           class="empty-playlist"
         >
           <el-empty
-            description="播放列表为空"
+            description="播放队列为空"
             :image-size="100"
           />
         </div>
       </div>
-    </el-dialog>
+    </el-drawer>
 
     <!-- 歌曲评论对话框 -->
     <el-dialog
@@ -367,7 +365,8 @@ import {
   ChatLineRound,
   Share,
   FullScreen,
-  Delete
+  Delete,
+  Mute
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
@@ -385,6 +384,12 @@ const showCommentsDialog = ref(false)
 const showShareDialog = ref(false)
 const shareData = ref({})
 const defaultCover = '/default-cover.svg'
+
+const handleCoverError = (event) => {
+  if (event.target?.src && !event.target.src.endsWith(defaultCover)) {
+    event.target.src = defaultCover
+  }
+}
 
 // 注入全屏歌词显示方法
 const showFullscreenLyric = inject('showFullscreenLyric', () => {
@@ -407,6 +412,19 @@ const sliderValue = computed({
 
 // 音量值（0-100）
 const volumeValue = ref(playerStore.volume * 100)
+
+// 静音切换（借鉴 Spotify：点击音量图标静音/恢复）
+const prevVolume = ref(volumeValue.value > 0 ? volumeValue.value : 70)
+const isMuted = computed(() => volumeValue.value === 0)
+const toggleMute = () => {
+  if (isMuted.value) {
+    volumeValue.value = prevVolume.value > 0 ? prevVolume.value : 70
+  } else {
+    prevVolume.value = volumeValue.value
+    volumeValue.value = 0
+  }
+  handleVolumeChange(volumeValue.value)
+}
 
 // 处理 OSS URL，使用服务器代理避免跨域
 const processImageUrl = (url) => {
@@ -557,6 +575,9 @@ const clearPlaylist = () => {
   playerStore.currentSong = null
   playerStore.isPlaying = false
   playerStore.currentIndex = -1
+  // 同步清空进度与时长，避免进度条残留上一首的值
+  playerStore.currentTime = 0
+  playerStore.duration = 0
   if (audioRef.value) {
     audioRef.value.pause()
     audioRef.value.currentTime = 0
@@ -1133,6 +1154,69 @@ onMounted(() => {
     border-radius: 0;
     z-index: 2000;
   }
+}
+
+/* ========== 播放队列抽屉（借鉴 Spotify / 网易云） ========== */
+.queue-drawer :deep(.el-drawer__body) {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+.queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.queue-header .playlist-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.queue-header .playlist-count {
+  margin-left: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.queue-drawer .playlist-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px 16px;
+}
+
+/* ========== 播放条细节（借鉴 Spotify：细进度条 hover 增粗、音量图标分级） ========== */
+.volume-icon {
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.volume-icon:hover {
+  color: var(--text-primary);
+}
+
+.progress-slider :deep(.el-slider__runway),
+.progress-slider :deep(.el-slider__bar) {
+  height: 4px;
+  transition: height 0.15s ease;
+}
+
+.progress-slider :deep(.el-slider__bar) {
+  background: var(--gradient-primary);
+}
+
+.player-progress:hover .progress-slider :deep(.el-slider__runway),
+.player-progress:hover .progress-slider :deep(.el-slider__bar) {
+  height: 6px;
 }
 </style>
 

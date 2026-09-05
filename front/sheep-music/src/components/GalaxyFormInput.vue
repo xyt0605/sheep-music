@@ -60,12 +60,12 @@ const onBlur = () => { focused.value = false; emit('blur', innerValue.value) }
 .gfi-input {
   width: 100%;
   padding: 16px 16px 14px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   outline: none;
-  border: 1.5px solid var(--border-color);
-  background: linear-gradient(180deg, var(--input-bg), rgba(255,255,255,0.92));
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
   color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
 }
 
@@ -84,8 +84,8 @@ const onBlur = () => { focused.value = false; emit('blur', innerValue.value) }
 
 .gfi.focused .gfi-input,
 .gfi.filled .gfi-input {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.18);
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 3px rgba(201, 255, 69, 0.16);
 }
 
 .gfi.focused .gfi-label,
@@ -93,7 +93,7 @@ const onBlur = () => { focused.value = false; emit('blur', innerValue.value) }
   top: 0;
   transform: translateY(-50%) scale(0.85);
   background: var(--card-bg);
-  color: var(--color-primary);
+  color: var(--color-primary-light);
 }
 
 .gfi-message {
@@ -102,6 +102,6 @@ const onBlur = () => { focused.value = false; emit('blur', innerValue.value) }
   color: var(--text-tertiary);
 }
 
-.sm .gfi-input { padding: 12px 14px; border-radius: 10px; }
+.sm .gfi-input { padding: 12px 14px; border-radius: var(--radius-md); }
 .lg .gfi-input { padding: 18px 18px; }
 </style>

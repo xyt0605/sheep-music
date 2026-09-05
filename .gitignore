@@ -158,3 +158,6 @@ coverage/
 .codex-qa-*/
 *简历*.pdf
 
+
+# npm 本地缓存（npm run 产生的临时缓存，勿提交）
+.npm-cache/

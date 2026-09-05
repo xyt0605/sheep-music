@@ -177,9 +177,9 @@
           </el-button>
         </div>
 
-        <!-- 内联评论区域（只在有评论时显示）-->
+        <!-- 内联评论区域（有评论，或用户点过评论按钮时显示）-->
         <div
-          v-if="(getMomentState(moment.id).total || moment.commentCount) > 0"
+          v-if="getMomentState(moment.id).expanded || (getMomentState(moment.id).total || moment.commentCount) > 0"
           class="moment-comments-section"
         >
           <div class="comment-input">
@@ -403,7 +403,8 @@ const getMomentState = (id) => {
       posting: false,
       input: '',
       total: 0,          // 总评论数
-      currentPage: 1     // 当前页码（用于分页器）
+      currentPage: 1,    // 当前页码（用于分页器）
+      expanded: false    // 用户点过评论按钮后强制展开（0条评论时也要能写第一条评论）
     }
   }
   return commentsByMoment.value[id]
@@ -523,6 +524,8 @@ const handleLike = async (moment) => {
 // 评论按钮（用于首次加载或聚焦，无弹窗）
 const handleComment = async (moment) => {
   const st = getMomentState(moment.id)
+  // 点评论按钮必须展开评论区，否则 0 条评论的动态永远无法发出第一条评论
+  st.expanded = true
   if (st.items.length === 0) {
     await loadMomentComments(moment.id, true)
   }

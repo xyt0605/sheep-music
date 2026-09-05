@@ -32,6 +32,11 @@ public interface CommentLikeRepository extends JpaRepository<CommentLike, Long> 
      * 查询评论的所有点赞记录
      */
     List<CommentLike> findByCommentId(Long commentId);
+
+    /**
+     * 查询一批评论的所有点赞记录
+     */
+    List<CommentLike> findByCommentIdIn(java.util.Collection<Long> commentIds);
     
     /**
      * 统计评论点赞数

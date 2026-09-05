@@ -45,12 +45,13 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     long countBySenderIdAndReceiverIdAndIsReadFalse(Long senderId, Long receiverId);
     
     /**
-     * 批量标记消息为已读
+     * 批量标记消息为已读（仅限接收者本人的消息）
      */
     @Modifying
     @Query("UPDATE ChatMessage m SET m.isRead = true, m.readTime = :readTime " +
-           "WHERE m.id IN :messageIds")
-    void markAsRead(@Param("messageIds") List<Long> messageIds, 
+           "WHERE m.id IN :messageIds AND m.receiverId = :receiverId")
+    void markAsRead(@Param("messageIds") List<Long> messageIds,
+                    @Param("receiverId") Long receiverId,
                     @Param("readTime") LocalDateTime readTime);
     
     /**

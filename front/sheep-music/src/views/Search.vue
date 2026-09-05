@@ -298,7 +298,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePlayerStore } from '@/store/player'
 import { useUserStore } from '@/store/user'
@@ -334,11 +334,11 @@ const pageSize = ref(20)
 // 搜索类型选项
 const searchTypeOptions = [
   {
-    label: '🎵 单曲',
+    label: '单曲',
     value: 'songs'
   },
   {
-    label: '👤 歌手',
+    label: '歌手',
     value: 'artists'
   }
 ]
@@ -377,6 +377,14 @@ const searchPlaceholder = computed(() => {
 })
 
 // ========== 初始化 ==========
+// 组件卸载时清掉未触发的防抖定时器，避免卸载后仍发起请求
+onUnmounted(() => {
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+    searchTimer = null
+  }
+})
+
 onMounted(() => {
   loadHotSearches()
   loadSearchHistory()
@@ -647,10 +655,21 @@ const formatDuration = (seconds) => {
 }
 
 // 高亮关键词
+const escapeHtml = (str) => String(str)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;')
+
+const escapeRegExp = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 const highlightKeyword = (text) => {
-  if (!keyword.value || !text) return text
-  const regex = new RegExp(`(${keyword.value})`, 'gi')
-  return text.replace(regex, '<span class="highlight">$1</span>')
+  if (!keyword.value || !text) return escapeHtml(text ?? '')
+  // 关键词做正则转义（否则输入 "(" 等元字符直接抛异常，渲染崩溃）、
+  // 文本做 HTML 转义（v-html 存在 XSS 注入风险）
+  const regex = new RegExp(`(${escapeRegExp(keyword.value)})`, 'gi')
+  return escapeHtml(text).replace(regex, '<span class="highlight">$1</span>')
 }
 
 // 分页切换

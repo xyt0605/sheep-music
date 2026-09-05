@@ -98,9 +98,11 @@ public class MomentController {
     public Result<Page<UserMoment>> getUserMoments(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest request) {
         try {
-            Page<UserMoment> moments = momentService.getUserMoments(userId, page, size);
+            Long viewerId = jwtUtil.getUserIdFromRequest(request);
+            Page<UserMoment> moments = momentService.getUserMoments(userId, viewerId, page, size);
             return Result.success("查询成功", moments);
         } catch (Exception e) {
             return Result.error(e.getMessage());

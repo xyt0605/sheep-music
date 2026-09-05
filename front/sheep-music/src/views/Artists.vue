@@ -1,7 +1,7 @@
 <template>
   <div class="artists-page">
     <div class="page-header">
-      <h2>🎤 全部歌手</h2>
+      <h2>全部歌手</h2>
       <p class="subtitle">
         发现你喜欢的音乐人
       </p>
@@ -133,7 +133,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Search, Loading, User, UserFilled, CaretRight } from '@element-plus/icons-vue'
@@ -266,6 +266,14 @@ export default {
     // 初始化
     onMounted(() => {
       loadArtists()
+    })
+
+    // 组件卸载时清掉未触发的防抖定时器，避免卸载后仍发起请求
+    onUnmounted(() => {
+      if (searchTimer) {
+        clearTimeout(searchTimer)
+        searchTimer = null
+      }
     })
     
     return {

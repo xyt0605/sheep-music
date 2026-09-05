@@ -26,6 +26,11 @@ public interface MomentLikeRepository extends JpaRepository<MomentLike, Long> {
      * 删除点赞记录
      */
     void deleteByMomentIdAndUserId(Long momentId, Long userId);
+
+    /**
+     * 删除某条动态的全部点赞记录
+     */
+    void deleteByMomentId(Long momentId);
     
     /**
      * 统计动态点赞数

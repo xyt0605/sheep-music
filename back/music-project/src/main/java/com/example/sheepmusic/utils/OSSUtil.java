@@ -41,21 +41,16 @@ public class OSSUtil {
      * @return 文件访问URL
      */
     public String uploadFile(MultipartFile file, String folder) throws IOException {
-        // 打印配置信息（调试用）
-        System.out.println("OSS配置 - endpoint: " + endpoint);
-        System.out.println("OSS配置 - bucketName: " + bucketName);
-        System.out.println("OSS配置 - accessKeyId: " + accessKeyId);
-        System.out.println("OSS配置 - urlPrefix: " + urlPrefix);
-        
         // 1. 获取原始文件名
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null) {
             throw new RuntimeException("文件名不能为空");
         }
-        
-        // 2. 获取文件扩展名
-        String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        
+
+        // 2. 获取文件扩展名（无扩展名时置空，避免越界异常）
+        int dotIndex = originalFilename.lastIndexOf('.');
+        String extension = dotIndex >= 0 ? originalFilename.substring(dotIndex) : "";
+
         // 3. 生成唯一文件名：folder + UUID + 扩展名
         String fileName = folder + UUID.randomUUID().toString() + extension;
         

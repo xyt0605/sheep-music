@@ -15,19 +15,24 @@ export const usePlayerStore = defineStore('player', () => {
   const volume = ref(0.7) // 音量 0-1
   const showPlayer = ref(false) // 是否显示播放器
   const showLyric = ref(false) // 是否显示歌词
+  const showDesktopLyric = ref(false) // 桌面歌词显隐（Layout 按钮 / 全屏歌词 / DesktopLyric 组件共享）
   const playMode = ref('list') // 播放模式：list-列表循环, random-随机播放, single-单曲循环
   
   // Audio 元素
   const audio = ref(null)
   
   // 计算属性
-  const hasNextSong = computed(() => {
-    return currentIndex.value < playlist.value.length - 1
+  // 手动切歌与自动切歌（getNextIndex）保持一致：列表/单曲模式下可回绕，
+  // 随机模式只要多于一首即可切
+  const canSwitchSong = computed(() => {
+    if (playlist.value.length === 0) return false
+    if (playMode.value === 'random') return playlist.value.length > 1
+    return true
   })
-  
-  const hasPrevSong = computed(() => {
-    return currentIndex.value > 0
-  })
+
+  const hasNextSong = canSwitchSong
+
+  const hasPrevSong = canSwitchSong
   
   // 初始化音频元素
   const initAudio = (audioElement) => {
@@ -75,9 +80,15 @@ export const usePlayerStore = defineStore('player', () => {
     try {
       // 如果提供了播放列表，更新播放列表
       if (list && list.length > 0) {
-        playlist.value = list
         const index = list.findIndex(s => s.id === song.id)
-        currentIndex.value = index >= 0 ? index : 0
+        if (index >= 0) {
+          playlist.value = list
+          currentIndex.value = index
+        } else {
+          // 歌曲不在列表中：插入到队首，保证 currentIndex 与 currentSong 指向一致
+          playlist.value = [song, ...list]
+          currentIndex.value = 0
+        }
       } else if (currentSong.value?.id !== song.id) {
         // 如果是新歌曲且没有提供列表，添加到当前播放列表
         const existIndex = playlist.value.findIndex(s => s.id === song.id)
@@ -116,14 +127,17 @@ export const usePlayerStore = defineStore('player', () => {
           try { audio.value.load() } catch (e) {}
         }
         
-        // 等待可以播放再开始
+        // 等待可以播放再开始；只有真正开始播放才置为播放中状态，
+        // 避免资源加载失败时 UI 卡在"播放中"且进度条冻结
         try {
           await audio.value.play()
+          isPlaying.value = true
         } catch (e) {
           // 某些浏览器需要用户交互后才能自动播放
           console.warn('音频播放受限或中断，将在用户交互后恢复：', e?.message || e)
+          isPlaying.value = false
+          return
         }
-        isPlaying.value = true
         
         // 调用后端 API 增加播放次数
         try {
@@ -158,10 +172,13 @@ export const usePlayerStore = defineStore('player', () => {
   
   // 继续播放
   const resume = () => {
-    if (audio.value) {
-      audio.value.play()
-      isPlaying.value = true
-    }
+    if (!audio.value) return
+    Promise.resolve(audio.value.play())
+      .then(() => { isPlaying.value = true })
+      .catch((e) => {
+        console.warn('恢复播放失败：', e?.message || e)
+        isPlaying.value = false
+      })
   }
   
   // 切换播放/暂停
@@ -206,12 +223,17 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
   
-  // 上一曲
+  // 上一曲（与自动切歌一致：列表/单曲模式回绕，随机模式随机换一首）
   const prev = () => {
-    if (hasPrevSong.value) {
-      currentIndex.value--
-      play(playlist.value[currentIndex.value])
+    if (!hasPrevSong.value) return
+    if (playMode.value === 'random') {
+      currentIndex.value = getNextIndex()
+    } else {
+      currentIndex.value = currentIndex.value > 0
+        ? currentIndex.value - 1
+        : playlist.value.length - 1
     }
+    play(playlist.value[currentIndex.value])
   }
   
   // 跳转到指定时间
@@ -241,17 +263,36 @@ export const usePlayerStore = defineStore('player', () => {
   // 从播放列表移除
   const removeFromPlaylist = (songId) => {
     const index = playlist.value.findIndex(s => s.id === songId)
-    if (index >= 0) {
-      playlist.value.splice(index, 1)
-      if (index < currentIndex.value) {
-        currentIndex.value--
+    if (index < 0) return
+    const isCurrent = index === currentIndex.value
+    playlist.value.splice(index, 1)
+
+    if (index < currentIndex.value) {
+      // 移除的是当前歌曲之前的歌：索引前移一位
+      currentIndex.value--
+    } else if (isCurrent) {
+      // 移除的正是当前播放的歌：同步切换/清理，避免索引越界或高亮错位
+      if (playlist.value.length === 0) {
+        pause()
+        currentSong.value = null
+        currentIndex.value = -1
+        return
       }
+      if (currentIndex.value >= playlist.value.length) {
+        currentIndex.value = playlist.value.length - 1
+      }
+      play(playlist.value[currentIndex.value])
     }
   }
   
   // 切换歌词显示
   const toggleLyric = () => {
     showLyric.value = !showLyric.value
+  }
+
+  // 切换桌面歌词显示
+  const toggleDesktopLyric = () => {
+    showDesktopLyric.value = !showDesktopLyric.value
   }
   
   // 设置播放模式
@@ -297,12 +338,13 @@ export const usePlayerStore = defineStore('player', () => {
     volume,
     showPlayer,
     showLyric,
+    showDesktopLyric,
     playMode,
-    
+
     // 计算属性
     hasNextSong,
     hasPrevSong,
-    
+
     // 方法
     initAudio,
     play,
@@ -316,6 +358,7 @@ export const usePlayerStore = defineStore('player', () => {
     addToPlaylist,
     removeFromPlaylist,
     toggleLyric,
+    toggleDesktopLyric,
     setPlayMode,
     togglePlayMode,
     clearPlayer

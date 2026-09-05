@@ -1,7 +1,7 @@
 <template>
   <div class="playlist-square">
     <div class="page-header">
-      <h2>🎵 歌单广场</h2>
+      <h2>歌单广场</h2>
       <p class="subtitle">
         发现更多精彩歌单
       </p>

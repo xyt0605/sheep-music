@@ -1,6 +1,17 @@
 import request from '@/utils/request'
 
 /**
+ * 批量导入歌手名称，重复项由后端自动复用。
+ */
+export const importArtists = (names) => {
+  return request({
+    url: '/admin/artist/import',
+    method: 'post',
+    data: { names }
+  })
+}
+
+/**
  * 创建歌手
  */
 export const createArtist = (data) => {

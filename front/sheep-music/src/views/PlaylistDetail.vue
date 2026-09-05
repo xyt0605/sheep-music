@@ -375,9 +375,7 @@ export default {
         if (res.code === 200) {
           playlist.value = res.data
           await loadSongs(playlistId)
-
-          // 增加播放次数
-          incrementPlayCount(playlistId).catch(() => {})
+          // 播放次数改为实际播放时统计（在 playAll/playSong 中），不再按页面访问量累加
         }
       } catch (error) {
         console.error('加载歌单失败:', error)
@@ -427,6 +425,9 @@ export default {
         commentSongId.value = songList[0]?.id || null
       }
 
+      // 实际播放时才累计歌单播放次数
+      incrementPlayCount(route.params.id).catch(() => {})
+
       ElMessage.success(random ? '开始随机播放' : '开始播放全部')
     }
 
@@ -438,6 +439,8 @@ export default {
       if (song.id) {
         commentSongId.value = song.id
       }
+      // 实际播放时才累计歌单播放次数
+      incrementPlayCount(route.params.id).catch(() => {})
     }
 
     // 添加到播放列表

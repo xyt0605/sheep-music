@@ -56,8 +56,8 @@ public class ConversationService {
                                                String message, LocalDateTime time) {
         Conversation conversation = conversationRepository
             .findByUserIdAndFriendId(userId, friendId)
-            .orElse(createOrUpdateConversation(userId, friendId));
-        
+            .orElseGet(() -> createOrUpdateConversation(userId, friendId));
+
         conversation.setLastMessageContent(message);
         conversation.setLastMessageTime(time);
         conversation.setUnreadCount(conversation.getUnreadCount() + 1);
@@ -72,8 +72,8 @@ public class ConversationService {
                                          String message, LocalDateTime time) {
         Conversation conversation = conversationRepository
             .findByUserIdAndFriendId(userId, friendId)
-            .orElse(createOrUpdateConversation(userId, friendId));
-        
+            .orElseGet(() -> createOrUpdateConversation(userId, friendId));
+
         conversation.setLastMessageContent(message);
         conversation.setLastMessageTime(time);
         // 不增加 unreadCount，因为发送者自己发的消息不需要未读提示

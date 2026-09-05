@@ -32,8 +32,17 @@ export default defineConfig({
   server: {
     port: 8001,
     proxy: {
+      // 与生产 Nginx 保持一致：播放器会把 OSS 地址改写为 /api/oss/*。
+      // 必须放在普通 /api 代理之前，否则媒体请求会被转发到 Spring Boot 并返回 401/404。
+      '/api/oss': {
+        target: 'https://sheepmusic.oss-cn-hangzhou.aliyuncs.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api\/oss/, '')
+      },
       '/api': {
-        target: 'http://localhost:9000',
+        // 本机 9000 被占用时可用 VITE_PROXY_TARGET 指到其他后端端口
+        target: process.env.VITE_PROXY_TARGET || 'http://localhost:9000',
         changeOrigin: true,
         ws: true,
         rewrite: (path) => path.replace(/^\/api/, '')

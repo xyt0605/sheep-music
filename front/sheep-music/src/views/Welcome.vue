@@ -1,177 +1,28 @@
 <template>
   <div class="welcome-container">
-    <div class="welcome-content">
-      <!-- Logo 和标题 -->
-      <div class="logo-section">
-        <div class="music-icon">
-          <svg
-            width="72"
-            height="72"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <defs>
-              <linearGradient
-                id="g1"
-                x1="0"
-                y1="0"
-                x2="1"
-                y2="1"
-              >
-                <stop
-                  offset="0%"
-                  stop-color="#0ea5e9"
-                />
-                <stop
-                  offset="100%"
-                  stop-color="#22d3ee"
-                />
-              </linearGradient>
-            </defs>
-            <path
-              d="M9 19a3 3 0 1 1-3-3 3 3 0 0 1 3 3Zm9-12v8.5a3.5 3.5 0 1 1-2-3.15V7h-7v8.5a3.5 3.5 0 1 1-2-3.15V5h11Z"
-              stroke="url(#g1)"
-              stroke-width="1.6"
-              fill="none"
-            />
-          </svg>
-        </div>
-        <h1 class="title">
-          Sheep Music
-        </h1>
-        <p class="subtitle">
-          发现音乐，享受生活
-        </p>
-      </div>
-      
-      <!-- 功能介绍 -->
-      <div class="features">
-        <div class="feature-item">
-          <div class="feature-icon">
-            <svg
-              width="42"
-              height="42"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <linearGradient
-                  id="g2"
-                  x1="0"
-                  y1="0"
-                  x2="1"
-                  y2="1"
-                >
-                  <stop
-                    offset="0%"
-                    stop-color="#06b6d4"
-                  />
-                  <stop
-                    offset="100%"
-                    stop-color="#3b82f6"
-                  />
-                </linearGradient>
-              </defs>
-              <path
-                d="M6 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm12 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM9 12V6a3 3 0 0 1 3-3h4"
-                stroke="url(#g2)"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
-          </div>
-          <div class="feature-text">
-            海量音乐库
-          </div>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon">
-            <svg
-              width="42"
-              height="42"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <linearGradient
-                  id="g3"
-                  x1="0"
-                  y1="0"
-                  x2="1"
-                  y2="1"
-                >
-                  <stop
-                    offset="0%"
-                    stop-color="#06b6d4"
-                  />
-                  <stop
-                    offset="100%"
-                    stop-color="#3b82f6"
-                  />
-                </linearGradient>
-              </defs>
-              <path
-                d="M8 5h8a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Z"
-                stroke="url(#g3)"
-                stroke-width="1.6"
-              />
-              <path
-                d="M10 12l5 3V9l-5 3Z"
-                stroke="url(#g3)"
-                stroke-width="1.6"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-          <div class="feature-text">
-            随时随地播放
-          </div>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon">
-            <svg
-              width="42"
-              height="42"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <linearGradient
-                  id="g4"
-                  x1="0"
-                  y1="0"
-                  x2="1"
-                  y2="1"
-                >
-                  <stop
-                    offset="0%"
-                    stop-color="#06b6d4"
-                  />
-                  <stop
-                    offset="100%"
-                    stop-color="#3b82f6"
-                  />
-                </linearGradient>
-              </defs>
-              <path
-                d="M12 21s-6-3.5-6-8a4 4 0 0 1 8 0 4 4 0 0 1 8 0c0 4.5-6 8-10 8Z"
-                stroke="url(#g4)"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-            </svg>
-          </div>
-          <div class="feature-text">
-            创建专属歌单
-          </div>
-        </div>
-      </div>
-      
-      <!-- 操作按钮 -->
+    <video
+      class="welcome-film"
+      src="/editorial/night-loop.mp4"
+      poster="/editorial/night-portrait.jpg"
+      autoplay
+      muted
+      loop
+      playsinline
+    />
+    <div class="welcome-veil" />
+
+    <header class="welcome-brand">
+      <span class="brand-glyph">S</span>
+      <strong>Sheep Music</strong>
+    </header>
+
+    <main class="welcome-content">
+      <p class="issue-label">PRIVATE LISTENING ROOM · VOL. 01</p>
+      <h1 class="title">Sheep Music</h1>
+      <p class="subtitle">
+        把正在循环的歌、想留下的片段，以及朋友分享来的旋律，收进同一个私人空间。
+      </p>
+
       <div class="action-buttons">
         <GalaxyButton
           size="lg"
@@ -190,12 +41,15 @@
           免费注册
         </GalaxyButton>
       </div>
-      
-      <!-- 底部说明 -->
-      <div class="footer-text">
-        <p>开启你的音乐之旅</p>
-      </div>
-    </div>
+
+      <p class="welcome-note">SOUND ON · MEMORY IN MOTION</p>
+    </main>
+
+    <footer class="welcome-strip">
+      <div><span>01</span><strong>私人歌单</strong></div>
+      <div><span>02</span><strong>每日推荐</strong></div>
+      <div><span>03</span><strong>好友电台</strong></div>
+    </footer>
   </div>
 </template>
 
@@ -227,156 +81,222 @@ export default {
 
 <style scoped>
 .welcome-container {
+  position: relative;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: grid;
+  padding: clamp(28px, 4vw, 58px);
+  align-content: center;
+  overflow: hidden;
+  background: #080a08;
+  color: #f7f5ee;
+}
+
+.welcome-film,
+.welcome-veil {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.welcome-film {
+  object-fit: cover;
+  object-position: center 34%;
+}
+
+.welcome-veil {
   background:
-    linear-gradient(135deg, #0b1325 0%, #0f1e33 100%),
-    radial-gradient(800px 400px at 20% 30%, rgba(14,165,233,0.12), transparent 60%),
-    radial-gradient(700px 350px at 80% 20%, rgba(34,211,238,0.10), transparent 65%),
-    repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 8px);
-  padding: 20px;
+    linear-gradient(90deg, rgba(6, 8, 6, 0.9) 0%, rgba(6, 8, 6, 0.58) 40%, rgba(6, 8, 6, 0.12) 68%),
+    linear-gradient(0deg, rgba(6, 8, 6, 0.82), transparent 42%);
+}
+
+.welcome-brand,
+.welcome-content,
+.welcome-strip {
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-brand {
+  position: absolute;
+  top: clamp(28px, 4vw, 58px);
+  left: clamp(28px, 4vw, 58px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: Georgia, serif;
+  font-size: 20px;
+}
+
+.brand-glyph {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  background: var(--signal-lime);
+  color: #11120f;
+  font-size: 21px;
+  font-weight: 800;
 }
 
 .welcome-content {
-  text-align: center;
-  color: var(--text-primary);
-  animation: fadeIn 0.8s ease-in;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color-light);
-  box-shadow: var(--shadow-xl);
-  backdrop-filter: blur(18px);
-  border-radius: 20px;
-  padding: 48px 56px;
+  width: min(720px, 68vw);
+  margin-top: 46px;
+  animation: welcomeIn 0.7s ease both;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.issue-label,
+.welcome-note,
+.welcome-strip span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
 }
 
-/* Logo 区域 */
-.logo-section {
-  margin-bottom: 60px;
-}
-
-.music-icon {
-  margin-bottom: 16px;
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+.issue-label {
+  color: var(--signal-lime);
 }
 
 .title {
-  font-size: 52px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
+  margin: 24px 0 18px;
+  font-family: var(--font-display);
+  font-size: clamp(64px, 10vw, 150px);
+  font-weight: 700;
+  line-height: 0.88;
+  letter-spacing: 0;
 }
 
 .subtitle {
-  font-size: 18px;
-  color: var(--text-tertiary);
+  max-width: 620px;
+  margin: 0;
+  color: #d0d3c9;
+  font-size: clamp(14px, 1.4vw, 18px);
+  line-height: 1.9;
 }
 
-/* 功能介绍 */
-.features {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  margin-bottom: 40px;
-  flex-wrap: wrap;
-}
-
-.feature-item {
-  text-align: center;
-  padding: 18px 20px;
-  border-radius: 16px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-  backdrop-filter: blur(12px);
-  min-width: 180px;
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
-}
-
-.feature-icon {
-  margin-bottom: 10px;
-}
-
-.feature-icon svg {
-  filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.35));
-}
-
-.feature-text {
-  font-size: 15px;
-  color: var(--text-secondary);
-}
-
-/* 按钮区域 */
 .action-buttons {
   display: flex;
-  gap: 20px;
-  justify-content: center;
-  margin-bottom: 36px;
+  gap: 12px;
+  margin-top: 34px;
   flex-wrap: wrap;
 }
 
 :deep(.galaxy-button.primary) {
-  background: linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%);
-  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.35);
+  background: var(--signal-lime);
+  color: #11120f;
 }
 
 :deep(.galaxy-button.secondary) {
-  background: linear-gradient(135deg, #1f2937 0%, #334155 100%);
-  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(10, 12, 10, 0.52);
+  color: #f7f5ee;
 }
 
 .action-btn {
-  min-width: 180px;
+  min-width: 154px;
 }
 
-.action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+.welcome-note {
+  margin-top: 24px;
+  color: #888d81;
 }
 
-.outline {
-  background: transparent;
-  border: 1.5px solid rgba(255,255,255,0.12);
-  color: #e5e7eb;
+.welcome-strip {
+  position: absolute;
+  right: clamp(28px, 4vw, 58px);
+  bottom: clamp(28px, 4vw, 58px);
+  left: clamp(28px, 4vw, 58px);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
 }
 
-/* 底部文字 */
-.footer-text {
-  font-size: 13px;
-  color: var(--text-tertiary);
+.welcome-strip div {
+  display: grid;
+  min-height: 68px;
+  padding: 14px 18px 0 0;
+  align-content: start;
+  gap: 4px;
+  border-right: 1px solid rgba(255, 255, 255, 0.16);
 }
 
-/* 响应式设计 */
+.welcome-strip div:last-child {
+  border-right: 0;
+  padding-left: 18px;
+}
+
+.welcome-strip div:nth-child(2) {
+  padding-left: 18px;
+}
+
+.welcome-strip span {
+  color: var(--signal-lime);
+}
+
+.welcome-strip strong {
+  font-size: 12px;
+  font-weight: 650;
+}
+
+@keyframes welcomeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @media (max-width: 768px) {
-  .title { font-size: 36px; }
-  .features { gap: 16px; }
-  
-  .action-buttons {
-    flex-direction: column;
-    align-items: center;
+  .welcome-container {
+    min-height: 100svh;
+    padding: 96px 24px 168px;
+    align-content: end;
+  }
+
+  .welcome-film {
+    object-position: 58% center;
+  }
+
+  .welcome-veil {
+    background: linear-gradient(0deg, rgba(6, 8, 6, 0.96) 0%, rgba(6, 8, 6, 0.62) 54%, rgba(6, 8, 6, 0.18) 100%);
+  }
+
+  .welcome-brand {
+    top: 26px;
+    left: 24px;
+  }
+
+  .welcome-content {
+    width: 100%;
+    margin: 0;
+  }
+
+  .title {
+    font-size: clamp(58px, 20vw, 92px);
   }
   
-  .action-btn { width: 100%; max-width: 320px; }
+  .action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .action-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .welcome-strip {
+    right: 24px;
+    bottom: 18px;
+    left: 24px;
+  }
+
+  .welcome-strip div {
+    min-height: 58px;
+    padding-top: 11px;
+  }
+
+  .welcome-strip strong {
+    font-size: 10px;
+  }
 }
 </style>
 

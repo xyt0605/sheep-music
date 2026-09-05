@@ -1,13 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#6a11cb"/>
-      <stop offset="1" stop-color="#2575fc"/>
-    </linearGradient>
-  </defs>
-  <rect x="0" y="0" width="200" height="200" rx="16" fill="url(#g)"/>
-  <g fill="#ffffff" opacity="0.9">
-    <path d="M120 40v80.5c-4.5-2.9-10.3-4.5-16.5-4.5-16.6 0-30 10.7-30 24s13.4 24 30 24 30-10.7 30-24V72h24V40h-37.5z"/>
-  </g>
-  <text x="100" y="180" font-size="20" text-anchor="middle" fill="#ffffff" opacity="0.85">Music</text>
+  <rect width="200" height="200" rx="6" fill="#11130f"/>
+  <path d="M0 50h200M0 100h200M0 150h200M50 0v200M100 0v200M150 0v200" stroke="#292d24" stroke-width="1"/>
+  <circle cx="100" cy="92" r="48" fill="#c9ff45"/>
+  <circle cx="100" cy="92" r="16" fill="#11130f"/>
+  <path d="M96 58v54c-4-3-9-4-14-4-11 0-20 7-20 16s9 16 20 16 20-7 20-16V76h25V58H96Z" fill="#11130f"/>
+  <text x="16" y="181" fill="#f5f4ee" font-family="monospace" font-size="10" font-weight="700">SHEEP / UNTITLED 01</text>
 </svg>

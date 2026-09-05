@@ -1,6 +1,52 @@
 <template>
   <div class="app-layout">
     <div class="galaxy-bg" />
+    <!-- 桌面端侧边栏（借鉴 Spotify，≥1181px 显示；小屏由顶部导航接管） -->
+    <aside class="app-sidebar">
+      <div
+        class="sidebar-brand"
+        @click="goHome"
+      >
+        <span class="brand-mark">S</span>
+        <span class="brand-copy">
+          <strong>Sheep Music</strong>
+          <small>PERSONAL RADIO</small>
+        </span>
+      </div>
+      <nav class="sidebar-nav">
+        <div
+          v-for="(section, idx) in sidebarSections"
+          :key="idx"
+          class="sidebar-section"
+        >
+          <div
+            v-if="section.label"
+            class="sidebar-section-label"
+          >{{ section.label }}</div>
+          <router-link
+            v-for="item in section.items"
+            :key="item.path"
+            :to="item.path"
+            class="sidebar-item"
+            active-class="active"
+          >
+            <el-icon class="menu-icon">
+              <component :is="item.icon" />
+            </el-icon>
+            <span class="menu-label">{{ item.name }}</span>
+            <el-badge
+              v-if="item.badge && item.badge > 0"
+              :value="item.badge"
+              :max="99"
+              class="sidebar-badge"
+            />
+          </router-link>
+        </div>
+      </nav>
+      <div class="sidebar-foot">
+        ON AIR / 私人频道
+      </div>
+    </aside>
     <!-- 顶部导航栏 -->
     <header class="app-header">
       <div class="header-content">
@@ -9,9 +55,47 @@
           class="logo"
           @click="goHome"
         >
-          <span class="logo-icon">🎵</span>
-          <span class="logo-text">Sheep Music</span>
+          <span class="brand-mark">S</span>
+          <span class="brand-copy">
+            <strong>Sheep Music</strong>
+            <small>PERSONAL RADIO</small>
+          </span>
         </div>
+
+        <div class="route-toolbar">
+          <button
+            class="history-button"
+            type="button"
+            title="后退"
+            aria-label="后退"
+            @click="navigateHistory(-1)"
+          >
+            <el-icon><ArrowLeft /></el-icon>
+          </button>
+          <button
+            class="history-button"
+            type="button"
+            title="前进"
+            aria-label="前进"
+            @click="navigateHistory(1)"
+          >
+            <el-icon><ArrowRight /></el-icon>
+          </button>
+          <div class="route-meta">
+            <span>NOW BROWSING</span>
+            <strong>{{ currentPageTitle }}</strong>
+          </div>
+        </div>
+
+        <button
+          class="quick-search"
+          type="button"
+          @click="goSearch"
+        >
+          <el-icon><Search /></el-icon>
+          <span>搜索歌曲、歌手或歌单</span>
+          <kbd>Ctrl F</kbd>
+        </button>
         
         <!-- 导航菜单（桌面端） -->
         <nav class="nav-menu desktop-menu">
@@ -26,10 +110,12 @@
               class="nav-item"
               active-class="active"
             >
-              <span
+              <el-icon
                 v-if="item.icon"
                 class="menu-icon"
-              >{{ item.icon }}</span>
+              >
+                <component :is="item.icon" />
+              </el-icon>
               <span class="menu-label">{{ item.name }}</span>
             </router-link>
             
@@ -39,10 +125,12 @@
               class="nav-dropdown"
             >
               <div class="nav-item dropdown-trigger">
-                <span
+                <el-icon
                   v-if="item.icon"
                   class="menu-icon"
-                >{{ item.icon }}</span>
+                >
+                  <component :is="item.icon" />
+                </el-icon>
                 <span class="menu-label">{{ item.name }}</span>
                 <span class="dropdown-arrow">▾</span>
               </div>
@@ -54,10 +142,12 @@
                   class="dropdown-item"
                   active-class="active"
                 >
-                  <span
+                  <el-icon
                     v-if="child.icon"
                     class="menu-icon"
-                  >{{ child.icon }}</span>
+                  >
+                    <component :is="child.icon" />
+                  </el-icon>
                   <span class="menu-label">{{ child.name }}</span>
                   <el-badge
                     v-if="child.badge && child.badge > 0"
@@ -76,7 +166,7 @@
           class="mobile-menu-btn"
           @click="toggleMobileMenu"
         >
-          <span class="menu-icon">☰</span>
+          <el-icon><Menu /></el-icon>
         </div>
         
         <!-- 右侧用户信息 -->
@@ -164,10 +254,12 @@
               active-class="active"
               @click="toggleMobileMenu"
             >
-              <span
+              <el-icon
                 v-if="item.icon"
                 class="menu-icon"
-              >{{ item.icon }}</span>
+              >
+                <component :is="item.icon" />
+              </el-icon>
               {{ item.name }}
             </router-link>
             
@@ -180,10 +272,12 @@
                 class="mobile-group-header" 
                 @click="toggleGroup(item.name)"
               >
-                <span
+                <el-icon
                   v-if="item.icon"
                   class="menu-icon"
-                >{{ item.icon }}</span>
+                >
+                  <component :is="item.icon" />
+                </el-icon>
                 {{ item.name }}
                 <span
                   class="expand-icon"
@@ -203,10 +297,12 @@
                     active-class="active"
                     @click="toggleMobileMenu"
                   >
-                    <span
+                    <el-icon
                       v-if="child.icon"
                       class="menu-icon"
-                    >{{ child.icon }}</span>
+                    >
+                      <component :is="child.icon" />
+                    </el-icon>
                     {{ child.name }}
                     <el-badge
                       v-if="child.badge && child.badge > 0"
@@ -245,7 +341,7 @@
 
 <script>
 import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store/user'
 import { usePlayerStore } from '@/store/player'
@@ -263,12 +359,13 @@ export default {
   },
   setup() {
     const router = useRouter()
+    const route = useRoute()
     const userStore = useUserStore()
     const playerStore = usePlayerStore()
     const socialStore = useSocialStore()
     const mobileMenuOpen = ref(false)
     const desktopLyricRef = ref(null)
-    const desktopLyricVisible = ref(false)
+    const desktopLyricVisible = computed(() => playerStore.showDesktopLyric)
     
     // 移动端分组展开状态
     const expandedGroups = ref({})
@@ -342,52 +439,94 @@ export default {
         { 
           name: '首页', 
           path: '/home', 
-          icon: '🏠',
+          icon: 'House',
           type: 'link'
         },
         {
           name: '发现音乐',
-          icon: '✨',
+          icon: 'Compass',
           type: 'dropdown',
           children: [
-            { name: '推荐', path: '/discover', icon: '💫' },
-            { name: '排行榜', path: '/rank', icon: '📊' },
-            { name: '歌单广场', path: '/playlist', icon: '📃' },
-            { name: '歌手', path: '/artists', icon: '🎤' },
-            { name: '搜索', path: '/search', icon: '🔍' }
+            { name: '推荐', path: '/discover', icon: 'MagicStick' },
+            { name: '排行榜', path: '/rank', icon: 'TrendCharts' },
+            { name: '歌单广场', path: '/playlist', icon: 'Collection' },
+            { name: '歌手', path: '/artists', icon: 'Microphone' },
+            { name: '搜索', path: '/search', icon: 'Search' }
           ]
         },
         {
           name: '我的音乐',
           path: '/my-music',
-          icon: '🎵',
+          icon: 'Headset',
           type: 'link'
         },
         {
           name: '社交互动',
-          icon: '💬',
+          icon: 'ChatLineRound',
           type: 'dropdown',
           children: [
-            { name: '好友', path: '/friends', icon: '👥', badge: socialStore.friendRequestCount },
-            { name: '聊天', path: '/chat', icon: '💬', badge: socialStore.unreadMessageCount },
-            { name: '动态', path: '/moments', icon: '📱' },
-            { name: '分享广场', path: '/share-square', icon: '🔗' }
+            { name: '好友', path: '/friends', icon: 'User', badge: socialStore.friendRequestCount },
+            { name: '聊天', path: '/chat', icon: 'ChatDotRound', badge: socialStore.unreadMessageCount },
+            { name: '动态', path: '/moments', icon: 'Camera' },
+            { name: '分享广场', path: '/share-square', icon: 'Share' }
           ]
         }
       ]
       
       // 如果是管理员，添加管理后台
       if (userStore.isAdmin) {
-        menu.push({ 
-          name: '管理后台', 
-          path: '/admin', 
-          icon: '🔧',
+        menu.push({
+          name: '管理后台',
+          path: '/admin',
+          icon: 'Setting',
           type: 'link'
         })
       }
-      
+
       return menu
     })
+
+    // 侧边栏分区（把顶部导航的分组拍平为 Spotify 式分区列表）
+    const sidebarSections = computed(() => {
+      const sections = []
+      let current = { label: null, items: [] }
+      const flush = () => {
+        if (current.items.length) {
+          sections.push(current)
+        }
+        current = { label: null, items: [] }
+      }
+      for (const item of menuItems.value) {
+        if (item.type === 'dropdown') {
+          flush()
+          sections.push({ label: item.name, items: item.children })
+        } else {
+          current.items.push(item)
+        }
+      }
+      flush()
+      return sections
+    })
+
+    const pageTitleMap = {
+      Home: '首页',
+      Discover: '发现音乐',
+      Rank: '排行榜',
+      Playlist: '歌单广场',
+      PlaylistDetail: '歌单详情',
+      Artists: '全部歌手',
+      ArtistDetail: '歌手详情',
+      Search: '搜索',
+      MyMusic: '我的音乐',
+      Profile: '个人中心',
+      Friends: '好友',
+      Chat: '聊天',
+      Moments: '动态',
+      ShareSquare: '分享广场',
+      Admin: '管理后台'
+    }
+
+    const currentPageTitle = computed(() => pageTitleMap[route.name] || 'Sheep Music')
     
     // 初始化社交数据
     onMounted(() => {
@@ -500,13 +639,18 @@ export default {
     const goHome = () => {
       router.push('/home')
     }
+
+    const goSearch = () => {
+      router.push('/search')
+    }
+
+    const navigateHistory = (direction) => {
+      router.go(direction)
+    }
     
-    // 切换桌面歌词
+    // 切换桌面歌词（显隐状态提升到 player store，全屏歌词中的按钮也能切换）
     const toggleDesktopLyric = () => {
-      if (desktopLyricRef.value) {
-        desktopLyricRef.value.toggle()
-        desktopLyricVisible.value = desktopLyricRef.value.visible
-      }
+      playerStore.toggleDesktopLyric()
     }
     
     // 下拉菜单操作
@@ -542,6 +686,8 @@ export default {
       userStore,
       socialStore,
       menuItems,
+      sidebarSections,
+      currentPageTitle,
       mobileMenuOpen,
       desktopLyricRef,
       desktopLyricVisible,
@@ -550,6 +696,8 @@ export default {
       toggleDesktopLyric,
       toggleGroup,
       goHome,
+      goSearch,
+      navigateHistory,
       handleCommand
     }
   }
@@ -968,6 +1116,142 @@ export default {
   transition: all var(--transition-base);
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
+}
+
+/* ========== 桌面端侧边栏（借鉴 Spotify，≥1181px 显示） ========== */
+.app-sidebar {
+  display: none;
+}
+
+@media (min-width: 1181px) {
+  .app-sidebar {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    bottom: 12px;
+    width: var(--sidebar-width);
+    z-index: 1001;
+    padding: 20px 10px 14px;
+    background: var(--bg-glass-strong);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: var(--glass-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 14px 18px;
+    font-size: 19px;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: 10px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--border-color-light);
+  }
+
+  .sidebar-section:last-child {
+    border-bottom: none;
+  }
+
+  .sidebar-section-label {
+    padding: 6px 14px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+  }
+
+  .sidebar-item:hover {
+    color: var(--text-primary);
+    background: var(--card-hover-bg);
+  }
+
+  .sidebar-item.active {
+    color: var(--text-primary);
+    background: var(--card-hover-bg);
+    box-shadow: inset 3px 0 0 var(--color-primary);
+  }
+
+  .sidebar-item .menu-icon {
+    font-size: 18px;
+    width: 22px;
+    text-align: center;
+  }
+
+  .sidebar-badge {
+    margin-left: auto;
+  }
+
+  .sidebar-foot {
+    padding: 12px 14px 4px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  /* 顶栏退化为工具条：避让侧边栏，隐藏品牌与主导航，仅保留右侧控件 */
+  .app-header {
+    left: calc(var(--sidebar-width) + 24px);
+    right: 12px;
+    top: 12px;
+    width: auto;
+    height: 60px;
+    border-radius: var(--radius-xl);
+  }
+
+  .header-content .logo {
+    display: none;
+  }
+
+  .desktop-menu {
+    display: none !important;
+  }
+
+  /* 主内容区避让侧边栏（Spotify 式在剩余空间左对齐） */
+  .app-main {
+    margin-top: 84px;
+    margin-left: calc(var(--sidebar-width) + 24px);
+    margin-right: 24px;
+    max-width: none;
+    width: auto;
+  }
 }
 
 .mobile-menu-btn:hover {

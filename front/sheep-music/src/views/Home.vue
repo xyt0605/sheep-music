@@ -5,17 +5,25 @@
       v-if="showWelcome"
       class="welcome-section"
     >
-      <div
-        class="section-close"
-        title="隐藏此区域"
-        @click.stop="hideWelcome"
-      >
-        ✕
+      <div class="welcome-copy">
+        <div class="page-kicker">
+          <span class="live-dot" />
+          <span>PERSONAL LISTENING DESK</span>
+          <span>{{ todayLabel }}</span>
+        </div>
+        <h1>{{ greetingText }}，{{ userStore.userInfo?.nickname || '音乐爱好者' }}</h1>
+        <p class="welcome-text">
+          欢迎回到 Sheep Music，继续你的私人播放列表。
+        </p>
       </div>
-      <h2>你好，{{ userStore.userInfo?.nickname || '音乐爱好者' }}</h2>
-      <p class="welcome-text">
-        欢迎来到 Sheep Music，开始你的音乐之旅
-      </p>
+      <button
+        class="home-discover-shortcut"
+        type="button"
+        @click="goToDiscover"
+      >
+        <el-icon><MagicStick /></el-icon>
+        打开每日推荐
+      </button>
     </div>
 
     <!-- 影像电台：将本期人物影像与正在播放的音乐放在同一首屏 -->
@@ -125,7 +133,7 @@
           <el-icon><MagicStick /></el-icon>
         </div>
         <div class="banner-text">
-          <h3>✨ 发现你的专属音乐</h3>
+          <h3>发现你的专属音乐</h3>
           <p>基于你的喜好，为你推荐精选歌曲和歌单</p>
         </div>
         <div class="banner-action">
@@ -150,10 +158,72 @@
       </div>
     </div>
     
+    <!-- 最近播放（借鉴 Spotify · Recently played） -->
+    <section
+      v-if="recentSongs.length > 0"
+      class="content-section"
+    >
+      <div class="section-header">
+        <h3>
+          <el-icon><Clock /></el-icon>
+          最近播放
+        </h3>
+        <el-link
+          type="primary"
+          @click="goToMyMusic"
+        >
+          查看全部 ›
+        </el-link>
+      </div>
+      <div class="shelf">
+        <button
+          class="shelf-arrow"
+          type="button"
+          aria-label="向左滚动"
+          @click="scrollShelf($event, -1)"
+        >‹</button>
+        <div class="shelf-row">
+          <div
+            v-for="song in recentSongs"
+            :key="'recent-' + song.id"
+            class="shelf-card"
+            @click="playFromShelf(song, recentSongs)"
+          >
+            <div class="shelf-cover">
+              <img
+                :src="song.cover || defaultCover"
+                :alt="song.title"
+                loading="lazy"
+              >
+              <div class="shelf-overlay">
+                <span class="shelf-play">
+                  <el-icon><CaretRight /></el-icon>
+                </span>
+              </div>
+            </div>
+            <div
+              class="shelf-title"
+              :title="song.title"
+            >{{ song.title }}</div>
+            <div class="shelf-artist">{{ artistNames(song) }}</div>
+          </div>
+        </div>
+        <button
+          class="shelf-arrow right"
+          type="button"
+          aria-label="向右滚动"
+          @click="scrollShelf($event, 1)"
+        >›</button>
+      </div>
+    </section>
+
     <!-- 热门歌曲 -->
     <section class="content-section">
       <div class="section-header">
-        <h3>🔥 热门歌曲</h3>
+        <h3>
+          <el-icon><TrendCharts /></el-icon>
+          热门歌曲
+        </h3>
         <el-link
           type="primary"
           @click="goToRank('hot')"
@@ -168,108 +238,70 @@
       >
         <GalaxyLoader size="lg" />
       </div>
-      
+
+      <!-- 横向卡片架（借鉴 Spotify / 网易云） -->
       <div
         v-else-if="hotSongs.length > 0"
-        class="carousel-container"
+        class="shelf"
       >
-        <el-carousel 
-          :interval="5000" 
-          arrow="always" 
-          height="400px"
-          indicator-position="outside"
-        >
-          <el-carousel-item
-            v-for="(chunk, chunkIndex) in hotSongsChunks"
-            :key="chunkIndex"
+        <button
+          class="shelf-arrow"
+          type="button"
+          aria-label="向左滚动"
+          @click="scrollShelf($event, -1)"
+        >‹</button>
+        <div class="shelf-row">
+          <div
+            v-for="(song, idx) in hotSongs.slice(0, 20)"
+            :key="song.id"
+            class="shelf-card"
+            @click="playFromShelf(song, hotSongs)"
           >
-            <div class="song-list">
-              <div 
-                v-for="(song, index) in chunk" 
-                :key="song.id" 
-                class="song-item"
-                @click="handlePlaySong(song)"
+            <div class="shelf-cover">
+              <img
+                :src="song.cover || defaultCover"
+                :alt="song.title"
+                loading="lazy"
               >
-                <div
-                  class="song-index"
-                  :class="{ 'top-three': (chunkIndex * 5 + index) < 3 }"
-                >
-                  {{ chunkIndex * 5 + index + 1 }}
-                </div>
-                <img
-                  :src="song.cover || defaultCover"
-                  class="song-cover"
-                >
-                <div class="song-info">
-                  <div class="song-name">
-                    {{ song.title }}
-                  </div>
-                  <div class="song-artist">
-                    <template
-                      v-for="(artist, idx) in song.artists || []"
-                      :key="artist.id"
-                    >
-                      <span
-                        class="clickable"
-                        @click.stop="goToArtist(artist.id)"
-                      >{{ artist.name }}</span>
-                      <span v-if="idx < (song.artists?.length || 0) - 1"> / </span>
-                    </template>
-                    <span v-if="!song.artists || song.artists.length === 0">未知歌手</span>
-                  </div>
-                </div>
-                <div class="song-play-count">
-                  <el-icon><Headset /></el-icon>
-                  {{ formatPlayCount(song.playCount) }}
-                </div>
-                <div class="song-actions">
-                  <el-button
-                    icon="CaretRight"
-                    circle
-                    size="small"
-                    title="播放"
-                    @click.stop="handlePlaySong(song)"
-                  />
-                  <el-button
-                    icon="Plus"
-                    circle
-                    size="small"
-                    title="添加到播放列表"
-                    @click.stop="handleAddToPlaylist(song)"
-                  />
-                  <el-button
-                    icon="FolderAdd"
-                    circle
-                    size="small"
-                    title="添加到歌单"
-                    @click.stop="showAddToPlaylistDialog(song.id)"
-                  />
-                  <el-button 
-                    :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'" 
-                    circle 
-                    size="small" 
-                    :type="favoriteSongs[song.id] ? 'danger' : ''"
-                    title="收藏" 
-                    @click.stop="handleToggleFavorite(song.id)"
-                  />
-                </div>
+              <div class="shelf-overlay">
+                <span class="shelf-play">
+                  <el-icon><CaretRight /></el-icon>
+                </span>
               </div>
+              <span
+                v-if="idx < 3"
+                class="shelf-rank"
+              >{{ idx + 1 }}</span>
             </div>
-          </el-carousel-item>
-        </el-carousel>
+            <div
+              class="shelf-title"
+              :title="song.title"
+            >{{ song.title }}</div>
+            <div class="shelf-artist">{{ artistNames(song) }}</div>
+          </div>
+        </div>
+        <button
+          class="shelf-arrow right"
+          type="button"
+          aria-label="向右滚动"
+          @click="scrollShelf($event, 1)"
+        >›</button>
       </div>
       <div
-        v-if="hotSongs.length === 0"
+        v-if="!hotSongsLoading && hotSongs.length === 0"
         class="empty-state"
       >
         <el-empty description="暂无热门歌曲" />
       </div>
     </section>
-    
+
     <!-- 新歌速递 -->
     <section class="content-section">
       <div class="section-header">
-        <h3>🎵 新歌速递</h3>
+        <h3>
+          <el-icon><Bell /></el-icon>
+          新歌速递
+        </h3>
         <el-link
           type="primary"
           @click="goToRank('new')"
@@ -284,100 +316,59 @@
       >
         <GalaxyLoader size="lg" />
       </div>
-      
+
+      <!-- 横向卡片架 -->
       <div
         v-else-if="newSongs.length > 0"
-        class="carousel-container"
+        class="shelf"
       >
-        <el-carousel 
-          :interval="5000" 
-          arrow="always" 
-          height="400px"
-          indicator-position="outside"
-        >
-          <el-carousel-item
-            v-for="(chunk, chunkIndex) in newSongsChunks"
-            :key="chunkIndex"
+        <button
+          class="shelf-arrow"
+          type="button"
+          aria-label="向左滚动"
+          @click="scrollShelf($event, -1)"
+        >‹</button>
+        <div class="shelf-row">
+          <div
+            v-for="song in newSongs.slice(0, 20)"
+            :key="'new-' + song.id"
+            class="shelf-card"
+            @click="playFromShelf(song, newSongs)"
           >
-            <div class="song-list">
-              <div 
-                v-for="(song, index) in chunk" 
-                :key="song.id" 
-                class="song-item"
-                @click="handlePlaySong(song)"
+            <div class="shelf-cover">
+              <img
+                :src="song.cover || defaultCover"
+                :alt="song.title"
+                loading="lazy"
               >
-                <div class="song-index">
-                  {{ chunkIndex * 5 + index + 1 }}
-                </div>
-                <img
-                  :src="song.cover || defaultCover"
-                  class="song-cover"
-                >
-                <div class="song-info">
-                  <div class="song-name">
-                    {{ song.title }}
-                  </div>
-                  <div class="song-artist">
-                    <template
-                      v-for="(artist, idx) in song.artists || []"
-                      :key="artist.id"
-                    >
-                      <span
-                        class="clickable"
-                        @click.stop="goToArtist(artist.id)"
-                      >{{ artist.name }}</span>
-                      <span v-if="idx < (song.artists?.length || 0) - 1"> / </span>
-                    </template>
-                    <span v-if="!song.artists || song.artists.length === 0">未知歌手</span>
-                  </div>
-                </div>
-                <div class="song-time">
-                  {{ formatDuration(song.duration) }}
-                </div>
-                <div class="song-actions">
-                  <el-button
-                    icon="CaretRight"
-                    circle
-                    size="small"
-                    title="播放"
-                    @click.stop="handlePlaySong(song)"
-                  />
-                  <el-button
-                    icon="Plus"
-                    circle
-                    size="small"
-                    title="添加到播放列表"
-                    @click.stop="handleAddToPlaylist(song)"
-                  />
-                  <el-button
-                    icon="FolderAdd"
-                    circle
-                    size="small"
-                    title="添加到歌单"
-                    @click.stop="showAddToPlaylistDialog(song.id)"
-                  />
-                  <el-button 
-                    :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'" 
-                    circle 
-                    size="small" 
-                    :type="favoriteSongs[song.id] ? 'danger' : ''"
-                    title="收藏" 
-                    @click.stop="handleToggleFavorite(song.id)"
-                  />
-                </div>
+              <div class="shelf-overlay">
+                <span class="shelf-play">
+                  <el-icon><CaretRight /></el-icon>
+                </span>
               </div>
             </div>
-          </el-carousel-item>
-        </el-carousel>
+            <div
+              class="shelf-title"
+              :title="song.title"
+            >{{ song.title }}</div>
+            <div class="shelf-artist">{{ artistNames(song) }}</div>
+          </div>
+        </div>
+        <button
+          class="shelf-arrow right"
+          type="button"
+          aria-label="向右滚动"
+          @click="scrollShelf($event, 1)"
+        >›</button>
       </div>
       <div
-        v-if="newSongs.length === 0"
+        v-if="!newSongsLoading && newSongs.length === 0"
         class="empty-state"
       >
         <el-empty description="暂无最新歌曲" />
       </div>
     </section>
-    
+
     <!-- 添加到歌单对话框 -->
     <PlaylistSelector 
       v-model="playlistSelectorVisible" 
@@ -393,9 +384,10 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { usePlayerStore } from '@/store/player'
 import { getHotSongs, getNewSongs } from '@/api/song'
+import { getRecentPlayHistory } from '@/api/playHistory'
 import { toggleFavorite, batchCheckFavorites } from '@/api/favorite'
 import { ElMessage } from 'element-plus'
-import { Headset, MagicStick, ArrowRight, VideoPause, VideoPlay, Mute, Microphone } from '@element-plus/icons-vue'
+import { ArrowRight, Bell, Clock, Headset, MagicStick, Microphone, Mute, TrendCharts, VideoPause, VideoPlay } from '@element-plus/icons-vue'
 import PlaylistSelector from '@/components/PlaylistSelector.vue'
 import GalaxyButton from '@/components/GalaxyButton.vue'
 import GalaxyLoader from '@/components/GalaxyLoader.vue'
@@ -539,6 +531,67 @@ export default {
       // 使用播放器 store 播放歌曲
       playerStore.play(song, hotSongs.value.concat(newSongs.value))
     }
+
+    // 从卡片架播放：以所在架子作为播放队列（借鉴 Spotify 的队列语义）
+    const playFromShelf = (song, list) => {
+      const queue = (list || []).filter(Boolean)
+      playerStore.play(song, queue.length > 0 ? queue : null)
+    }
+
+    // 歌手名串（卡片架用）
+    const artistNames = (song) => {
+      if (!song) return '未知歌手'
+      return (song.artists || []).map(a => a.name).join(' / ') || song.artistName || '未知歌手'
+    }
+
+    // 最近播放（借鉴 Spotify · Recently played，按歌曲去重）
+    const recentSongs = ref([])
+    const loadRecent = async () => {
+      try {
+        const res = await getRecentPlayHistory(20)
+        if (res.code === 200) {
+          const seen = new Set()
+          recentSongs.value = (res.data || [])
+            .map(row => row.song)
+            .filter(s => {
+              if (!s || seen.has(s.id)) return false
+              seen.add(s.id)
+              return true
+            })
+            .slice(0, 12)
+        }
+      } catch (error) {
+        console.error('加载最近播放失败:', error)
+      }
+    }
+
+    // 时间问候语（借鉴 Spotify 的 Good evening 头部）
+    const greetingText = computed(() => {
+      const h = new Date().getHours()
+      if (h < 6) return '夜深了'
+      if (h < 12) return '早上好'
+      if (h < 14) return '中午好'
+      if (h < 18) return '下午好'
+      return '晚上好'
+    })
+
+    const todayLabel = computed(() => new Intl.DateTimeFormat('zh-CN', {
+      month: '2-digit',
+      day: '2-digit',
+      weekday: 'short'
+    }).format(new Date()))
+
+    // 卡片架横向滚动
+    const scrollShelf = (event, direction) => {
+      const row = event.currentTarget?.parentElement?.querySelector('.shelf-row')
+      if (row) {
+        row.scrollBy({ left: direction * Math.max(row.clientWidth * 0.8, 320), behavior: 'smooth' })
+      }
+    }
+
+    const goToMyMusic = () => {
+      router.push('/my-music')
+    }
     
     // 添加到播放列表
     const handleAddToPlaylist = (song) => {
@@ -663,6 +716,7 @@ export default {
       await loadHotSongs()
       await loadNewSongs()
       await loadFavoriteStatus()
+      loadRecent()
     })
 
     // 当登录用户变化时，按用户读取偏好；退出登录则恢复默认显示
@@ -722,6 +776,14 @@ export default {
       showBanner,
       hideWelcome,
       hideBanner,
+      // 推荐卡片架 & 最近播放
+      recentSongs,
+      greetingText,
+      todayLabel,
+      playFromShelf,
+      artistNames,
+      scrollShelf,
+      goToMyMusic,
       editorialVideo,
       editorialIndex,
       editorialPlaying,
@@ -1344,5 +1406,164 @@ export default {
   .content-section {
     margin-bottom: 30px;
   }
+}
+
+/* ========== 横向卡片架（借鉴 Spotify / 网易云） ========== */
+.shelf {
+  position: relative;
+}
+
+.shelf-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 4px 2px 12px;
+  scrollbar-width: none;
+}
+
+.shelf-row::-webkit-scrollbar {
+  display: none;
+}
+
+.shelf-card {
+  flex: 0 0 164px;
+  cursor: pointer;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.shelf-card:hover {
+  background: var(--card-hover-bg);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.shelf-cover {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.shelf-cover img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shelf-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.shelf-play {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-primary);
+  color: #fff;
+  font-size: 22px;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(6px);
+  transition: all var(--transition-fast);
+}
+
+.shelf-card:hover .shelf-overlay {
+  opacity: 1;
+}
+
+.shelf-card:hover .shelf-play {
+  transform: translateY(0);
+}
+
+.shelf-rank {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shelf-title {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shelf-artist {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shelf-arrow {
+  position: absolute;
+  top: 33%;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shelf-arrow.left {
+  left: -12px;
+}
+
+.shelf-arrow.right {
+  right: -12px;
+}
+
+.shelf:hover .shelf-arrow {
+  opacity: 1;
+}
+
+.shelf-arrow:hover {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: transparent;
 }
 </style>

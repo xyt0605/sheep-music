@@ -52,5 +52,17 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
      */
     @Query("SELECT f.songId FROM Favorite f WHERE f.userId = :userId AND f.songId IN :songIds")
     List<Long> findFavoriteSongIdsByUserIdAndSongIds(@Param("userId") Long userId, @Param("songIds") List<Long> songIds);
+
+    // ==================== 推荐系统 v2：有界查询 ====================
+
+    /**
+     * 查询收藏了指定歌曲的用户收藏记录（CF 共现，songIds 有界，结果有 LIMIT）
+     */
+    List<Favorite> findBySongIdIn(java.util.Collection<Long> songIds, Pageable pageable);
+
+    /**
+     * 查询一批用户的收藏记录（CF 共现用户的喜爱歌曲，userIds 有界，结果有 LIMIT）
+     */
+    List<Favorite> findByUserIdIn(java.util.Collection<Long> userIds, Pageable pageable);
 }
 

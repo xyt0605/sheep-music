@@ -1,21 +1,53 @@
 <template>
   <div class="register-container">
-    <div class="register-box">
-      <!-- 标题 -->
-      <h2 class="title">
-        Sheep Music
-      </h2>
-      <p class="subtitle">
-        创建新账号
-      </p>
+    <section class="register-visual">
+      <div class="register-brand">
+        <span class="brand-glyph">S</span>
+        <strong>Sheep Music</strong>
+      </div>
+
+      <div class="register-story">
+        <p class="story-kicker">CREATE YOUR LISTENING ROOM · 08/26</p>
+        <h1>给下一首歌，<br>留一个位置。</h1>
+        <p class="story-copy">
+          收藏喜欢的旋律，记录播放过的夜晚，再和朋友分享那些值得循环的片段。
+        </p>
+      </div>
+
+      <figure class="register-photo register-photo-back">
+        <img
+          src="/editorial/night-portrait.jpg"
+          alt="夜晚人像"
+        >
+        <figcaption>AFTER DARK · 01</figcaption>
+      </figure>
+      <figure class="register-photo register-photo-front">
+        <img
+          src="/editorial/bamboo-portrait.jpg"
+          alt="日光人像"
+        >
+        <figcaption>DAYLIGHT · 02</figcaption>
+      </figure>
+    </section>
+
+    <section class="register-panel">
+      <div class="register-box">
+        <div class="form-header">
+          <span>NEW MEMBER</span>
+          <h2 class="title">
+            创建音乐空间
+          </h2>
+          <p class="subtitle">
+            几步完成注册，开始整理你的私人播放列表。
+          </p>
+        </div>
       
-      <!-- 注册表单 -->
-      <el-form
-        ref="registerFormRef"
-        :model="registerForm"
-        :rules="registerRules"
-        class="register-form"
-      >
+        <el-form
+          ref="registerFormRef"
+          :model="registerForm"
+          :rules="registerRules"
+          class="register-form"
+        >
         <!-- 用户名输入框 -->
         <el-form-item prop="username">
           <GalaxyFormInput
@@ -88,8 +120,9 @@
             立即登录
           </router-link>
         </div>
-      </el-form>
-    </div>
+        </el-form>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -217,38 +250,158 @@ export default {
 <style scoped>
 .register-container {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(460px, 0.95fr);
+  background: #0b0d0b;
+}
+
+.register-visual {
+  position: relative;
+  min-height: 100vh;
+  padding: clamp(36px, 5vw, 72px);
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(8, 10, 8, 0.78), rgba(8, 10, 8, 0.18)),
+    url('/editorial/night-portrait.jpg') center / cover;
+  color: #f7f5ee;
+}
+
+.register-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(8, 10, 8, 0.88), transparent 56%);
+  pointer-events: none;
+}
+
+.register-brand,
+.register-story,
+.register-photo {
+  position: relative;
+  z-index: 1;
+}
+
+.register-brand {
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: radial-gradient(900px 450px at 80% 30%, rgba(245,87,108,0.25), transparent 65%),
-              radial-gradient(700px 350px at 0% 0%, rgba(102,126,234,0.25), transparent 60%),
-              linear-gradient(135deg, #0f172a 0%, #1f2937 100%);
+  gap: 12px;
+  font-family: Georgia, serif;
+  font-size: 20px;
+}
+
+.brand-glyph {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  background: var(--signal-lime);
+  color: #11120f;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.register-story {
+  max-width: 640px;
+  margin-top: clamp(90px, 17vh, 190px);
+}
+
+.story-kicker,
+.form-header > span,
+.register-photo figcaption {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
+.story-kicker {
+  color: var(--signal-lime);
+}
+
+.register-story h1 {
+  margin: 24px 0 18px;
+  font-family: var(--font-display);
+  font-size: clamp(50px, 6vw, 86px);
+  line-height: 1.04;
+  letter-spacing: 0;
+}
+
+.story-copy {
+  max-width: 500px;
+  color: #d1d4ca;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.register-photo {
+  position: absolute;
+  right: 7%;
+  bottom: 7%;
+  width: clamp(120px, 12vw, 180px);
+  margin: 0;
+  padding: 8px 8px 26px;
+  background: #f4f1e7;
+  color: #171914;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+}
+
+.register-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 0.82;
+  object-fit: cover;
+}
+
+.register-photo figcaption {
+  margin-top: 8px;
+  letter-spacing: 0;
+}
+
+.register-photo-back {
+  right: 22%;
+  bottom: 10%;
+  transform: rotate(-6deg);
+}
+
+.register-photo-front {
+  transform: rotate(6deg);
+}
+
+.register-panel {
+  display: grid;
+  min-height: 100vh;
+  padding: clamp(28px, 5vw, 76px);
+  place-items: center;
+  background: var(--bg-secondary);
 }
 
 .register-box {
-  width: 460px;
-  padding: 46px 42px;
-  background: var(--card-bg);
-  border-radius: 16px;
-  border: 1px solid var(--border-color-light);
-  backdrop-filter: blur(18px);
-  box-shadow: var(--shadow-xl);
+  width: min(100%, 520px);
+  padding: clamp(30px, 4vw, 52px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-lg);
+}
+
+.form-header > span {
+  color: var(--text-tertiary);
 }
 
 .title {
-  text-align: center;
-  font-size: 30px;
-  font-weight: 700;
+  margin: 16px 0 8px;
   color: var(--text-primary);
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
+  font-family: var(--font-display);
+  font-size: 38px;
+  line-height: 1.08;
+  letter-spacing: 0;
 }
 
 .subtitle {
-  text-align: center;
-  color: var(--text-tertiary);
-  margin-bottom: 26px;
-  font-size: 15px;
+  margin: 0 0 24px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.7;
 }
 
 .register-form {
@@ -265,12 +418,12 @@ export default {
 .login-link {
   text-align: center;
   margin-top: 18px;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
 .login-link a {
-  color: var(--color-primary);
+  color: var(--color-primary-light);
   text-decoration: none;
   font-weight: 600;
 }
@@ -282,17 +435,47 @@ export default {
 /* 响应式 - 全局样式已覆盖部分 */
 @media (max-width: 768px) {
   .register-container {
-    padding: 15px;
+    grid-template-columns: 1fr;
+  }
+
+  .register-visual {
+    min-height: 370px;
+    padding: 28px 24px;
+  }
+
+  .register-story {
+    margin-top: 64px;
+  }
+
+  .register-story h1 {
+    font-size: 44px;
+  }
+
+  .story-copy {
+    max-width: 80%;
+    font-size: 13px;
+  }
+
+  .register-photo {
+    display: none;
+  }
+
+  .register-photo-back {
+    display: none;
+  }
+
+  .register-panel {
+    min-height: auto;
+    padding: 22px 14px 34px;
   }
   
   .register-box {
     width: 100%;
-    max-width: 460px;
-    padding: 28px 18px;
+    padding: 30px 20px;
   }
   
   .title {
-    font-size: 24px;
+    font-size: 32px;
   }
   
   .subtitle {

@@ -109,11 +109,22 @@ public class MomentService {
     }
     
     /**
-     * 获取用户的动态
+     * 获取用户的动态（按查看者与作者的关系过滤可见性）
      */
-    public Page<UserMoment> getUserMoments(Long userId, int page, int size) {
+    public Page<UserMoment> getUserMoments(Long userId, Long viewerId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return momentRepository.findByUserIdOrderByCreateTimeDesc(userId, pageable);
+        // 本人查看：全部动态
+        if (userId.equals(viewerId)) {
+            return momentRepository.findByUserIdOrderByCreateTimeDesc(userId, pageable);
+        }
+        // 好友查看：公开 + 好友可见
+        if (viewerId != null && friendshipService.areFriends(viewerId, userId)) {
+            return momentRepository.findByUserIdAndVisibilityInOrderByCreateTimeDesc(
+                userId, java.util.Arrays.asList("public", "friends"), pageable);
+        }
+        // 陌生人查看：仅公开
+        return momentRepository.findByUserIdAndVisibilityOrderByCreateTimeDesc(
+            userId, "public", pageable);
     }
     
     /**
@@ -127,10 +138,9 @@ public class MomentService {
         boolean exists = momentLikeRepository.existsByMomentIdAndUserId(momentId, userId);
         
         if (exists) {
-            // 取消点赞
+            // 取消点赞（计数用原子更新，避免并发丢失）
             momentLikeRepository.deleteByMomentIdAndUserId(momentId, userId);
-            moment.setLikeCount(Math.max(0, moment.getLikeCount() - 1));
-            momentRepository.save(moment);
+            momentRepository.decrementLikeCount(momentId);
             return false;
         } else {
             // 点赞
@@ -138,9 +148,8 @@ public class MomentService {
             like.setMomentId(momentId);
             like.setUserId(userId);
             momentLikeRepository.save(like);
-            
-            moment.setLikeCount(moment.getLikeCount() + 1);
-            momentRepository.save(moment);
+
+            momentRepository.incrementLikeCount(momentId);
             
             // 创建通知
             if (!moment.getUserId().equals(userId)) {
@@ -175,10 +184,9 @@ public class MomentService {
         comment.setUserAvatar(user.getAvatar());
         
         MomentComment saved = momentCommentRepository.save(comment);
-        
-        // 更新动态评论数
-        moment.setCommentCount(moment.getCommentCount() + 1);
-        momentRepository.save(moment);
+
+        // 更新动态评论数（原子更新，避免并发丢失）
+        momentRepository.incrementCommentCount(momentId);
         
         // 创建通知
         if (!moment.getUserId().equals(userId)) {
@@ -212,13 +220,10 @@ public class MomentService {
         
         // 删除动态及相关数据
         momentRepository.delete(moment);
-        
+
         // 删除点赞记录
-        List<MomentLike> likes = momentLikeRepository.findAll().stream()
-            .filter(like -> like.getMomentId().equals(momentId))
-            .collect(java.util.stream.Collectors.toList());
-        momentLikeRepository.deleteAll(likes);
-        
+        momentLikeRepository.deleteByMomentId(momentId);
+
         // 删除评论
         List<MomentComment> comments = momentCommentRepository.findByMomentIdOrderByCreateTimeDesc(momentId);
         momentCommentRepository.deleteAll(comments);

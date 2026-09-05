@@ -101,5 +101,31 @@ public interface PlayHistoryRepository extends JpaRepository<PlayHistory, Long> 
         @Param("startTime") LocalDateTime startTime,
         @Param("endTime") LocalDateTime endTime
     );
+
+    // ==================== 推荐系统 v2：有界查询 ====================
+
+    /**
+     * 用户播放次数聚合（按歌曲分组），附带最近播放时间用于时间衰减
+     * 返回行结构：[songId(Long), 次数(Long), 最近播放时间(LocalDateTime)]
+     */
+    @Query("SELECT ph.songId, COUNT(ph), MAX(ph.playTime) FROM PlayHistory ph " +
+           "WHERE ph.userId = :userId " +
+           "GROUP BY ph.songId")
+    List<Object[]> countPlaysGroupBySong(@Param("userId") Long userId);
+
+    /**
+     * 播放过指定歌曲的用户ID去重列表（CF 共现，songIds 有界，结果有 LIMIT）
+     */
+    @Query("SELECT DISTINCT ph.userId FROM PlayHistory ph WHERE ph.songId IN :songIds")
+    List<Long> findUserIdsBySongIds(@Param("songIds") List<Long> songIds, Pageable pageable);
+
+    /**
+     * 一批用户的播放次数聚合（按歌曲分组），CF 共现用户的喜爱歌曲
+     * 返回行结构：[songId(Long), 次数(Long)]，userIds 有界
+     */
+    @Query("SELECT ph.songId, COUNT(ph) FROM PlayHistory ph " +
+           "WHERE ph.userId IN :userIds " +
+           "GROUP BY ph.songId")
+    List<Object[]> countPlaysGroupByUserIds(@Param("userIds") java.util.Collection<Long> userIds, Pageable pageable);
 }
 

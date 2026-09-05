@@ -1,7 +1,7 @@
 <template>
   <div class="rank-page">
     <div class="page-header">
-      <h2>📊 {{ pageTitle }}</h2>
+      <h2>{{ pageTitle }}</h2>
       <p class="subtitle">
         {{ pageSubtitle }}
       </p>
@@ -14,11 +14,11 @@
       @tab-change="handleTabChange"
     >
       <el-tab-pane
-        label="🔥 热门歌曲"
+        label="热门歌曲"
         name="hot"
       />
       <el-tab-pane
-        label="🎵 新歌速递"
+        label="新歌速递"
         name="new"
       />
     </el-tabs>
@@ -192,7 +192,7 @@ export default {
     
     // 页面标题
     const pageTitle = computed(() => {
-      return activeTab.value === 'hot' ? '🔥 热门歌曲排行榜' : '🎵 新歌速递排行榜'
+      return activeTab.value === 'hot' ? '热门歌曲排行榜' : '新歌速递排行榜'
     })
     
     const pageSubtitle = computed(() => {

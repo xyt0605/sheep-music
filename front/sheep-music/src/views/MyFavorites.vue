@@ -1,7 +1,7 @@
 <template>
   <div class="my-favorites">
     <div class="page-header">
-      <h2>💖 我的收藏</h2>
+      <h2>我的收藏</h2>
       <p class="count-text">
         共 {{ pagination.total }} 首歌曲
       </p>
