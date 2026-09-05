@@ -69,7 +69,7 @@
       >
         <div class="artist-avatar-wrapper">
           <el-avatar 
-            :src="artist.avatar || defaultAvatar" 
+            :src="ossThumb(artist.avatar, 200) || defaultAvatar" 
             :size="150"
             class="artist-avatar"
           >
@@ -138,6 +138,8 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Search, Loading, User, UserFilled, CaretRight } from '@element-plus/icons-vue'
 import { getArtists, searchArtists } from '@/api/artist'
+
+import { ossThumb } from '@/utils/image'
 
 export default {
   name: 'Artists',

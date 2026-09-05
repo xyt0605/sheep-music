@@ -37,7 +37,7 @@
               @click="handlePlaySong(favorite.song)"
             >
               <img 
-                :src="favorite.song?.cover || defaultCover" 
+                :src="ossThumb(favorite.song?.cover, 200) || defaultCover" 
                 alt="封面" 
                 class="song-cover"
               >
@@ -171,7 +171,7 @@
               @click="handlePlaySong(item.song)"
             >
               <img 
-                :src="item.song?.cover || defaultCover" 
+                :src="ossThumb(item.song?.cover, 200) || defaultCover" 
                 alt="封面" 
                 class="song-cover"
               >
@@ -512,6 +512,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Loading, Star, Clock, Plus, CaretRight, MoreFilled, Edit, View, Delete } from '@element-plus/icons-vue'
 import PlaylistCover from '@/components/PlaylistCover.vue'
 import PlaylistSelector from '@/components/PlaylistSelector.vue'
+
+import { ossThumb } from '@/utils/image'
 
 export default {
   name: 'MyMusic',

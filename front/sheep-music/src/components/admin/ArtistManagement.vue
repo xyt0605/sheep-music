@@ -21,7 +21,7 @@
       <el-table-column label="歌手" min-width="240">
         <template #default="{ row }">
           <div class="artist-cell">
-            <el-avatar :size="42" :src="row.avatar">{{ row.name?.charAt(0) }}</el-avatar>
+            <el-avatar :size="42" :src="ossThumb(row.avatar, 100)">{{ row.name?.charAt(0) }}</el-avatar>
             <div>
               <strong>{{ row.name }}</strong>
               <span>{{ row.region || '未设置地区' }}</span>
@@ -78,6 +78,7 @@
 </template>
 
 <script setup>
+import { ossThumb } from '@/utils/image'
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Close, Refresh, Search } from '@element-plus/icons-vue'

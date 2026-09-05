@@ -53,7 +53,7 @@
           {{ index + 1 }}
         </div>
         <img
-          :src="song.cover || defaultCover"
+          :src="ossThumb(song.cover, 200) || defaultCover"
           class="song-cover"
         >
         <div class="song-info">
@@ -159,6 +159,8 @@ import { toggleFavorite, batchCheckFavorites } from '@/api/favorite'
 import { ElMessage } from 'element-plus'
 import { Loading, Headset, Clock } from '@element-plus/icons-vue'
 import PlaylistSelector from '@/components/PlaylistSelector.vue'
+
+import { ossThumb } from '@/utils/image'
 
 export default {
   name: 'Rank',

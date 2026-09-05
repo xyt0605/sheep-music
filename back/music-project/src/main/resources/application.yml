@@ -16,8 +16,8 @@ spring:
   # JPA配置
   jpa:
     hibernate:
-      ddl-auto: update  # 自动创建/更新表结构
-    show-sql: true      # 显示SQL语句
+      ddl-auto: ${JPA_DDL_AUTO:update}  # 表结构策略：开发 update；生产可设 validate（配 init.sql）
+    show-sql: false     # 生产不打印 SQL，开发调试时可临时改回 true
     properties:
       hibernate:
         format_sql: false

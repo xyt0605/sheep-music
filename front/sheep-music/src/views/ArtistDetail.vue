@@ -20,7 +20,7 @@
       <div class="artist-card">
         <div class="artist-avatar">
           <img
-            :src="artist.avatar || defaultAvatar"
+            :src="ossThumb(artist.avatar, 300) || defaultAvatar"
             alt="歌手头像"
           >
         </div>
@@ -95,7 +95,7 @@
               {{ index + 1 }}
             </div>
             <img
-              :src="song.cover || defaultCover"
+              :src="ossThumb(song.cover, 200) || defaultCover"
               class="song-cover"
             >
             <div class="song-info">
@@ -192,6 +192,7 @@
 </template>
 
 <script setup>
+import { ossThumb } from '@/utils/image'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePlayerStore } from '@/store/player'

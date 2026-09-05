@@ -1,1 +1,0 @@
-import{af as s}from"./index-CJJ3bzAm.js";const o=e=>s({url:"/music/recommend/personalized",method:"get",params:e}),r=e=>s({url:"/music/recommend/guess-you-like",method:"get",params:e}),m=e=>s({url:"/music/recommend/playlists",method:"get",params:e});export{r as a,o as b,m as g};

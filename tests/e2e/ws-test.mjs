@@ -4,8 +4,8 @@ const require = createRequire('D:/workspace/java-project/project1/sheep-music/fr
 const { Client } = require('@stomp/stompjs')
 const SockJS = require('sockjs-client')
 
-const BASE = 'http://localhost:19000'
-const WS = 'ws://localhost:19000/ws-chat/websocket'
+const BASE = process.env.E2E_BASE || 'http://localhost:19000'
+const WS = (process.env.E2E_BASE || 'http://localhost:19000').replace('http', 'ws') + '/ws-chat/websocket'
 let pass = 0, fail = 0
 const ok = (name, cond, extra = '') => {
   if (cond) { pass++; console.log(`  PASS  ${name}`) }

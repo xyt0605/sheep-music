@@ -16,7 +16,7 @@
         @click="handlePlaySong(favorite.song)"
       >
         <img 
-          :src="favorite.song?.cover || defaultCover" 
+          :src="ossThumb(favorite.song?.cover, 200) || defaultCover" 
           alt="封面" 
           class="song-cover"
         >
@@ -134,6 +134,8 @@ import { getMyFavorites, removeFavorite } from '@/api/favorite'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import PlaylistSelector from '@/components/PlaylistSelector.vue'
+
+import { ossThumb } from '@/utils/image'
 
 export default {
   name: 'MyFavorites',
