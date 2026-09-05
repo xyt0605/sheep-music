@@ -70,6 +70,7 @@
               @touchend="handleTouchEnd"
             >
               <div
+                ref="lyricContentRef"
                 class="lyric-content"
                 :style="{ transform: `translateY(${lyricOffset}px)` }"
               >
@@ -80,6 +81,7 @@
                 <div
                   v-for="(line, index) in lyrics"
                   :key="index"
+                  :data-lyric-index="index"
                   :class="[
                     'lyric-line',
                     { 
@@ -195,7 +197,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { usePlayerStore } from '@/store/player'
 import { getSongLyric } from '@/api/lyric'
 import { 
@@ -215,6 +217,7 @@ const emit = defineEmits(['close'])
 
 const playerStore = usePlayerStore()
 const lyricScrollRef = ref(null)
+const lyricContentRef = ref(null)
 const lyricOffset = ref(0)
 const activeLyricIndex = ref(0)
 const isDragging = ref(false)
@@ -222,6 +225,9 @@ const dragTime = ref(0)
 const touchStartY = ref(0)
 const lastTouchY = ref(0)
 const autoScroll = ref(true)
+let centerFrameId = null
+let resumeAutoScrollTimer = null
+let lyricResizeObserver = null
 
 // 歌词数据
 const lyrics = ref([])
@@ -292,7 +298,7 @@ const loadLyric = async (songId) => {
   }
 }
 
-const defaultCover = '/default-cover.jpg'
+const defaultCover = '/default-cover.svg'
 
 // 处理 OSS URL，使用服务器代理避免跨域
 const processImageUrl = (url) => {
@@ -342,41 +348,85 @@ const formatTime = (seconds) => {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 }
 
-// 自动滚动到当前歌词
-const scrollToActiveLyric = () => {
-  if (!lyricScrollRef.value) return
+// 使用真实 DOM 尺寸居中当前歌词。歌词字号、换行和翻译都会改变行高，不能使用固定值估算。
+const scrollToActiveLyric = async () => {
   if (!autoScroll.value) return
-  
-  const lineHeight = 80 // 每行歌词高度
-  const containerHeight = lyricScrollRef.value.clientHeight
-  
-  // 因为有占位符（50vh），第一行歌词实际在占位符之后
-  // 当前行的实际位置 = 占位符高度 + 索引 * 行高 + 行高/2（行的中心）
-  const placeholderHeight = containerHeight / 2 // 50vh = 容器高度的一半
-  const currentLineCenter = placeholderHeight + activeLyricIndex.value * lineHeight + lineHeight / 2
-  
-  // 要让当前行的中心对齐到容器中心，需要的偏移量
-  // 容器中心 - 当前行中心 = 需要向上移动的距离（负值）
-  const containerCenter = containerHeight / 2
-  const targetOffset = containerCenter - currentLineCenter
-  
-  lyricOffset.value = targetOffset
+
+  await nextTick()
+
+  if (centerFrameId) cancelAnimationFrame(centerFrameId)
+  centerFrameId = requestAnimationFrame(() => {
+    centerFrameId = requestAnimationFrame(() => {
+      const container = lyricScrollRef.value
+      const content = lyricContentRef.value
+      const activeLine = content?.querySelector(`[data-lyric-index="${activeLyricIndex.value}"]`)
+      if (!container || !activeLine) return
+
+      const lineCenter = activeLine.offsetTop + activeLine.offsetHeight / 2
+      const targetOffset = container.clientHeight / 2 - lineCenter
+      if (Number.isFinite(targetOffset)) {
+        lyricOffset.value = Math.round(targetOffset)
+      }
+    })
+  })
+}
+
+const syncActiveLyric = (time) => {
+  if (!lyrics.value.length) return
+
+  let targetIndex = 0
+  for (let i = lyrics.value.length - 1; i >= 0; i--) {
+    if (time >= lyrics.value[i].time) {
+      targetIndex = i
+      break
+    }
+  }
+  activeLyricIndex.value = targetIndex
+}
+
+// 根据屏幕中央最近的真实歌词行计算拖动目标，不再按固定行高反推。
+const getCenteredLyricIndex = () => {
+  const container = lyricScrollRef.value
+  const content = lyricContentRef.value
+  if (!container || !content) return activeLyricIndex.value
+
+  const containerRect = container.getBoundingClientRect()
+  const centerY = containerRect.top + containerRect.height / 2
+  const lines = Array.from(content.querySelectorAll('.lyric-line'))
+  let nearestIndex = activeLyricIndex.value
+  let nearestDistance = Number.POSITIVE_INFINITY
+
+  lines.forEach((line, index) => {
+    const rect = line.getBoundingClientRect()
+    const distance = Math.abs(rect.top + rect.height / 2 - centerY)
+    if (distance < nearestDistance) {
+      nearestDistance = distance
+      nearestIndex = index
+    }
+  })
+
+  return nearestIndex
+}
+
+const observeLyricLayout = () => {
+  lyricResizeObserver?.disconnect()
+  if (!lyricScrollRef.value || !lyricContentRef.value || typeof ResizeObserver === 'undefined') return
+
+  lyricResizeObserver = new ResizeObserver(() => {
+    if (props.visible && autoScroll.value) scrollToActiveLyric()
+  })
+  lyricResizeObserver.observe(lyricScrollRef.value)
+  lyricResizeObserver.observe(lyricContentRef.value)
 }
 
 // 监听当前时间变化，更新活动歌词
 watch(currentTime, (time) => {
   if (!lyrics.value.length) return
-  
-  // 找到当前应该高亮的歌词
-  for (let i = lyrics.value.length - 1; i >= 0; i--) {
-    if (time >= lyrics.value[i].time) {
-      if (activeLyricIndex.value !== i) {
-        activeLyricIndex.value = i
-        console.log('当前歌词索引:', i, '总歌词数:', lyrics.value.length)
-        scrollToActiveLyric()
-      }
-      break
-    }
+
+  const previousIndex = activeLyricIndex.value
+  syncActiveLyric(time)
+  if (activeLyricIndex.value !== previousIndex) {
+    scrollToActiveLyric()
   }
 })
 
@@ -387,8 +437,8 @@ const handleWheel = (e) => {
   lyricOffset.value += e.deltaY * -0.5
   
   // 3秒后恢复自动滚动
-  clearTimeout(handleWheel.timer)
-  handleWheel.timer = setTimeout(() => {
+  clearTimeout(resumeAutoScrollTimer)
+  resumeAutoScrollTimer = setTimeout(() => {
     autoScroll.value = true
     scrollToActiveLyric()
   }, 3000)
@@ -409,17 +459,7 @@ const handleTouchMove = (e) => {
   lyricOffset.value += deltaY
   lastTouchY.value = e.touches[0].clientY
   
-  // 计算拖动到的时间
-  const lineHeight = 80
-  const containerHeight = lyricScrollRef.value?.clientHeight || 600
-  const placeholderHeight = containerHeight / 2
-  const containerCenter = containerHeight / 2
-  
-  // 根据当前偏移量反推中心位置对应的歌词索引
-  // containerCenter = placeholderHeight + index * lineHeight + lineHeight/2 + offset
-  // 解出 index = (containerCenter - placeholderHeight - lineHeight/2 - offset) / lineHeight
-  const centerLineIndex = Math.round((containerCenter - placeholderHeight - lineHeight / 2 - lyricOffset.value) / lineHeight)
-  const targetIndex = Math.max(0, Math.min(lyrics.value.length - 1, centerLineIndex))
+  const targetIndex = getCenteredLyricIndex()
   dragTime.value = lyrics.value[targetIndex]?.time || 0
 }
 
@@ -433,7 +473,8 @@ const handleTouchEnd = () => {
   }
   
   // 3秒后恢复自动滚动
-  setTimeout(() => {
+  clearTimeout(resumeAutoScrollTimer)
+  resumeAutoScrollTimer = setTimeout(() => {
     autoScroll.value = true
     scrollToActiveLyric()
   }, 3000)
@@ -443,6 +484,7 @@ const handleTouchEnd = () => {
 const seekToLine = (index) => {
   const time = lyrics.value[index]?.time
   if (time !== undefined) {
+    autoScroll.value = true
     playerStore.seek(time)
     activeLyricIndex.value = index
     scrollToActiveLyric()
@@ -487,11 +529,11 @@ const toggleFavorite = () => {
 // 监听可见性变化
 watch(() => props.visible, async (val) => {
   if (val) {
-    console.log('🎵 全屏歌词打开')
+    console.log('全屏歌词打开')
     
     // 强制启用自动滚动
     autoScroll.value = true
-    console.log('✅ 自动滚动已启用:', autoScroll.value)
+    console.log('自动滚动已启用:', autoScroll.value)
     
     // 加载当前歌曲的歌词
     if (currentSong.value?.id) {
@@ -501,41 +543,31 @@ watch(() => props.visible, async (val) => {
     // 等待 DOM 更新后滚动到当前位置
     await nextTick()
     
-    // 找到当前时间对应的歌词
-    const time = currentTime.value
-    for (let i = lyrics.value.length - 1; i >= 0; i--) {
-      if (time >= lyrics.value[i].time) {
-        activeLyricIndex.value = i
-        console.log('📍 初始歌词索引:', i, '时间:', time)
-        break
-      }
-    }
-    
-    // 多次尝试滚动，确保容器尺寸正确
-    setTimeout(() => {
-      console.log('⏱️ 第一次滚动尝试')
-      scrollToActiveLyric()
-    }, 50)
-    
-    setTimeout(() => {
-      console.log('⏱️ 第二次滚动尝试')
-      scrollToActiveLyric()
-    }, 200)
-    
-    setTimeout(() => {
-      console.log('⏱️ 第三次滚动尝试')
-      scrollToActiveLyric()
-    }, 500)
+    syncActiveLyric(currentTime.value)
+    observeLyricLayout()
+    scrollToActiveLyric()
   } else {
-    console.log('🎵 全屏歌词关闭')
+    lyricResizeObserver?.disconnect()
+    console.log('全屏歌词关闭')
   }
 })
 
 // 监听歌曲变化
-watch(() => currentSong.value?.id, (newId) => {
+watch(() => currentSong.value?.id, async (newId) => {
   if (newId && props.visible) {
-    loadLyric(newId)
+    autoScroll.value = true
+    await loadLyric(newId)
+    syncActiveLyric(currentTime.value)
+    await nextTick()
+    observeLyricLayout()
+    scrollToActiveLyric()
   }
+})
+
+onBeforeUnmount(() => {
+  if (centerFrameId) cancelAnimationFrame(centerFrameId)
+  clearTimeout(resumeAutoScrollTimer)
+  lyricResizeObserver?.disconnect()
 })
 </script>
 
@@ -695,7 +727,7 @@ watch(() => currentSong.value?.id, (newId) => {
 .lyric-line {
   padding: 20px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   opacity: 0.4;
   transform: scale(0.95);
 }
@@ -721,15 +753,16 @@ watch(() => currentSong.value?.id, (newId) => {
 }
 
 .lyric-text {
+  margin: 0;
   font-size: 24px;
   line-height: 1.5;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, text-shadow 0.3s ease, opacity 0.3s ease;
 }
 
 .lyric-translation {
+  margin: 5px 0 0;
   font-size: 16px;
   opacity: 0.7;
-  margin-top: 5px;
 }
 
 /* 时间指示器 */
@@ -888,22 +921,82 @@ watch(() => currentSong.value?.id, (newId) => {
 
 /* 响应式 */
 @media (max-width: 768px) {
+  .lyric-container {
+    width: 100%;
+    height: 100%;
+  }
+
+  .lyric-header {
+    flex: 0 0 auto;
+    padding: 14px 18px 8px;
+  }
+
   .lyric-main {
-    flex-direction: column;
-    gap: 30px;
+    display: grid;
+    grid-template-rows: auto minmax(180px, 1fr);
+    min-height: 0;
+    gap: 12px;
+    padding: 0 18px;
+    align-items: stretch;
   }
   
   .album-section {
     flex: none;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+    min-height: 108px;
+  }
+
+  .album-wrapper {
+    flex: 0 0 auto;
+    margin-bottom: 0;
   }
   
   .album-cover {
-    width: 200px;
-    height: 200px;
+    width: 96px;
+    height: 96px;
+  }
+
+  .album-shadow {
+    display: none;
+  }
+
+  .song-meta {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .song-name {
+    overflow: hidden;
+    margin: 0 0 6px;
+    font-size: 20px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .artist-name {
+    overflow: hidden;
+    margin: 0;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .album-name {
+    display: none;
+  }
+
+  .lyric-section {
+    min-height: 0;
+    height: auto;
   }
   
   .lyric-scroll {
-    height: 400px;
+    height: 100%;
+    max-height: none;
+    min-height: 180px;
   }
   
   .lyric-text {
@@ -912,6 +1005,38 @@ watch(() => currentSong.value?.id, (newId) => {
   
   .lyric-line.active .lyric-text {
     font-size: 24px;
+  }
+
+  .lyric-line {
+    padding: 14px 10px;
+    text-align: center;
+  }
+
+  .lyric-footer {
+    flex: 0 0 auto;
+    width: 100%;
+    padding: 12px 18px 18px;
+  }
+
+  .progress-wrapper {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .control-buttons {
+    gap: 12px;
+  }
+
+  .control-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 17px;
+  }
+
+  .play-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 22px;
   }
 }
 </style>

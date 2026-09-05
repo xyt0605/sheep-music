@@ -19,6 +19,12 @@ class WSClient {
 
   connect({ userId, token }) {
     if (this.connected && this.userId === userId) return
+    // 旧连接（包括还在握手的）先停掉再新建，否则会出现双连接、消息重复推送
+    if (this.client) {
+      try { this.client.deactivate() } catch (_) {}
+      this.client = null
+    }
+    this.connected = false
     this.userId = userId
     this.token = token
 

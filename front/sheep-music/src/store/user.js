@@ -3,7 +3,15 @@ import { defineStore } from 'pinia'
 export const useUserStore = defineStore('user', {
   state: () => ({
     token: localStorage.getItem('token') || '',
-    userInfo: JSON.parse(localStorage.getItem('userInfo') || 'null')  // 从 localStorage 恢复
+    // localStorage 内容被写坏（如存了 "undefined"）时不应让整个应用白屏
+    userInfo: (() => {
+      try {
+        return JSON.parse(localStorage.getItem('userInfo') || 'null')
+      } catch (_) {
+        localStorage.removeItem('userInfo')
+        return null
+      }
+    })()
   }),
 
   getters: {

@@ -33,7 +33,10 @@
             title="双击锁定/解锁"
           >
             <el-icon><Rank /></el-icon>
-            {{ isLocked ? '🔒' : '🔓' }}
+            <el-icon>
+              <Lock v-if="isLocked" />
+              <Unlock v-else />
+            </el-icon>
           </div>
           
           <!-- 功能按钮 -->
@@ -224,7 +227,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, onActivated, onDeactivated } from 'vue'
 import { usePlayerStore } from '@/store/player'
-import { Rank, Check } from '@element-plus/icons-vue'
+import { Check, Lock, Rank, Unlock } from '@element-plus/icons-vue'
 import { getSongLyric } from '@/api/lyric'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
@@ -329,11 +332,21 @@ const toggle = () => {
   if (visible.value) {
     loadSettings()
   }
+  playerStore.showDesktopLyric = visible.value
 }
 
 const close = () => {
   visible.value = false
+  playerStore.showDesktopLyric = false
 }
+
+// 外部（Layout 按钮 / 全屏歌词按钮）通过 store 切换时同步内部显隐
+watch(() => playerStore.showDesktopLyric, (val) => {
+  if (visible.value !== val) {
+    visible.value = val
+    if (val) loadSettings()
+  }
+})
 
 // 切换锁定状态
 const toggleLock = () => {

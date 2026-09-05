@@ -38,10 +38,10 @@ const handleClick = (e) => {
   align-items: center;
   justify-content: center;
   padding: 0.75rem 1.25rem;
-  border-radius: 9999px;
-  color: var(--text-inverse);
+  border-radius: var(--radius-md);
+  color: #11120f;
   background: var(--gradient-primary);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.35);
+  box-shadow: none;
   outline: none;
   border: none;
   cursor: pointer;
@@ -50,8 +50,8 @@ const handleClick = (e) => {
 }
 
 .galaxy-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow);
 }
 
 .galaxy-button:active {
@@ -62,7 +62,7 @@ const handleClick = (e) => {
   position: absolute;
   inset: 0;
   background: radial-gradient(120px 120px at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.35), transparent 60%);
-  opacity: 0.35;
+  opacity: 0;
   pointer-events: none;
 }
 
@@ -80,8 +80,8 @@ const handleClick = (e) => {
 .lg { padding: 0.9rem 1.5rem; font-size: 1.05rem; }
 
 .primary { background: var(--gradient-primary); }
-.secondary { background: var(--gradient-secondary); }
-.warm { background: var(--gradient-warm); }
+.secondary { background: var(--gradient-secondary); color: #f7f6f1; }
+.warm { background: var(--gradient-warm); color: #ffffff; }
 
 .disabled,
 .galaxy-button:disabled {
@@ -98,6 +98,6 @@ const handleClick = (e) => {
 
 <style>
 .galaxy-button:hover .glow {
-  opacity: 0.5;
+  opacity: 0;
 }
 </style>

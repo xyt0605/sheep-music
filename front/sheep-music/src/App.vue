@@ -3,13 +3,10 @@
     <!-- 动态背景 -->
     <DynamicBackground />
     
-    <!-- 路由视图带过渡动画 -->
-    <router-view v-slot="{ Component, route }">
-      <component
-        :is="Component"
-        :key="route.path"
-      />
-    </router-view>
+    <!-- 路由视图（不在此处加 key：顶层组件是持久的 Layout，
+         在这里按 path 强制重挂载会导致 Layout 每次导航都重新初始化社交数据与 WebSocket）。
+         页面级的 key 已放在 Layout 内部的 router-view 上。 -->
+    <router-view />
     
     <!-- 全局音乐播放器 -->
     <MusicPlayer />

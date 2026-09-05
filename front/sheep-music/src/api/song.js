@@ -1,6 +1,17 @@
 import request from '@/utils/request'
 
 /**
+ * 一站式导入歌曲，支持按名称自动创建歌手。
+ */
+export const importSong = (data) => {
+  return request({
+    url: '/admin/song/import',
+    method: 'post',
+    data
+  })
+}
+
+/**
  * 创建歌曲
  */
 export const createSong = (data) => {

@@ -1,7 +1,7 @@
 <template>
   <div class="profile-page">
     <div class="page-header">
-      <h2>👤 个人中心</h2>
+      <h2>个人中心</h2>
       <p class="subtitle">
         管理你的个人信息
       </p>

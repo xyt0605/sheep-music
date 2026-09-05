@@ -127,6 +127,11 @@ const extractColors = async (imageUrl) => {
 
 // 渐变动画
 const animateGradient = () => {
+  // 先取消已有循环再启动新的，否则换歌时旧循环因 animationId 被覆盖而永远无法停止
+  if (animationId) {
+    cancelAnimationFrame(animationId)
+    animationId = null
+  }
   const animate = () => {
     gradientAngle = (gradientAngle + 0.5) % 360
     
@@ -212,14 +217,16 @@ watch(() => playerStore.isPlaying, (isPlaying) => {
 })
 
 // 组件挂载时初始化
+let handleVisibilityChange = null
+
 onMounted(() => {
   // 如果正在播放，启动动画
   if (playerStore.isPlaying) {
     animateGradient()
   }
-  
+
   // 监听页面可见性变化，确保音频不受影响
-  const handleVisibilityChange = () => {
+  handleVisibilityChange = () => {
     if (document.hidden) {
       // 页面不可见时，停止背景动画以节省性能，但不影响音频
       if (animationId) {
@@ -233,7 +240,7 @@ onMounted(() => {
       }
     }
   }
-  
+
   document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 
@@ -242,7 +249,11 @@ onUnmounted(() => {
   if (animationId) {
     cancelAnimationFrame(animationId)
   }
-  // 移除事件监听器会自动清理
+  // 显式移除监听器（App 级组件虽通常不卸载，仍需正确清理）
+  if (handleVisibilityChange) {
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+    handleVisibilityChange = null
+  }
 })
 </script>
 

@@ -1,5 +1,7 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import router from '@/router'
+import { useUserStore } from '@/store/user'
 
 // 根据环境自动选择 baseURL
 // 开发环境：/api（通过代理到本地后端）
@@ -50,6 +52,17 @@ request.interceptors.response.use(
   },
   error => {
     // 对响应错误做点什么（网络错误、超时等）
+    // 401：token 缺失/过期（后端统一返回401），清理本地登录态并跳转登录页，
+    // 避免用户停留在"假登录"状态反复弹错误提示
+    if (error.response?.status === 401) {
+      const userStore = useUserStore()
+      userStore.logout()
+      if (router.currentRoute.value.path !== '/login') {
+        ElMessage.error('登录已过期，请重新登录')
+        router.push('/login')
+      }
+      return Promise.reject(error)
+    }
     const message = error.response?.data?.message || error.message || '请求失败'
     ElMessage.error(message)
     return Promise.reject(error)

@@ -2,7 +2,7 @@
   <div class="my-music">
     <!-- 页面头部 -->
     <div class="page-header">
-      <h2>🎵 我的音乐</h2>
+      <h2>我的音乐</h2>
       <p class="subtitle">
         我的收藏、播放历史和歌单管理
       </p>
@@ -16,7 +16,7 @@
     >
       <!-- 我的收藏 -->
       <el-tab-pane
-        label="💖 我的收藏"
+        label="我的收藏"
         name="favorites"
       >
         <div class="tab-content">
@@ -142,7 +142,7 @@
       
       <!-- 播放历史 -->
       <el-tab-pane
-        label="🕒 播放历史"
+        label="播放历史"
         name="history"
       >
         <div class="tab-content">
@@ -281,7 +281,7 @@
       
       <!-- 我的歌单 -->
       <el-tab-pane
-        label="📁 我的歌单"
+        label="我的歌单"
         name="playlists"
       >
         <div class="tab-content">
@@ -696,7 +696,10 @@ export default {
     // 播放歌曲
     const handlePlaySong = (song) => {
       if (!song) return
-      const songList = favorites.value.map(f => f.song)
+      // 按当前 Tab 选用对应列表作为播放队列（历史 Tab 不应使用收藏列表）
+      const songList = activeTab.value === 'history'
+        ? playHistory.value.map(h => h.song).filter(Boolean)
+        : favorites.value.map(f => f.song).filter(Boolean)
       playerStore.play(song, songList)
     }
     
@@ -939,11 +942,16 @@ export default {
       if (tab && ['favorites', 'history', 'playlists'].includes(tab)) {
         activeTab.value = tab
       }
-      
-      // 加载默认Tab的数据
+
+      // 按 Tab 加载对应数据（只加载 favorites 会导致 ?tab=playlists 深链进入时页面为空）
       if (activeTab.value === 'favorites') {
         loadFavorites()
         loadFavoriteCount()
+      } else if (activeTab.value === 'history') {
+        loadPlayHistory()
+        loadHistoryCount()
+      } else if (activeTab.value === 'playlists') {
+        loadPlaylists()
       }
     })
     
