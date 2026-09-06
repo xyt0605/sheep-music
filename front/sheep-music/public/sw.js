@@ -1,6 +1,6 @@
 // Service Worker for PWA
 // 版本号变更会在 activate 阶段清掉所有旧缓存，发布出现异常时可用它强制刷新客户端
-const CACHE_NAME = 'sheep-music-v4'
+const CACHE_NAME = 'sheep-music-v5'
 const urlsToCache = [
   '/',
   '/index.html',
