@@ -120,33 +120,36 @@
               v-if="msg.cards.length && msg.done"
               class="dj-msg-actions"
             >
-              <el-button
-                size="small"
-                type="primary"
-                round
-                @click="playAll(msg)"
-              >播放整组</el-button>
-              <el-button
-                size="small"
-                round
-                @click="queueAll(msg)"
-              >全部入队</el-button>
-            </div>
-            <div
-              v-if="msg.cards.length && msg.done && !loading"
-              class="dj-feedback"
-            >
-              <el-button
-                size="small"
-                text
-                type="primary"
-                @click="ask('多来点这样的')"
-              >多来点这样的</el-button>
-              <el-button
-                size="small"
-                text
-                @click="ask('换个口味，来点不一样的')"
-              >换个口味</el-button>
+              <div class="dj-actions-main">
+                <el-button
+                  size="small"
+                  type="primary"
+                  round
+                  @click="playAll(msg)"
+                >播放整组</el-button>
+                <el-button
+                  size="small"
+                  round
+                  @click="queueAll(msg)"
+                >全部入队</el-button>
+              </div>
+              <div
+                v-if="!loading"
+                class="dj-actions-feedback"
+              >
+                <el-button
+                  size="small"
+                  text
+                  type="primary"
+                  @click="ask('多来点这样的')"
+                >多来点这样的</el-button>
+                <el-divider direction="vertical" />
+                <el-button
+                  size="small"
+                  text
+                  @click="ask('换个口味，来点不一样的')"
+                >换个口味</el-button>
+              </div>
             </div>
             <div
               v-if="msg.error"
@@ -699,8 +702,35 @@ defineExpose({ open: () => { visible.value = true } })
 
 .dj-msg-actions {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color-light);
+  flex-wrap: wrap;
+}
+
+.dj-actions-main {
+  display: flex;
+  gap: 8px;
+}
+
+/* 反馈簇：与主操作同行右对齐；窄宽度下整体换行不挤压 */
+.dj-actions-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-left: auto;
+}
+
+.dj-actions-feedback .el-button {
+  padding: 4px 8px;
+}
+
+.dj-actions-feedback .el-divider {
+  margin: 0 2px;
+  height: 14px;
 }
 
 .dj-error {
@@ -744,11 +774,6 @@ defineExpose({ open: () => { visible.value = true } })
   white-space: nowrap;
 }
 
-.dj-feedback {
-  display: flex;
-  gap: 4px;
-  margin-top: 6px;
-}
 
 .dj-header {
   display: flex;
