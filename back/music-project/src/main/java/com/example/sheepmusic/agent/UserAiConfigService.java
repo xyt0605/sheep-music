@@ -53,16 +53,20 @@ public class UserAiConfigService {
         return out;
     }
 
+    /** 保存配置：apiKey 留空且已有配置时沿用旧密钥（仅改地址/模型）；首次必须填 Key */
     public void save(Long userId, String apiKey, String baseUrl, String model) {
-        if (apiKey == null || apiKey.isBlank()) {
+        UserAiConfig c = repo.findByUserId(userId);
+        boolean hasKey = apiKey != null && !apiKey.isBlank();
+        if (!hasKey && c == null) {
             throw new IllegalArgumentException("API Key 不能为空");
         }
-        UserAiConfig c = repo.findByUserId(userId);
         if (c == null) {
             c = new UserAiConfig();
             c.setUserId(userId);
         }
-        c.setApiKeyEnc(crypto.encrypt(apiKey.trim()));
+        if (hasKey) {
+            c.setApiKeyEnc(crypto.encrypt(apiKey.trim()));
+        }
         c.setBaseUrl(baseUrl == null || baseUrl.isBlank() ? ChatClientFactory.DEFAULT_BASE_URL : baseUrl.trim());
         c.setModel(model == null || model.isBlank() ? ChatClientFactory.DEFAULT_MODEL : model.trim());
         c.setUpdateTime(LocalDateTime.now());

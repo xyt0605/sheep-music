@@ -164,6 +164,24 @@
         append-to-body
       >
         <el-form label-position="top">
+          <el-form-item label="厂商">
+            <el-select
+              v-model="providerKey"
+              style="width: 100%"
+              @change="applyPreset"
+            >
+              <el-option
+                v-for="p in PROVIDER_PRESETS"
+                :key="p.key"
+                :label="p.label"
+                :value="p.key"
+              />
+            </el-select>
+            <div
+              v-if="activePreset?.hint"
+              class="dj-cfg-hint"
+            >{{ activePreset.hint }}</div>
+          </el-form-item>
           <el-form-item
             label="API Key"
             required
@@ -172,20 +190,31 @@
               v-model="cfgForm.apiKey"
               type="password"
               show-password
-              :placeholder="cfg.apiKeyMasked || '智谱开放平台 API Key'"
+              :placeholder="cfg.apiKeyMasked || '该厂商的 API Key'"
             />
           </el-form-item>
           <el-form-item label="接口地址">
             <el-input
               v-model="cfgForm.baseUrl"
-              :placeholder="cfg.defaultBaseUrl"
+              :placeholder="activePreset?.baseUrl || cfg.defaultBaseUrl"
             />
           </el-form-item>
           <el-form-item label="模型">
-            <el-input
+            <el-select
               v-model="cfgForm.model"
-              :placeholder="cfg.defaultModel"
-            />
+              filterable
+              allow-create
+              default-first-option
+              placeholder="选择或输入模型名"
+              style="width: 100%"
+            >
+              <el-option
+                v-for="m in activePreset?.models || []"
+                :key="m"
+                :label="m"
+                :value="m"
+              />
+            </el-select>
           </el-form-item>
         </el-form>
         <div class="dj-cfg-status">
@@ -259,6 +288,30 @@ const testResult = ref('')
 const cfg = ref({ configured: false, defaultBaseUrl: '', defaultModel: '' })
 const cfgForm = ref({ apiKey: '', baseUrl: '', model: '' })
 
+// 厂商预设：任何 OpenAI 兼容端点均可（选"自定义"后手填）
+const PROVIDER_PRESETS = [
+  { key: 'zhipu', label: '智谱 BigModel', baseUrl: 'https://open.bigmodel.cn/api/paas/v4', models: ['glm-4.5-air', 'glm-4.5-flash', 'glm-4-plus'], hint: '免费注册 open.bigmodel.cn；flash 免费但当前响应慢' },
+  { key: 'deepseek', label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', models: ['deepseek-chat', 'deepseek-reasoner'], hint: '推荐 deepseek-chat（reasoner 思考耗大量 token）' },
+  { key: 'moonshot', label: '月之暗面 Kimi', baseUrl: 'https://api.moonshot.cn/v1', models: ['moonshot-v1-8k', 'moonshot-v1-32k', 'kimi-k2-0711-preview'] },
+  { key: 'qwen', label: '阿里通义千问', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', models: ['qwen-max', 'qwen-plus', 'qwen-turbo'] },
+  { key: 'doubao', label: '字节豆包（火山方舟）', baseUrl: 'https://ark.cn-beijing.volces.com/api/v3', models: ['（填你的接入点 ID）'], hint: '模型填方舟控制台的接入点 ID' },
+  { key: 'siliconflow', label: '硅基流动（聚合）', baseUrl: 'https://api.siliconflow.cn/v1', models: ['deepseek-ai/DeepSeek-V3', 'Qwen/Qwen2.5-72B-Instruct'] },
+  { key: 'openai', label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: ['gpt-4o-mini', 'gpt-4o'] },
+  { key: 'gemini', label: 'Google Gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', models: ['gemini-2.0-flash', 'gemini-1.5-pro'] },
+  { key: 'ollama', label: 'Ollama 本地（零成本）', baseUrl: 'http://localhost:11434/v1', models: ['qwen2.5:7b', 'llama3.1:8b'], hint: '需本机已装 Ollama 并拉取模型' },
+  { key: 'custom', label: '自定义', baseUrl: '', models: [] }
+]
+const providerKey = ref('zhipu')
+const activePreset = computed(() => PROVIDER_PRESETS.find(pp => pp.key === providerKey.value))
+
+const applyPreset = () => {
+  const preset = activePreset.value
+  if (preset && preset.baseUrl) {
+    cfgForm.value.baseUrl = preset.baseUrl
+  }
+  cfgForm.value.model = ''
+}
+
 function genSessionId() {
   return (crypto.randomUUID && crypto.randomUUID()) || `dj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
@@ -266,7 +319,7 @@ const messages = ref([]) // {role:'user'|'dj', text, statusText, cards[], done, 
 const listRef = ref(null)
 const defaultCover = '/default-cover.svg'
 
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 watch(visible, v => { if (v) loadConfig() })
 const playerStore = usePlayerStore()
 
@@ -374,9 +427,11 @@ const loadConfig = async () => {
     const res = await getAiConfig()
     if (res.code === 200) {
       cfg.value = res.data || {}
-      cfgForm.value.baseUrl = ''
-      cfgForm.value.model = ''
+      cfgForm.value.baseUrl = cfg.value.baseUrl || ''
+      cfgForm.value.model = cfg.value.model || ''
       cfgForm.value.apiKey = ''
+      const match = PROVIDER_PRESETS.find(pp => pp.baseUrl && pp.baseUrl === cfg.value.baseUrl)
+      providerKey.value = match ? match.key : (cfg.value.baseUrl ? 'custom' : 'zhipu')
       cfgLoaded.value = true
     }
   } catch (e) {
@@ -391,14 +446,14 @@ const openSettings = () => {
 }
 
 const saveCfg = async () => {
-  if (!cfgForm.value.apiKey) {
-    ElMessage.warning('请填写 API Key（留空表示沿用已保存的密钥）')
+  if (!cfgForm.value.apiKey && !cfg.value.configured) {
+    ElMessage.warning('请填写 API Key')
     return
   }
   saving.value = true
   try {
     const res = await saveAiConfig({
-      apiKey: cfgForm.value.apiKey,
+      apiKey: cfgForm.value.apiKey || undefined,
       baseUrl: cfgForm.value.baseUrl || undefined,
       model: cfgForm.value.model || undefined
     })
@@ -683,4 +738,11 @@ defineExpose({ open: () => { visible.value = true } })
 .dj-cfg-test {
   margin-top: 4px;
   color: var(--text-primary);
+}
+
+.dj-cfg-hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+  line-height: 1.4;
 }
