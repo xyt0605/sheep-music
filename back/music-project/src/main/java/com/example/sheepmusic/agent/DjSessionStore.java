@@ -1,86 +1,91 @@
 package com.example.sheepmusic.agent;
 
-import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 小屋 DJ 会话记忆（agent v1 P2）
- * 服务端内存会话库： sessionId → 最近 10 轮对话 + 上一轮已推荐歌名
- * TTL 30 分钟、总量 200 个会话（synchronized 读写，个人站流量足够）
+ * 小屋 DJ 会话记忆（agent v1 P3：持久化到 tb_dj_chat_message，重启不丢）
+ * TTL 30 分钟（读取时清理）；每会话保留最近 30 条；lastTitles 由最近一条带 titlesJson 的 DJ 消息派生
  */
-@Component
+@Slf4j
+@Service
+@RequiredArgsConstructor
 public class DjSessionStore {
 
     public record Turn(String role, String text) {
     }
 
-    public static final class Session {
-        private final List<Turn> turns = new ArrayList<>();
-        private List<String> lastTitles = new ArrayList<>();
-        private Instant lastActive = Instant.now();
-
-        public List<Turn> getTurns() {
-            return turns;
-        }
-
-        public List<String> getLastTitles() {
-            return lastTitles;
-        }
+    public record Context(List<Turn> turns, List<String> lastTitles) {
     }
 
     private static final long TTL_MS = 30 * 60 * 1000L;
-    private static final int MAX_SESSIONS = 200;
+    private static final int FETCH_LIMIT = 30;
     private static final int MAX_TURNS = 10;
 
-    private final Map<String, Session> sessions = new ConcurrentHashMap<>();
+    private final DjChatMessageRepository repo;
 
-    public synchronized Session get(String sessionId) {
-        sweep();
-        Session s = sessions.get(sessionId);
-        if (s == null) {
-            s = new Session();
-            sessions.put(sessionId, s);
+    public Context load(Long userId, String sessionId) {
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(30);
+        try {
+            repo.deleteByUserIdAndSessionIdAndCreateTimeBefore(userId, sessionId, cutoff);
+        } catch (Exception e) {
+            log.debug("会话过期清理失败: {}", e.getMessage());
         }
-        s.lastActive = Instant.now();
-        return s;
-    }
+        List<DjChatMessage> list = new ArrayList<>(repo
+                .findByUserIdAndSessionIdOrderByCreateTimeDesc(userId, sessionId, PageRequest.of(0, FETCH_LIMIT))
+                .getContent());
+        Collections.reverse(list);
 
-    public synchronized void appendTurn(String sessionId, String role, String text) {
-        Session s = get(sessionId);
-        s.getTurns().add(new Turn(role, text));
-        while (s.getTurns().size() > MAX_TURNS) {
-            s.getTurns().remove(0);
-        }
-    }
-
-    public synchronized void setLastTitles(String sessionId, List<String> titles) {
-        get(sessionId).lastTitles = titles == null ? List.of() : titles;
-    }
-
-    private void sweep() {
-        if (sessions.size() <= MAX_SESSIONS) {
-            return;
-        }
-        Instant cutoff = Instant.now().minusMillis(TTL_MS);
-        sessions.entrySet().removeIf(e -> e.getValue().lastActive.isBefore(cutoff));
-        while (sessions.size() > MAX_SESSIONS) {
-            String oldest = null;
-            Instant min = Instant.MAX;
-            for (Map.Entry<String, Session> e : sessions.entrySet()) {
-                if (e.getValue().lastActive.isBefore(min)) {
-                    min = e.getValue().lastActive;
-                    oldest = e.getKey();
-                }
+        List<Turn> turns = new ArrayList<>();
+        List<String> lastTitles = List.of();
+        for (DjChatMessage m : list) {
+            if (m.getTitlesJson() != null && !m.getTitlesJson().isBlank()) {
+                lastTitles = parseTitles(m.getTitlesJson());
             }
-            if (oldest == null) {
-                break;
+            turns.add(new Turn(m.getRole(), m.getContent()));
+        }
+        while (turns.size() > MAX_TURNS) {
+            turns.remove(0);
+        }
+        return new Context(turns, lastTitles);
+    }
+
+    public void appendTurn(Long userId, String sessionId, String role, String text, List<String> titles) {
+        DjChatMessage m = new DjChatMessage();
+        m.setUserId(userId);
+        m.setSessionId(sessionId);
+        m.setRole(role);
+        m.setContent(text == null ? "" : text.length() > 1900 ? text.substring(0, 1900) : text);
+        if (titles != null) {
+            try {
+                m.setTitlesJson(new com.fasterxml.jackson.databind.ObjectMapper()
+                        .writeValueAsString(titles.size() > 12 ? titles.subList(0, 12) : titles));
+            } catch (Exception ignored) {
             }
-            sessions.remove(oldest);
+        }
+        try {
+            repo.save(m);
+        } catch (Exception e) {
+            log.warn("会话消息写入失败: {}", e.getMessage());
+        }
+    }
+
+    private List<String> parseTitles(String json) {
+        try {
+            List<String> titles = new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readValue(json, new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
+                    });
+            return titles == null ? List.of() : titles;
+        } catch (Exception e) {
+            return List.of();
         }
     }
 }

@@ -2,6 +2,8 @@ const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BA
   || (typeof process !== 'undefined' && process.env?.VUE_APP_API_BASE_URL)
   || '/api'
 
+import request from '@/utils/request'
+
 const getToken = () => localStorage.getItem('token')
 
 /**
@@ -53,3 +55,9 @@ export async function streamDj(query, sessionId, { onEvent } = {}) {
     }
   }
 }
+
+// ===== AI 连接配置（P3 BYOK 可视化配置板块） =====
+export const getAiConfig = () => request({ url: '/agent/config', method: 'get' })
+export const saveAiConfig = (data) => request({ url: '/agent/config', method: 'post', data })
+export const clearAiConfig = () => request({ url: '/agent/config', method: 'delete' })
+export const testAiConfig = (data) => request({ url: '/agent/config/test', method: 'post', data, timeout: 60000 })

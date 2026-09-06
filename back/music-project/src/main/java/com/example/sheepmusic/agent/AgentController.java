@@ -34,6 +34,9 @@ public class AgentController {
     private AgentOrchestrator orchestrator;
 
     @Autowired
+    private UserAiConfigService configService;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
@@ -50,10 +53,11 @@ public class AgentController {
             sendAndComplete(emitter, "error", Map.of("message", "跟 DJ 说点想听什么吧～"));
             return emitter;
         }
-        if (!orchestrator.isConfigured()) {
-            log.warn("小屋 DJ 未配置密钥，降级返回提示");
+        // BYOK（P3）：用户必须配置自己的密钥才能使用
+        if (configService.resolve(userId) == null) {
+            log.debug("用户 {} 未配置 AI 密钥，DJ 降级提示", userId);
             sendAndComplete(emitter, "error", Map.of("message",
-                    "DJ 还没接上大模型：请配置环境变量 AGENT_API_KEY（智谱开放平台密钥）后重启服务"));
+                    "当前用户还没有配置密钥，无法使用。请点击抽屉右上角 ⚙ 完成 AI 连接配置"));
             return emitter;
         }
         String sid = sessionId.isBlank() ? java.util.UUID.randomUUID().toString() : sessionId;

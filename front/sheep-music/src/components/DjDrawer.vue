@@ -1,12 +1,24 @@
 <template>
   <el-drawer
     v-model="visible"
-    title="小屋 DJ"
     direction="rtl"
     size="430px"
     class="dj-drawer"
     :append-to-body="true"
   >
+    <template #header>
+      <div class="dj-header">
+        <span class="dj-header-title">小屋 DJ</span>
+        <el-button
+          size="small"
+          text
+          @click="openSettings"
+        >
+          <el-icon><Setting /></el-icon>
+          AI 连接
+        </el-button>
+      </div>
+    </template>
     <div class="dj-body">
       <!-- 消息流 -->
       <div
@@ -20,6 +32,17 @@
           <div class="dj-empty-icon">🎧</div>
           <p>跟 DJ 说一句你想听什么</p>
           <p class="dj-empty-hint">比如："来点适合下雨天听的歌"</p>
+          <div
+            v-if="cfgLoaded && !cfg.configured"
+            class="dj-config-tip"
+          >
+            当前用户还没有配置密钥，无法使用
+            <el-button
+              size="small"
+              type="primary"
+              @click="openSettings"
+            >去配置</el-button>
+          </div>
         </div>
 
         <template
@@ -133,6 +156,71 @@
         </template>
       </div>
 
+      <!-- AI 连接设置对话框（P3 BYOK 可视化配置板块） -->
+      <el-dialog
+        v-model="cfgVisible"
+        title="AI 连接设置"
+        width="420px"
+        append-to-body
+      >
+        <el-form label-position="top">
+          <el-form-item
+            label="API Key"
+            required
+          >
+            <el-input
+              v-model="cfgForm.apiKey"
+              type="password"
+              show-password
+              :placeholder="cfg.apiKeyMasked || '智谱开放平台 API Key'"
+            />
+          </el-form-item>
+          <el-form-item label="接口地址">
+            <el-input
+              v-model="cfgForm.baseUrl"
+              :placeholder="cfg.defaultBaseUrl"
+            />
+          </el-form-item>
+          <el-form-item label="模型">
+            <el-input
+              v-model="cfgForm.model"
+              :placeholder="cfg.defaultModel"
+            />
+          </el-form-item>
+        </el-form>
+        <div class="dj-cfg-status">
+          <template v-if="cfg.configured">
+            已配置：{{ cfg.model }} @ {{ cfg.baseUrl }}（Key: {{ cfg.apiKeyMasked }}）
+          </template>
+          <template v-else>
+            未配置
+          </template>
+          <div
+            v-if="testResult"
+            class="dj-cfg-test"
+          >{{ testResult }}</div>
+        </div>
+        <template #footer>
+          <el-button
+            size="small"
+            type="danger"
+            text
+            @click="clearCfg"
+          >清除配置</el-button>
+          <el-button
+            size="small"
+            :loading="testing"
+            @click="testCfg"
+          >测试连接</el-button>
+          <el-button
+            type="primary"
+            size="small"
+            :loading="saving"
+            @click="saveCfg"
+          >保存</el-button>
+        </template>
+      </el-dialog>
+
       <!-- 输入区 -->
       <div class="dj-input">
         <el-input
@@ -154,8 +242,8 @@
 <script setup>
 import { ref, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Loading } from '@element-plus/icons-vue'
-import { streamDj } from '@/api/agent'
+import { Loading, Setting } from '@element-plus/icons-vue'
+import { streamDj, getAiConfig, saveAiConfig, clearAiConfig, testAiConfig } from '@/api/agent'
 import { getExternalCover } from '@/api/externalMusic'
 import { usePlayerStore } from '@/store/player'
 
@@ -163,6 +251,13 @@ const visible = ref(false)
 const draft = ref('')
 const loading = ref(false)
 const sessionId = ref(genSessionId())
+const cfgVisible = ref(false)
+const cfgLoaded = ref(false)
+const saving = ref(false)
+const testing = ref(false)
+const testResult = ref('')
+const cfg = ref({ configured: false, defaultBaseUrl: '', defaultModel: '' })
+const cfgForm = ref({ apiKey: '', baseUrl: '', model: '' })
 
 function genSessionId() {
   return (crypto.randomUUID && crypto.randomUUID()) || `dj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -170,6 +265,9 @@ function genSessionId() {
 const messages = ref([]) // {role:'user'|'dj', text, statusText, cards[], done, error}
 const listRef = ref(null)
 const defaultCover = '/default-cover.svg'
+
+import { watch } from 'vue'
+watch(visible, v => { if (v) loadConfig() })
 const playerStore = usePlayerStore()
 
 const STAGE_TEXT = {
@@ -252,6 +350,7 @@ const ask = async () => {
           fillCardCover(card)
         } else if (event === 'error') {
           dj.error = data.message || 'DJ 开小差了，稍后再试'
+          if (/还没有配置密钥/.test(dj.error)) openSettings()
         } else if (event === 'done') {
           dj.done = true
           dj.statusText = ''
@@ -266,6 +365,89 @@ const ask = async () => {
     dj.statusText = ''
     loading.value = false
     scrollBottom()
+  }
+}
+
+// ===== AI 连接配置（P3 BYOK 可视化配置板块） =====
+const loadConfig = async () => {
+  try {
+    const res = await getAiConfig()
+    if (res.code === 200) {
+      cfg.value = res.data || {}
+      cfgForm.value.baseUrl = ''
+      cfgForm.value.model = ''
+      cfgForm.value.apiKey = ''
+      cfgLoaded.value = true
+    }
+  } catch (e) {
+    console.error('加载 AI 配置失败:', e)
+  }
+}
+
+const openSettings = () => {
+  testResult.value = ''
+  cfgVisible.value = true
+  loadConfig()
+}
+
+const saveCfg = async () => {
+  if (!cfgForm.value.apiKey) {
+    ElMessage.warning('请填写 API Key（留空表示沿用已保存的密钥）')
+    return
+  }
+  saving.value = true
+  try {
+    const res = await saveAiConfig({
+      apiKey: cfgForm.value.apiKey,
+      baseUrl: cfgForm.value.baseUrl || undefined,
+      model: cfgForm.value.model || undefined
+    })
+    if (res.code === 200) {
+      cfg.value = res.data || {}
+      cfgForm.value.apiKey = ''
+      testResult.value = ''
+      ElMessage.success('AI 连接配置已保存')
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (e) {
+    ElMessage.error(e?.message || '保存失败')
+  } finally {
+    saving.value = false
+  }
+}
+
+const testCfg = async () => {
+  testing.value = true
+  testResult.value = '测试中…'
+  try {
+    const res = await testAiConfig({
+      apiKey: cfgForm.value.apiKey || undefined,
+      baseUrl: cfgForm.value.baseUrl || undefined,
+      model: cfgForm.value.model || undefined
+    })
+    if (res.code === 200 && res.data) {
+      testResult.value = (res.data.ok ? '✓ ' : '✗ ') + (res.data.message || '') + `（${res.data.latencyMs}ms）`
+    } else {
+      testResult.value = res.message || '测试失败'
+    }
+  } catch (e) {
+    testResult.value = '测试失败：' + (e?.message || '网络错误')
+  } finally {
+    testing.value = false
+  }
+}
+
+const clearCfg = async () => {
+  try {
+    const res = await clearAiConfig()
+    if (res.code === 200) {
+      cfg.value = res.data || { configured: false }
+      cfgForm.value = { apiKey: '', baseUrl: '', model: '' }
+      ElMessage.success('已清除 AI 连接配置')
+    }
+  } catch (e) {
+    ElMessage.error('清除失败')
   }
 }
 
@@ -465,4 +647,40 @@ defineExpose({ open: () => { visible.value = true } })
   display: flex;
   gap: 4px;
   margin-top: 6px;
+}
+
+.dj-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.dj-header-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dj-config-tip {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  color: var(--color-accent);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.dj-cfg-status {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.dj-cfg-test {
+  margin-top: 4px;
+  color: var(--text-primary);
 }

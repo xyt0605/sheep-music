@@ -33,24 +33,21 @@ public class AgentOrchestrator {
     private static final int MAX_ROUNDS = 2;
     private static final int MAX_CANDIDATES = 10;
 
-    private final ChatClient chatClient;
     private final DjTools tools;
     private final DjSessionStore sessionStore;
+    private final UserAiConfigService configService;
+    private final ChatClientFactory clientFactory;
     private final ObjectMapper mapper = new ObjectMapper();
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
 
-    @Value("${spring.ai.openai.api-key:not-configured}")
-    private String apiKey;
-
-    public AgentOrchestrator(ChatClient.Builder chatClientBuilder, @Autowired DjTools tools,
-                             @Autowired DjSessionStore sessionStore) {
-        this.chatClient = chatClientBuilder.build();
+    public AgentOrchestrator(@Autowired DjTools tools,
+                             @Autowired DjSessionStore sessionStore,
+                             @Autowired UserAiConfigService configService,
+                             @Autowired ChatClientFactory clientFactory) {
         this.tools = tools;
         this.sessionStore = sessionStore;
-    }
-
-    public boolean isConfigured() {
-        return apiKey != null && !apiKey.isBlank() && !"not-configured".equals(apiKey);
+        this.configService = configService;
+        this.clientFactory = clientFactory;
     }
 
     /** 在工作线程中执行整轮编排（由 Controller 提交到线程池） */
@@ -75,20 +72,26 @@ public class AgentOrchestrator {
     }
 
     private void doRun(Long userId, String sessionId, String query, SseEmitter emitter) throws Exception {
-        // ---------- 会话记忆（P2）：session 事件回传 + 历史上下文 ----------
-        DjSessionStore.Session session = sessionId == null || sessionId.isBlank()
-                ? sessionStore.get(java.util.UUID.randomUUID().toString())
-                : sessionStore.get(sessionId);
+        // ---------- BYOK：解析用户自己的 AI 配置（无配置 → 明确提示） ----------
+        UserAiConfigService.AiConfig cfg = configService.resolve(userId);
+        if (cfg == null) {
+            send(emitter, "error", Map.of("message", "当前用户还没有配置密钥，无法使用。请点击抽屉右上角 ⚙ 完成 AI 连接配置"));
+            return;
+        }
+        ChatClient chatClient = clientFactory.create(cfg.apiKey(), cfg.baseUrl(), cfg.model());
+
+        // ---------- 会话记忆（P3）：MySQL 持久化，session 事件回传 + 历史上下文 ----------
+        DjSessionStore.Context ctx = sessionStore.load(userId, sessionId);
         send(emitter, "session", Map.of("sessionId", sessionId));
         StringBuilder historyText = new StringBuilder();
-        if (!session.getTurns().isEmpty()) {
+        if (!ctx.turns().isEmpty()) {
             historyText.append("对话历史（最近在后）：\n");
-            session.getTurns().stream()
-                    .skip(Math.max(0, session.getTurns().size() - 6))
+            ctx.turns().stream()
+                    .skip(Math.max(0, ctx.turns().size() - 6))
                     .forEach(t -> historyText.append(t.role().equals("user") ? "用户: " : "DJ: ").append(t.text()).append('\n'));
         }
-        if (!session.getLastTitles().isEmpty()) {
-            historyText.append("上一轮已推荐（除非用户点名，避免重复）：").append(String.join("、", session.getLastTitles())).append('\n');
+        if (!ctx.lastTitles().isEmpty()) {
+            historyText.append("上一轮已推荐（除非用户点名，避免重复）：").append(String.join("、", ctx.lastTitles())).append('\n');
         }
         Map<String, Object> taste = tools.tasteProfile(userId);
         if (!taste.isEmpty()) {
@@ -97,7 +100,7 @@ public class AgentOrchestrator {
 
         // ---------- ① Dispatcher：意图拆解 ----------
         send(emitter, "stage", Map.of("stage", "dispatcher", "status", "start"));
-        String intentJson = callLlm(AgentPrompts.DISPATCHER, historyText + "用户需求：" + query, 1024, 0.3);
+        String intentJson = callLlm(chatClient, AgentPrompts.DISPATCHER, historyText + "用户需求：" + query, 1024, 0.3);
         Map<String, Object> intent = parseJson(intentJson);
         int wantCount = intVal(intent, "count", 8);
         send(emitter, "stage", Map.of("stage", "dispatcher", "status", "done", "intent", intent));
@@ -126,7 +129,7 @@ public class AgentOrchestrator {
                 for (int attempt = 0; attempt < 2 && act == null; attempt++) {
                     String extra = attempt == 0 ? "" : "\n（你上一次的输出无法解析，请只输出一个 JSON 对象。）";
                     try {
-                        act = parseJson(callLlm(AgentPrompts.LIBRARIAN, userMsg + extra, 1600, 0.4));
+                        act = parseJson(callLlm(chatClient, AgentPrompts.LIBRARIAN, userMsg + extra, 1600, 0.4));
                     } catch (Exception e) {
                         log.debug("Librarian 第{}步第{}次输出解析失败: {}", step, attempt + 1, e.getMessage());
                     }
@@ -176,7 +179,7 @@ public class AgentOrchestrator {
             send(emitter, "stage", Map.of("stage", "critic", "status", "start", "round", round));
             Map<String, Object> verdict = null;
             try {
-                verdict = parseJson(callLlm(AgentPrompts.CRITIC,
+                verdict = parseJson(callLlm(chatClient, AgentPrompts.CRITIC,
                         "用户需求：" + query + "\n候选组：\n" + describe(picked), 800, 0.2));
             } catch (Exception e) {
                 log.debug("Critic 输出解析失败，视为通过: {}", e.getMessage());
@@ -203,7 +206,7 @@ public class AgentOrchestrator {
 
         // ---------- ③ DJ：串场词 + 逐首理由（P2：单次 JSON 调用，intro 切片伪流式） ----------
         send(emitter, "stage", Map.of("stage", "dj", "status", "start"));
-        String djRaw = callLlm(AgentPrompts.DJ,
+        String djRaw = callLlm(chatClient, AgentPrompts.DJ,
                 historyText + "用户需求：" + query + "\n候选歌曲（按推荐顺序）：\n" + describe(picked),
                 1800, 0.85);
         String intro = "";
@@ -250,9 +253,8 @@ public class AgentOrchestrator {
         }
 
         // ---------- 会话记忆（P2）：写入本轮对话与已推荐清单 ----------
-        sessionStore.appendTurn(sessionId, "user", query);
-        sessionStore.appendTurn(sessionId, "dj", intro);
-        sessionStore.setLastTitles(sessionId,
+        sessionStore.appendTurn(userId, sessionId, "user", query, null);
+        sessionStore.appendTurn(userId, sessionId, "dj", intro,
                 picked.stream().map(i2 -> String.valueOf(i2.get("title"))).toList());
         send(emitter, "done", Map.of("count", cards.size(), "intro", intro));
     }
@@ -347,7 +349,7 @@ public class AgentOrchestrator {
 
     // ========== LLM 调用与 JSON 解析 ==========
 
-    private String callLlm(String system, String user, int maxTokens, double temperature) {
+    private String callLlm(ChatClient chatClient, String system, String user, int maxTokens, double temperature) {
         return chatClient.prompt()
                 .system(system)
                 .user(user)
