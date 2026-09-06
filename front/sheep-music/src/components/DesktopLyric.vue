@@ -550,7 +550,12 @@ watch(() => playerStore.currentTime, (time) => {
 
 // 监听歌曲变化，加载新歌词
 watch(() => currentSong.value?.id, (newId) => {
-  if (newId) {
+  if (newId && currentSong.value?.isExternal) {
+    // 外源歌曲（曲库供应链）没有歌词接口：不请求，直接显示纯音乐提示
+    currentLyric.value = '♪ 纯音乐，请欣赏 ♪'
+    nextLyric.value = ''
+    mockLyrics.value = []
+  } else if (newId) {
     loadLyrics(newId)
   } else {
     // 没有歌曲时显示默认提示
@@ -689,9 +694,10 @@ const generateMockLyrics = (songId) => {
     ]
   ]
   
-  // 根据歌曲ID选择不同的歌词模板
-  const index = (songId || 0) % lyricTemplates.length
-  return lyricTemplates[index]
+  // 根据歌曲ID选择不同的歌词模板（外源歌曲 id 为字符串，Number() 归一避免 NaN 越界）
+  const numId = Math.abs(Math.floor(Number(songId) || 0))
+  const index = numId % lyricTemplates.length
+  return lyricTemplates[index] || lyricTemplates[0]
 }
 
 // 更新当前歌词（函数声明，避免初始化前访问）

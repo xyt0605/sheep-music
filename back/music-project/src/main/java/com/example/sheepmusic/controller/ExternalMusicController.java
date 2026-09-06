@@ -2,6 +2,7 @@ package com.example.sheepmusic.controller;
 
 import com.example.sheepmusic.common.Result;
 import com.example.sheepmusic.dto.ExternalSearchResultVO;
+import com.example.sheepmusic.dto.ExternalSourceVO;
 import com.example.sheepmusic.service.ExternalMusicService;
 import com.example.sheepmusic.service.MusicSourceProvider;
 import com.example.sheepmusic.service.MusicSourceRegistry;
@@ -27,6 +28,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * 外源开放曲库（曲库供应链 v1，见 docs/specs/曲库供应链v1/）
@@ -51,6 +54,26 @@ public class ExternalMusicController {
             .connectTimeout(Duration.ofSeconds(5))
             .followRedirects(HttpClient.Redirect.ALWAYS)
             .build();
+
+    @Operation(summary = "音源列表（含启用状态，前端分区用）")
+    @GetMapping("/sources")
+    public Result<List<ExternalSourceVO>> sources() {
+        List<ExternalSourceVO> list = registry.all().stream()
+                // 启用的源排前面，同状态按标识排序，保证分区顺序稳定
+                .sorted(Comparator.comparing((MusicSourceProvider p) -> !p.isEnabled())
+                        .thenComparing(MusicSourceProvider::source))
+                .map(p -> new ExternalSourceVO(p.source(), p.label(), p.isEnabled()))
+                .toList();
+        return Result.success(list);
+    }
+
+    /** fileId 安全校验：安全字符集（字母/数字/点/下划线/连字符/空格），可含一层 "/"，禁止 ".." 等路径穿越 */
+    private boolean isSafeFileId(String fileId) {
+        if (fileId.length() > 200 || fileId.contains("..")) {
+            return false;
+        }
+        return fileId.matches("[A-Za-z0-9._\\- ]{1,100}(?:/[A-Za-z0-9._\\- ]{1,150}){0,2}");
+    }
 
     @Operation(summary = "搜索外源开放曲库歌曲")
     @GetMapping("/search")
@@ -78,23 +101,28 @@ public class ExternalMusicController {
     public ResponseEntity<InputStreamResource> stream(
             @Parameter(description = "音源标识", example = "jamendo")
             @RequestParam String source,
-            @Parameter(description = "外部曲目 ID（数字）", example = "1442761")
+            @Parameter(description = "外部曲目 ID", example = "1442761")
             @RequestParam String trackId,
+            @Parameter(description = "文件标识（数字 ID 或 音源内容相对路径）", example = "61fd04c6ec4b")
+            @RequestParam(required = false) String fileId,
             @RequestHeader(value = HttpHeaders.RANGE, required = false) String range
     ) {
         MusicSourceProvider provider = registry.optionalGet(source).orElse(null);
         if (provider == null) {
             return ResponseEntity.badRequest().build();
         }
-        // 防开放代理：trackId 必须是纯数字，上游 URL 只能由 Provider 内置白名单拼出
-        if (trackId == null || !trackId.matches("\\d{1,20}")) {
+        // 防开放代理：trackId 必须是纯数字；fileId 限定安全字符集且禁止 ".."（ccMixter 为 用户名/文件名 路径），
+        // 上游 URL 只能由 Provider 内置白名单前缀 + 校验过的标识拼出
+        if (trackId == null || !trackId.matches("\\d{1,20}")
+                || fileId == null || !isSafeFileId(fileId)) {
             return ResponseEntity.badRequest().build();
         }
 
-        String upstreamUrl = provider.resolveStreamUrl(trackId);
+        String upstreamUrl = provider.resolveStreamUrl(trackId, fileId);
         HttpRequest.Builder reqBuilder = HttpRequest.newBuilder(URI.create(upstreamUrl))
                 .timeout(Duration.ofSeconds(30))
                 .header(HttpHeaders.USER_AGENT, "SheepMusic/1.0 (+stream-proxy)");
+        provider.streamHeaders().forEach(reqBuilder::header);
         if (range != null && !range.isBlank()) {
             reqBuilder.header(HttpHeaders.RANGE, range);
         }

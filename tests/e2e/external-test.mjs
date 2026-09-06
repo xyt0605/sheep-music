@@ -75,6 +75,46 @@ ok('非数字 trackId 返回 400', r.status === 400, `status=${r.status}`)
 r = await api('GET', '/music/external/stream?source=nonexist&trackId=123')
 ok('未知音源 stream 返回 400', r.status === 400, `status=${r.status}`)
 
+// ============ AC-11 音源列表接口 ============
+console.log('\n[5] 音源列表（AC-11）')
+r = await api('GET', '/music/external/sources')
+ok('未登录获取音源列表返回 401', r.status === 401, `status=${r.status}`)
+r = await api('GET', '/music/external/sources', { token: U })
+const srcList = data(r) || []
+ok('音源列表 code=200 且非空', code(r) === 200 && Array.isArray(srcList) && srcList.length > 0, `len=${srcList.length}`)
+const jam = srcList.find(s => s.source === 'jamendo')
+const cc = srcList.find(s => s.source === 'ccmixter')
+ok('包含 jamendo 与 ccmixter，字段齐全',
+  !!jam && !!cc && 'enabled' in jam && 'label' in cc,
+  `sources=${srcList.map(s => s.source).join(',')}`)
+if (process.env.JAMENDO_CLIENT_ID) {
+  ok('已配置密钥：jamendo enabled=true', jam?.enabled === true)
+} else {
+  ok('未配置密钥：jamendo enabled=false', jam?.enabled === false)
+}
+ok('ccmixter 无需配置恒启用', cc?.enabled === true)
+ok('启用的源排在未启用前面', srcList[0]?.enabled === true, `first=${srcList[0]?.source}`)
+
+// ============ AC-12 ccMixter 零注册源（可达时做真实联测） ============
+console.log('\n[6] ccMixter 实测（AC-12，网络可达时）')
+r = await api('GET', '/music/external/search?source=ccmixter&keyword=summer&page=0&size=10', { token: U })
+ok('ccmixter 搜索 code=200 且 enabled=true', code(r) === 200 && data(r)?.enabled === true, `code=${code(r)} msg=${msg(r)}`)
+const ccItems = data(r)?.items || []
+if (ccItems.length > 0) {
+  const first = ccItems[0]
+  ok('ccmixter 字段齐全（标题/歌手/授权）', !!first.title && !!first.artist && (!!first.licenseName || !!first.licenseUrl))
+  ok('ccmixter streamUrl 为同源代理且带 fileId 路径',
+    /\/music\/external\/stream\?source=ccmixter&trackId=\d+&fileId=[^&]+$/.test(first.streamUrl || ''),
+    `streamUrl=${first?.streamUrl}`)
+  const streamPath = first.streamUrl.replace(/^\/api/, '')
+  const res = await fetch(BASE + streamPath, { headers: { Range: 'bytes=0-1023' } })
+  ok('ccmixter 流代理真实音频 206/200', res.status === 206 || res.status === 200, `status=${res.status}`)
+  ok('ccmixter Content-Type 为音频', /audio\//.test(res.headers.get('content-type') || ''), res.headers.get('content-type'))
+  await res.body?.cancel().catch(() => {})
+} else {
+  console.log('  SKIP  上游无结果或网络不可达（message=' + (data(r)?.message || '无') + '），跳过联测断言')
+}
+
 // ============ 可选：真实上游联测（需外网 + 密钥，AC-10 冒烟） ============
 if (process.env.JAMENDO_CLIENT_ID && data(await api('GET', '/music/external/search?source=jamendo&keyword=love', { token: U }))?.items?.length > 0) {
   console.log('\n[5] 真实上游联测（AC-10 冒烟）')

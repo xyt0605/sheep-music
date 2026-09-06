@@ -15,13 +15,19 @@ import java.util.stream.Collectors;
 public class MusicSourceRegistry {
 
     private final Map<String, MusicSourceProvider> providers;
+    private final List<MusicSourceProvider> providerList;
 
     public MusicSourceRegistry(List<MusicSourceProvider> providerList) {
+        this.providerList = List.copyOf(providerList);
         this.providers = providerList.stream()
                 .collect(Collectors.toMap(MusicSourceProvider::source, Function.identity()));
     }
 
     public Optional<MusicSourceProvider> optionalGet(String source) {
         return Optional.ofNullable(source).map(providers::get);
+    }
+
+    public List<MusicSourceProvider> all() {
+        return providerList;
     }
 }

@@ -232,48 +232,61 @@
           </div>
         </div>
 
-        <!-- 分区二：开放曲库（CC 授权，试听不入库） -->
-        <div class="source-section">
+        <!-- 分区二+：开放曲库（每个已启用音源一区，CC 授权，试听不入库） -->
+        <div
+          v-for="section in extSections"
+          :key="section.source"
+          class="source-section"
+        >
           <div class="result-header source-header">
             <el-icon class="header-icon">
               <Connection />
             </el-icon>
-            <h3>开放曲库</h3>
+            <h3>{{ section.label }}</h3>
             <el-tag
+              v-if="section.enabled"
               size="small"
               type="success"
               effect="plain"
             >
               CC 授权
             </el-tag>
+            <el-tag
+              v-else
+              size="small"
+              type="info"
+              effect="plain"
+            >
+              未启用
+            </el-tag>
             <span
-              v-if="extResult && extResult.enabled && extTotal > 0"
+              v-if="section.enabled && section.total > 0"
               class="source-count"
             >
-              {{ extTotal }} 首
+              {{ section.total }} 首
             </span>
           </div>
 
           <div
-            v-if="extLoading"
+            v-if="section.loading"
             class="ext-tip"
           >
             <el-icon class="is-loading">
               <Loading />
             </el-icon>
-            正在搜索开放曲库...
+            正在搜索{{ section.label }}...
           </div>
 
-          <template v-else-if="extResult && extResult.enabled">
+          <template v-else-if="section.enabled">
             <div
-              v-if="externalSongs.length > 0"
+              v-if="section.songs.length > 0"
               class="song-list"
             >
               <div
-                v-for="song in externalSongs"
+                v-for="song in section.songs"
                 :key="song.id"
                 class="song-item"
-                @click="handlePlayExternal(song)"
+                @click="handlePlayExternal(section, song)"
               >
                 <div class="song-index ext-index">
                   <el-icon><Connection /></el-icon>
@@ -310,48 +323,48 @@
                     circle
                     size="small"
                     title="播放"
-                    @click.stop="handlePlayExternal(song)"
+                    @click.stop="handlePlayExternal(section, song)"
                   />
                   <el-button
                     icon="Plus"
                     circle
                     size="small"
                     title="添加到播放列表"
-                    @click.stop="handleAddExternal(song)"
+                    @click.stop="handleAddExternal(section, song)"
                   />
                 </div>
               </div>
             </div>
 
             <div
-              v-else-if="extResult.message"
+              v-else-if="section.message"
               class="ext-tip"
             >
-              {{ extResult.message }}
+              {{ section.message }}
             </div>
             <div
               v-else
               class="ext-tip"
             >
-              开放曲库中没有找到相关歌曲
+              {{ section.label }}中没有找到相关歌曲
             </div>
 
             <el-pagination
-              v-if="extTotal > extPageSize"
-              v-model:current-page="extPage"
+              v-if="section.total > extPageSize"
+              v-model:current-page="section.page"
               :page-size="extPageSize"
-              :total="extTotal"
+              :total="section.total"
               layout="prev, pager, next"
               class="pagination"
-              @current-change="handleExtPageChange"
+              @current-change="handleExtPageChange(section)"
             />
           </template>
 
           <div
-            v-else-if="extResult && !extResult.enabled"
+            v-else
             class="ext-tip"
           >
-            {{ extResult.message }}
+            {{ section.message || '音源未启用' }}
           </div>
         </div>
       </div>
@@ -434,7 +447,7 @@ import { useRouter } from 'vue-router'
 import { usePlayerStore } from '@/store/player'
 import { useUserStore } from '@/store/user'
 import { searchSongs } from '@/api/song'
-import { searchExternalSongs } from '@/api/externalMusic'
+import { searchExternalSongs, getExternalSources } from '@/api/externalMusic'
 import { getArtists } from '@/api/artist'
 import {
   getSearchHistory,
@@ -484,13 +497,33 @@ const artistResults = ref([])
 const totalArtists = ref(0)
 const allArtists = ref([]) // 缓存所有歌手
 
-// 开放曲库（外源）搜索——独立 loading 旁路加载，不阻塞本地结果（曲库供应链 v1）
-const extLoading = ref(false)
-const extResult = ref(null) // 后端 ExternalSearchResultVO：{source, sourceLabel, enabled, message, total, items}
-const externalSongs = ref([]) // 映射为 player 形状的外源歌曲
-const extTotal = ref(0)
-const extPage = ref(1)
+// 开放曲库（外源）搜索——按音源分区，独立 loading 旁路加载，不阻塞本地结果（曲库供应链 v1）
+// section 结构：{ source, label, enabled, message, total, songs, page, loading }
+const extSections = ref([])
 const extPageSize = ref(20)
+let extSourcesPromise = null
+
+const loadSources = () => {
+  if (extSourcesPromise) return extSourcesPromise
+  extSourcesPromise = getExternalSources()
+    .then(res => {
+      extSections.value = (res.code === 200 ? res.data || [] : []).map(s => ({
+        source: s.source,
+        label: s.label,
+        enabled: s.enabled,
+        message: '',
+        total: 0,
+        songs: [],
+        page: 1,
+        loading: false
+      }))
+    })
+    .catch(error => {
+      console.error('加载音源列表失败:', error)
+      extSections.value = []
+    })
+  return extSourcesPromise
+}
 
   const defaultCover = '/default-cover.svg'
   const defaultAvatar = '/default-artist.svg'
@@ -529,6 +562,7 @@ onMounted(() => {
   loadHotSearches()
   loadSearchHistory()
   loadAllArtists()
+  loadSources()
 })
 
 // 加载热门搜索
@@ -648,8 +682,8 @@ const performSearch = async () => {
   try {
     if (searchType.value === 'songs') {
       await searchSongsData()
-      // 开放曲库异步旁路搜索：独立 extLoading，失败只影响本分区
-      searchExternalData()
+      // 开放曲库异步旁路搜索：先确保音源分区就绪，再并行搜索各源
+      loadSources().then(() => searchExternalData())
     } else {
       await searchArtistsData()
     }
@@ -684,13 +718,15 @@ const searchSongsData = async () => {
 
 // ========== 开放曲库（外源）搜索 ==========
 
-// 重置外源分区状态
+// 重置外源分区状态（保留分区骨架）
 const resetExternal = () => {
-  extResult.value = null
-  externalSongs.value = []
-  extTotal.value = 0
-  extPage.value = 1
-  extLoading.value = false
+  extSections.value.forEach(s => {
+    s.songs = []
+    s.total = 0
+    s.page = 1
+    s.message = ''
+    s.loading = false
+  })
 }
 
 // 后端 VO → player 歌曲对象（外源歌曲写操作不适用，见规格 FR-5）
@@ -701,50 +737,65 @@ const mapExternalSong = (vo, source) => ({
   cover: vo.cover,
   duration: vo.duration,
   url: vo.streamUrl,
+  lyric: '',
   isExternal: true,
   source,
   licenseName: vo.licenseName,
   licenseUrl: vo.licenseUrl
 })
 
-// 搜索开放曲库（旁路，不抛错——异常只影响本分区展示）
-const searchExternalData = async () => {
-  extLoading.value = true
+// 搜索单个音源分区（异常只影响本分区展示）
+const searchSection = async (section, kw) => {
+  section.loading = true
   try {
     const res = await searchExternalSongs({
-      source: 'jamendo',
-      keyword: keyword.value.trim(),
-      page: extPage.value - 1,
+      source: section.source,
+      keyword: kw,
+      page: section.page - 1,
       size: extPageSize.value
     })
     if (res.code === 200 && res.data) {
-      extResult.value = res.data
-      extTotal.value = Math.max(0, res.data.total || 0)
-      externalSongs.value = (res.data.items || []).map(vo => mapExternalSong(vo, res.data.source))
+      section.enabled = res.data.enabled
+      section.message = res.data.message || ''
+      section.total = Math.max(0, res.data.total || 0)
+      section.songs = (res.data.items || []).map(vo => mapExternalSong(vo, res.data.source))
     } else {
-      resetExternal()
+      section.songs = []
+      section.total = 0
+      section.message = '搜索失败，请稍后重试'
     }
   } catch (error) {
-    console.error('开放曲库搜索失败:', error)
-    resetExternal()
+    console.error(`开放曲库[${section.source}]搜索失败:`, error)
+    section.songs = []
+    section.total = 0
+    section.message = '搜索失败，请稍后重试'
   } finally {
-    extLoading.value = false
+    section.loading = false
   }
 }
 
+// 并行搜索所有分区（旁路，不阻塞本地结果）
+const searchExternalData = () => {
+  const kw = keyword.value.trim()
+  extSections.value.forEach(section => {
+    section.page = 1
+    searchSection(section, kw)
+  })
+}
+
 // 外源分区翻页
-const handleExtPageChange = () => {
-  searchExternalData()
+const handleExtPageChange = (section) => {
+  searchSection(section, keyword.value.trim())
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // 播放外源歌曲（整区入队，队列内可切歌）
-const handlePlayExternal = (song) => {
-  playerStore.play(song, externalSongs.value)
+const handlePlayExternal = (section, song) => {
+  playerStore.play(song, section.songs)
 }
 
 // 外源歌曲加入播放队列
-const handleAddExternal = (song) => {
+const handleAddExternal = (section, song) => {
   playerStore.addToPlaylist(song)
   ElMessage.success(`已添加到播放列表: ${song.title}`)
 }
@@ -824,7 +875,6 @@ const handleSearch = () => {
   // 设置新的定时器（500ms 后执行搜索）
   searchTimer = setTimeout(() => {
     currentPage.value = 1
-    extPage.value = 1
     performSearch()
   }, 500)
 }

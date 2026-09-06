@@ -2,19 +2,22 @@ package com.example.sheepmusic.service;
 
 import com.example.sheepmusic.dto.ExternalSearchResultVO;
 
+import java.net.URI;
+import java.util.Map;
+
 /**
  * 外源音源 SPI（曲库供应链 v1）
  * 新增音源 = 新增一个实现 + 配置项，搜索页分区自动扩展，无需改动既有代码
  */
 public interface MusicSourceProvider {
 
-    /** 音源标识（URL 参数用，小写，如 jamendo） */
+    /** 音源标识（URL 参数用，小写，如 jamendo / ccmixter） */
     String source();
 
     /** 音源展示名 */
     String label();
 
-    /** 是否已启用（密钥等配置齐全） */
+    /** 是否已启用（密钥等配置齐全；无配置要求的源恒为 true） */
     boolean isEnabled();
 
     /**
@@ -28,6 +31,38 @@ public interface MusicSourceProvider {
      * 解析曲目真实音频地址（流式代理上游用）
      *
      * @param trackId 已由调用方做过格式校验
+     * @param fileHint 同一条目含多个音频文件时的文件标识（如 ccMixter 的 file_id），可为 null
      */
-    String resolveStreamUrl(String trackId);
+    String resolveStreamUrl(String trackId, String fileHint);
+
+    /**
+     * 流式代理访问该音源上游时附加的请求头（部分站点按 UA/Referer 防护，如 ccMixter）。
+     * 返回空 Map 表示使用代理默认头。
+     */
+    default Map<String, String> streamHeaders() {
+        return Map.of();
+    }
+
+    /**
+     * 从 Creative Commons 授权链接推导简称，
+     * 如 https://creativecommons.org/licenses/by-nc-nd/3.0/ → "CC BY-NC-ND 3.0"
+     */
+    static String ccLicenseName(String licenseUrl) {
+        if (licenseUrl == null || licenseUrl.isBlank()) {
+            return "CC";
+        }
+        try {
+            String path = URI.create(licenseUrl).getPath();
+            if (!path.contains("/licenses/")) {
+                return "CC";
+            }
+            String after = path.substring(path.indexOf("/licenses/") + "/licenses/".length());
+            String[] parts = after.split("/");
+            String code = parts.length > 0 ? parts[0].toUpperCase().replace("-", " ") : "";
+            String version = parts.length > 1 ? " " + parts[1] : "";
+            return code.isBlank() ? "CC" : "CC " + code + version;
+        } catch (Exception e) {
+            return "CC";
+        }
+    }
 }

@@ -98,7 +98,7 @@ public class JamendoProvider implements MusicSourceProvider {
     }
 
     @Override
-    public String resolveStreamUrl(String trackId) {
+    public String resolveStreamUrl(String trackId, String fileHint) {
         return streamBaseUrl + String.format(STREAM_PATH, trackId);
     }
 
@@ -107,20 +107,8 @@ public class JamendoProvider implements MusicSourceProvider {
         return "/api/music/external/stream?source=" + source() + "&trackId=" + trackId;
     }
 
-    /** 从授权链接推导简称，如 https://creativecommons.org/licenses/by-nc-nd/3.0/ → CC BY-NC-ND 3.0 */
+    /** 授权简称统一在 SPI 静态方法实现（ccMixter 等源共用） */
     private String licenseName(String licenseUrl) {
-        if (licenseUrl == null || licenseUrl.isBlank()) {
-            return "CC";
-        }
-        try {
-            String path = URI.create(licenseUrl).getPath();
-            String after = path.substring(path.indexOf("/licenses/") + "/licenses/".length());
-            String[] parts = after.split("/");
-            String code = parts.length > 0 ? parts[0].toUpperCase().replace("-", " ") : "";
-            String version = parts.length > 1 ? " " + parts[1] : "";
-            return code.isBlank() ? "CC" : "CC " + code + version;
-        } catch (Exception e) {
-            return "CC";
-        }
+        return MusicSourceProvider.ccLicenseName(licenseUrl);
     }
 }
