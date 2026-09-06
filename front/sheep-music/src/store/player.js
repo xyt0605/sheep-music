@@ -139,21 +139,24 @@ export const usePlayerStore = defineStore('player', () => {
           return
         }
         
-        // 调用后端 API 增加播放次数
-        try {
-          await playSongAPI(song.id)
-        } catch (error) {
-          console.error('更新播放次数失败:', error)
-        }
-        
-        // 添加播放历史记录（仅登录用户）
-        try {
-          const userStore = useUserStore()
-          if (userStore.isLogin) {
-            await addPlayHistory({ songId: song.id })
+        // 外源歌曲（开放曲库试听）无本地 songId，不产生任何后端写操作（曲库供应链 v1）
+        if (!song.isExternal) {
+          // 调用后端 API 增加播放次数
+          try {
+            await playSongAPI(song.id)
+          } catch (error) {
+            console.error('更新播放次数失败:', error)
           }
-        } catch (error) {
-          console.error('添加播放历史失败:', error)
+
+          // 添加播放历史记录（仅登录用户）
+          try {
+            const userStore = useUserStore()
+            if (userStore.isLogin) {
+              await addPlayHistory({ songId: song.id })
+            }
+          } catch (error) {
+            console.error('添加播放历史失败:', error)
+          }
         }
       }
     } catch (error) {

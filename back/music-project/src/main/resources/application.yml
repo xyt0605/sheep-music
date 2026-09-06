@@ -61,3 +61,12 @@ knife4j:
 springdoc:
   api-docs:
     path: /v3/api-docs
+
+# 外源开放曲库（曲库供应链 v1：docs/specs/曲库供应链v1/）
+# JAMENDO_CLIENT_ID 在 devportal.jamendo.com 免费注册；未配置时功能优雅降级
+external:
+  sources:
+    jamendo:
+      client-id: ${JAMENDO_CLIENT_ID:}
+      api-base-url: https://api.jamendo.com/v3.0
+      stream-base-url: https://prod-1.storage.jamendo.com

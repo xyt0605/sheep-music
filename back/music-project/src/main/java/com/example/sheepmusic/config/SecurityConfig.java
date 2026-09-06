@@ -61,6 +61,8 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**", "/ws-chat/**", "/api/ws/**", "/api/ws-chat/**").permitAll()
                         // 放行热门搜索接口（公开接口）
                         .requestMatchers(HttpMethod.GET, "/api/user/search-history/hot").permitAll()
+                        // 放行外源音频流代理（<audio> 无法携带 JWT；曲库供应链 v1，暴露面由数字 trackId+白名单收敛）
+                        .requestMatchers("/music/external/stream", "/api/music/external/stream").permitAll()
                         // 管理员接口（只有管理员可访问）
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
                         // 其他请求需要认证
