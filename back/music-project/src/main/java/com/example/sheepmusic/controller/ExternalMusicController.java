@@ -98,7 +98,7 @@ public class ExternalMusicController {
     @Operation(summary = "搜索外源开放曲库歌曲")
     @GetMapping("/search")
     public Result<ExternalSearchResultVO> search(
-            @Parameter(description = "音源标识", example = "jamendo")
+            @Parameter(description = "音源标识", example = "gequhai")
             @RequestParam(defaultValue = "jamendo") String source,
             @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "页码（0 起）", example = "0")
@@ -119,7 +119,7 @@ public class ExternalMusicController {
     @Operation(summary = "外源音频流式代理（免登录，支持 Range）")
     @GetMapping("/stream")
     public ResponseEntity<InputStreamResource> stream(
-            @Parameter(description = "音源标识", example = "jamendo")
+            @Parameter(description = "音源标识", example = "gequhai")
             @RequestParam String source,
             @Parameter(description = "外部曲目 ID", example = "1442761")
             @RequestParam String trackId,
@@ -148,7 +148,6 @@ public class ExternalMusicController {
         HttpRequest.Builder reqBuilder = HttpRequest.newBuilder(URI.create(upstreamUrl))
                 .timeout(Duration.ofSeconds(30))
                 .header(HttpHeaders.USER_AGENT, "SheepMusic/1.0 (+stream-proxy)");
-        provider.streamHeaders().forEach(reqBuilder::header);
         if (range != null && !range.isBlank()) {
             reqBuilder.header(HttpHeaders.RANGE, range);
         }
