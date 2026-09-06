@@ -79,6 +79,8 @@ if (gqItems.length > 0) {
     /\/music\/external\/stream\?source=gequhai&trackId=\d+$/.test(g1.streamUrl || ''), `streamUrl=${g1?.streamUrl}`)
   const lrc = await api('GET', `/music/external/lyric?source=gequhai&trackId=${g1.sourceTrackId}`, { token: U })
   ok('gequhai 歌词返回 LRC 文本', code(lrc) === 200 && /\[\d{2}:\d{2}/.test(data(lrc) || ''), `len=${(data(lrc) || '').length}`)
+  const cov = await api('GET', `/music/external/cover?source=gequhai&trackId=${g1.sourceTrackId}`, { token: U })
+  ok('gequhai 封面返回图片 URL', code(cov) === 200 && /^https?:\/\//.test(data(cov) || ''), `cover=${data(cov)}`)
   const gres = await fetch(BASE + g1.streamUrl.replace(/^\/api/, ''), { headers: { Range: 'bytes=0-1023' } })
   ok('gequhai 流代理真实音频 206/200', gres.status === 206 || gres.status === 200, `status=${gres.status}`)
   ok('gequhai Content-Type 为音频', /audio\//.test(gres.headers.get('content-type') || ''), gres.headers.get('content-type'))

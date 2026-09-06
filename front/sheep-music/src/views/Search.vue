@@ -302,6 +302,7 @@
                 <img
                   :src="song.cover || defaultCover"
                   class="song-cover"
+                  @error="song.cover = ''"
                 >
                 <div class="song-info">
                   <div
@@ -455,7 +456,7 @@ import { useRouter } from 'vue-router'
 import { usePlayerStore } from '@/store/player'
 import { useUserStore } from '@/store/user'
 import { searchSongs } from '@/api/song'
-import { searchExternalSongs, getExternalSources } from '@/api/externalMusic'
+import { searchExternalSongs, getExternalSources, getExternalCover } from '@/api/externalMusic'
 import { getArtists } from '@/api/artist'
 import {
   getSearchHistory,
@@ -769,6 +770,8 @@ const searchSection = async (section, kw) => {
       section.message = res.data.message || ''
       section.total = Math.max(0, res.data.total || 0)
       section.songs = (res.data.items || []).map(vo => mapExternalSong(vo, res.data.source))
+      // 搜索页行不带封面：异步回填（响应式，加载完自动替换占位图）
+      fillCovers(section.songs)
     } else {
       section.songs = []
       section.total = 0
@@ -808,6 +811,23 @@ const handlePlayExternal = (section, song) => {
 const handleAddExternal = (section, song) => {
   playerStore.addToPlaylist(song)
   ElMessage.success(`已添加到播放列表: ${song.title}`)
+}
+
+// 外源列表封面异步回填：搜索页行本身不带封面，逐首向后端解析（后端 5 分钟页面缓存，3 并发防打爆上游）
+const fillCovers = (songs) => {
+  const queue = songs.filter(s => !s.cover && s.source && s.sourceTrackId)
+  const worker = async () => {
+    while (queue.length) {
+      const song = queue.shift()
+      try {
+        const res = await getExternalCover({ source: song.source, trackId: song.sourceTrackId })
+        if (res.code === 200 && res.data) song.cover = res.data
+      } catch (error) {
+        // 单曲封面失败保持占位图
+      }
+    }
+  }
+  for (let i = 0; i < 3 && i < queue.length; i++) worker()
 }
 
 // 加载收藏状态

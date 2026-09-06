@@ -95,6 +95,26 @@ public class ExternalMusicController {
         }
     }
 
+    @Operation(summary = "外源歌曲封面 URL（无则返回空串）")
+    @GetMapping("/cover")
+    public Result<String> cover(
+            @Parameter(description = "音源标识", example = "gequhai")
+            @RequestParam String source,
+            @Parameter(description = "外部曲目 ID（数字）", example = "326")
+            @RequestParam String trackId
+    ) {
+        MusicSourceProvider provider = registry.optionalGet(source).orElse(null);
+        if (provider == null || trackId == null || !trackId.matches("\\d{1,20}")) {
+            return Result.error(400, "参数错误");
+        }
+        try {
+            return Result.success(provider.resolveCover(trackId));
+        } catch (Exception e) {
+            log.warn("外源封面获取失败 [{}#{}]: {}", source, trackId, e.getMessage());
+            return Result.success("");
+        }
+    }
+
     @Operation(summary = "搜索外源开放曲库歌曲")
     @GetMapping("/search")
     public Result<ExternalSearchResultVO> search(

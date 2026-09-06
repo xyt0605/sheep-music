@@ -44,4 +44,11 @@ public interface MusicSourceProvider {
     default String resolveLyric(String trackId) {
         return "";
     }
+
+    /**
+     * 解析歌曲封面图 URL（无则返回空串）。默认不支持。
+     */
+    default String resolveCover(String trackId) {
+        return "";
+    }
 }

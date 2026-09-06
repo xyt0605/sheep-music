@@ -41,6 +41,7 @@ public class GequhaiProvider implements MusicSourceProvider {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
     private static final Pattern PLAY_ID = Pattern.compile("window\\.play_id = '([0-9a-f]{32})'");
     private static final Pattern MP3_TYPE = Pattern.compile("window\\.mp3_type = (\\d+)");
+    private static final Pattern MP3_COVER = Pattern.compile("window\\.mp3_cover = '([^']*)'");
     private static final long CACHE_TTL_MS = 5 * 60 * 1000L;
     private static final int CACHE_MAX = 300;
 
@@ -64,7 +65,7 @@ public class GequhaiProvider implements MusicSourceProvider {
     /** 解析出的音频直链缓存 */
     private final Map<String, CachedUrl> streamCache = new ConcurrentHashMap<>();
 
-    private record PlayPage(String playId, int mp3Type, String lyric, long fetchedAt) {
+    private record PlayPage(String playId, int mp3Type, String lyric, String cover, long fetchedAt) {
     }
 
     private record CachedUrl(String url, long cachedAt) {
@@ -170,6 +171,16 @@ public class GequhaiProvider implements MusicSourceProvider {
         }
     }
 
+    @Override
+    public String resolveCover(String trackId) {
+        try {
+            return fetchPlayPage(trackId).cover();
+        } catch (Exception e) {
+            log.warn("gequhai 封面获取失败 [{}]: {}", trackId, e.getMessage());
+            return "";
+        }
+    }
+
     /** /play 页抓取+解析（缓存 5 分钟）；play_id 绑定会话，歌词/播放地址共用 */
     private PlayPage fetchPlayPage(String trackId) throws Exception {
         PlayPage cached = pageCache.get(trackId);
@@ -186,8 +197,10 @@ public class GequhaiProvider implements MusicSourceProvider {
         String playId = idMatcher.group(1);
         int mp3Type = typeMatcher.find() ? Integer.parseInt(typeMatcher.group(1)) : 0;
         String lyric = extractLyric(html);
+        Matcher coverMatcher = MP3_COVER.matcher(html);
+        String cover = coverMatcher.find() ? coverMatcher.group(1) : "";
 
-        PlayPage page = new PlayPage(playId, mp3Type, lyric, System.currentTimeMillis());
+        PlayPage page = new PlayPage(playId, mp3Type, lyric, cover, System.currentTimeMillis());
         if (pageCache.size() > CACHE_MAX) {
             pageCache.clear();
         }

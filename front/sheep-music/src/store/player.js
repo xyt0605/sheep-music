@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { playSong as playSongAPI } from '@/api/song'
 import { addPlayHistory } from '@/api/playHistory'
-import { getExternalLyric } from '@/api/externalMusic'
+import { getExternalLyric, getExternalCover } from '@/api/externalMusic'
 import { useUserStore } from '@/store/user'
 
 export const usePlayerStore = defineStore('player', () => {
@@ -163,6 +163,12 @@ export const usePlayerStore = defineStore('player', () => {
           getExternalLyric({ source: song.source, trackId: song.sourceTrackId })
             .then(res => { song.lyric = res.code === 200 ? (res.data || '') : '' })
             .catch(() => { song.lyric = '' })
+          // 搜索列表可能尚未回填封面：播放时兜底加载（加载完成播放器/歌词封面同步刷新）
+          if (!song.cover) {
+            getExternalCover({ source: song.source, trackId: song.sourceTrackId })
+              .then(res => { if (res.code === 200 && res.data) song.cover = res.data })
+              .catch(() => {})
+          }
         }
       }
     } catch (error) {

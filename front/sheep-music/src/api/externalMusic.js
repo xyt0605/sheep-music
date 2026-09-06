@@ -29,3 +29,12 @@ export const getExternalLyric = (params) => {
     params
   })
 }
+
+// 外源歌曲封面 URL（无则返回空串）
+export const getExternalCover = (params) => {
+  return request({
+    url: '/music/external/cover',
+    method: 'get',
+    params
+  })
+}
