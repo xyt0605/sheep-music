@@ -1006,7 +1006,8 @@ const handleAddSuccess = () => {
   margin-bottom: 30px;
   position: sticky;
   top: 0;
-  background: #f8f9fa;
+  background: var(--bg-glass);
+  backdrop-filter: var(--glass-blur);
   padding: 20px 0;
   z-index: 10;
 }
@@ -1030,8 +1031,8 @@ const handleAddSuccess = () => {
 }
 
 .search-type-selector :deep(.el-segmented__item-selected) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--gradient-primary);
+  color: #161812;
 }
 
 .search-input {
@@ -1039,13 +1040,13 @@ const handleAddSuccess = () => {
 }
 
 .search-input :deep(.el-input__wrapper) {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   border-radius: 25px;
   padding: 5px 15px;
 }
 
 .search-input :deep(.el-input__wrapper:hover) {
-  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
+  box-shadow: var(--shadow-glow);
 }
 
 /* ========== 初始状态 ========== */
@@ -1064,22 +1065,23 @@ const handleAddSuccess = () => {
 
 .section-header h3 {
   font-size: 18px;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
   flex: 1;
 }
 
 .header-icon {
   font-size: 24px;
-  color: #409eff;
+  color: var(--color-primary-light);
 }
 
 /* ========== 热门搜索 ========== */
 .hot-search-section {
-  background: white;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color-light);
   padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-xl);
+  box-shadow: none;
   margin-bottom: 25px;
 }
 
@@ -1094,17 +1096,18 @@ const handleAddSuccess = () => {
   align-items: center;
   gap: 12px;
   padding: 12px 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
+  background: var(--bg-tertiary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .hot-search-item:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  transform: translateX(5px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  background: var(--surface-elevated);
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .hot-rank {
@@ -1113,53 +1116,54 @@ const handleAddSuccess = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ddd;
-  border-radius: 6px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: bold;
-  color: #666;
+  color: var(--text-secondary);
   transition: all 0.3s;
 }
 
 .hot-rank.top-three {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+  background: var(--color-accent);
+  color: #fff;
+  box-shadow: none;
 }
 
 .hot-search-item:hover .hot-rank {
-  background: rgba(255, 255, 255, 0.3);
-  color: white;
+  background: var(--color-accent);
+  color: #fff;
 }
 
 .hot-keyword {
   flex: 1;
   font-size: 14px;
-  color: #333;
+  color: var(--text-primary);
   transition: color 0.3s;
 }
 
 .hot-search-item:hover .hot-keyword {
-  color: white;
+  color: var(--text-primary);
 }
 
 .hot-icon {
   font-size: 18px;
-  color: #fbbf24;
+  color: var(--color-accent);
   transition: all 0.3s;
 }
 
 .hot-search-item:hover .hot-icon {
-  color: white;
+  color: var(--color-accent);
   transform: rotate(15deg);
 }
 
 /* ========== 搜索历史 ========== */
 .search-history-section {
-  background: white;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color-light);
   padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-xl);
+  box-shadow: none;
 }
 
 .history-list {
@@ -1173,36 +1177,37 @@ const handleAddSuccess = () => {
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: #f0f2f5;
-  border-radius: 20px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-full);
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .history-item:hover {
-  background: #409eff;
-  color: white;
+  background: var(--gradient-primary);
+  border-color: transparent;
   transform: translateY(-2px);
 }
 
 .history-keyword {
   font-size: 14px;
-  color: #606266;
+  color: var(--text-secondary);
   transition: color 0.3s;
 }
 
 .history-item:hover .history-keyword {
-  color: white;
+  color: #161812;
 }
 
 .delete-icon {
   font-size: 14px;
-  color: #999;
+  color: var(--text-tertiary);
   transition: all 0.3s;
 }
 
 .history-item:hover .delete-icon {
-  color: white;
+  color: #161812;
   transform: rotate(90deg);
 }
 
@@ -1210,13 +1215,13 @@ const handleAddSuccess = () => {
 .loading-state {
   text-align: center;
   padding: 80px 20px;
-  color: #909399;
+  color: var(--text-secondary);
 }
 
 .loading-state .el-icon {
   font-size: 50px;
   margin-bottom: 15px;
-  color: #409eff;
+  color: var(--color-primary-light);
 }
 
 /* ========== 搜索结果 ========== */
@@ -1241,7 +1246,7 @@ const handleAddSuccess = () => {
 
 .result-header h3 {
   font-size: 18px;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -1258,18 +1263,19 @@ const handleAddSuccess = () => {
 
 .source-count {
   font-size: 13px;
-  color: #999;
+  color: var(--text-tertiary);
   font-weight: normal;
 }
 
 .ext-tip {
-  background: white;
-  border-radius: 12px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
   padding: 24px;
   text-align: center;
-  color: #909399;
+  color: var(--text-secondary);
   font-size: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1309,10 +1315,11 @@ const handleAddSuccess = () => {
 }
 
 .song-list {
-  background: white;
-  border-radius: 12px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   padding: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 .song-item {
@@ -1326,14 +1333,13 @@ const handleAddSuccess = () => {
 }
 
 .song-item:hover {
-  background: linear-gradient(135deg, #f5f7fa 0%, #ecf0f5 100%);
-  transform: translateX(5px);
+  background: var(--card-hover-bg);
 }
 
 .song-index {
   width: 30px;
   text-align: center;
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 14px;
   font-weight: 600;
 }
@@ -1358,7 +1364,7 @@ const handleAddSuccess = () => {
 
 .song-name {
   font-size: 15px;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1368,7 +1374,7 @@ const handleAddSuccess = () => {
 
 .song-artist {
   font-size: 13px;
-  color: #999;
+  color: var(--text-tertiary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1380,23 +1386,23 @@ const handleAddSuccess = () => {
 }
 
 .clickable:hover {
-  color: #409eff;
+  color: var(--color-primary-light);
 }
 
 /* 高亮关键词 */
 .song-name :deep(.highlight),
 .song-artist :deep(.highlight),
 .artist-name :deep(.highlight) {
-  color: #409eff;
+  color: var(--color-primary-dark);
   font-weight: bold;
-  background: linear-gradient(135deg, #ecf5ff 0%, #e3f2fd 100%);
+  background: rgba(201, 255, 69, 0.16);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .song-duration {
   font-size: 13px;
-  color: #999;
+  color: var(--text-tertiary);
   margin-right: 20px;
   font-weight: 500;
 }
@@ -1424,8 +1430,8 @@ const handleAddSuccess = () => {
 }
 
 .artist-card {
-  background: white;
-  border-radius: 12px;
+  background: var(--surface-raised);
+  border-radius: var(--radius-xl);
   padding: 20px;
   cursor: pointer;
   transition: all 0.3s;
@@ -1486,7 +1492,7 @@ const handleAddSuccess = () => {
 
 .artist-name {
   font-size: 16px;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 6px;
   font-weight: 600;
   overflow: hidden;
@@ -1496,7 +1502,7 @@ const handleAddSuccess = () => {
 
 .artist-region {
   font-size: 13px;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 /* ========== 分页 ========== */
@@ -1514,7 +1520,7 @@ const handleAddSuccess = () => {
 
 .empty-icon {
   font-size: 100px;
-  color: #dcdfe6;
+  color: var(--border-strong);
 }
 
 /* ========== 过渡动画 ========== */
