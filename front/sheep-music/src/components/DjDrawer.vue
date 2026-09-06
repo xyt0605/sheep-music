@@ -71,6 +71,10 @@
                 <div class="dj-card-info">
                   <div class="dj-card-title">{{ card.title }}</div>
                   <div class="dj-card-artist">{{ card.artist }}</div>
+                  <div
+                    v-if="card.reason"
+                    class="dj-card-reason"
+                  >{{ card.reason }}</div>
                   <el-tag
                     size="small"
                     :type="card.source === 'local' ? 'primary' : 'warning'"
@@ -104,6 +108,22 @@
                 round
                 @click="queueAll(msg)"
               >全部入队</el-button>
+            </div>
+            <div
+              v-if="msg.cards.length && msg.done && !loading"
+              class="dj-feedback"
+            >
+              <el-button
+                size="small"
+                text
+                type="primary"
+                @click="ask('多来点这样的')"
+              >多来点这样的</el-button>
+              <el-button
+                size="small"
+                text
+                @click="ask('换个口味，来点不一样的')"
+              >换个口味</el-button>
             </div>
             <div
               v-if="msg.error"
@@ -142,6 +162,11 @@ import { usePlayerStore } from '@/store/player'
 const visible = ref(false)
 const draft = ref('')
 const loading = ref(false)
+const sessionId = ref(genSessionId())
+
+function genSessionId() {
+  return (crypto.randomUUID && crypto.randomUUID()) || `dj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
 const messages = ref([]) // {role:'user'|'dj', text, statusText, cards[], done, error}
 const listRef = ref(null)
 const defaultCover = '/default-cover.svg'
@@ -193,8 +218,11 @@ const ask = async () => {
   scrollBottom()
 
   try {
-    await streamDj(query, {
+    await streamDj(query, sessionId.value, {
       onEvent: (event, data) => {
+        if (event === 'session' && data.sessionId) {
+          sessionId.value = data.sessionId  // 服务端归一化后的会话 ID（P2 会话记忆）
+        }
         if (event === 'stage') {
           dj.statusText = STAGE_TEXT[data.stage] || dj.statusText
           if (data.stage === 'librarian' && data.round > 1) {
@@ -216,6 +244,7 @@ const ask = async () => {
             artist: data.artist,
             cover: data.cover || '',
             streamUrl: data.streamUrl,
+            reason: data.reason || '',
             isExternal: !!data.isExternal,
             key: `${data.source}-${data.songId || data.sourceTrackId}`
           }
@@ -419,3 +448,21 @@ defineExpose({ open: () => { visible.value = true } })
   padding: 0 14px 10px;
 }
 </style>
+
+.dj-card-reason {
+  font-size: 12px;
+  color: var(--color-primary-dark);
+  background: rgba(201, 255, 69, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dj-feedback {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}

@@ -4,7 +4,9 @@ import com.example.sheepmusic.dto.ExternalSearchResultVO;
 import com.example.sheepmusic.dto.ExternalSongVO;
 import com.example.sheepmusic.dto.RecommendItemVO;
 import com.example.sheepmusic.entity.Artist;
+import com.example.sheepmusic.entity.PlayHistory;
 import com.example.sheepmusic.entity.Song;
+import com.example.sheepmusic.repository.PlayHistoryRepository;
 import com.example.sheepmusic.service.ExternalMusicService;
 import com.example.sheepmusic.service.RecommendationService;
 import com.example.sheepmusic.service.SongService;
@@ -15,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +38,58 @@ public class DjTools {
 
     @Autowired
     private ExternalMusicService externalMusicService;
+
+    @Autowired
+    private PlayHistoryRepository playHistoryRepository;
+
+    /**
+     * 口味画像（agent v1 P2）：播放历史近 50 条聚合常听歌手/风格 Top5 + 最近播放
+     * 确定性数据、零 LLM 成本；失败返回空 Map（DJ 不提个性化）
+     */
+    public Map<String, Object> tasteProfile(Long userId) {
+        Map<String, Object> profile = new LinkedHashMap<>();
+        try {
+            List<PlayHistory> plays = playHistoryRepository
+                    .findByUserIdWithSongDetails(userId, PageRequest.of(0, 50))
+                    .getContent();
+            if (plays.isEmpty()) {
+                return profile;
+            }
+            Map<String, Integer> artistCount = new HashMap<>();
+            Map<String, Integer> genreCount = new HashMap<>();
+            List<String> recentTitles = new ArrayList<>();
+            for (PlayHistory ph : plays) {
+                Song s = ph.getSong();
+                if (s == null) {
+                    continue;
+                }
+                for (Artist a : s.getArtists() == null ? List.<Artist>of() : s.getArtists()) {
+                    artistCount.merge(a.getName(), 1, Integer::sum);
+                }
+                if (s.getGenre() != null && !s.getGenre().isBlank()) {
+                    genreCount.merge(s.getGenre(), 1, Integer::sum);
+                }
+                if (recentTitles.size() < 5) {
+                    recentTitles.add(s.getTitle());
+                }
+            }
+            profile.put("topArtists", topN(artistCount, 5));
+            profile.put("topGenres", topN(genreCount, 5));
+            profile.put("recentTitles", recentTitles);
+        } catch (Exception e) {
+            log.warn("口味画像聚合失败: {}", e.getMessage());
+        }
+        return profile;
+    }
+
+    /** Map 按值降序取前 N，格式 "名称×次数" */
+    private List<String> topN(Map<String, Integer> counts, int n) {
+        return counts.entrySet().stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .limit(n)
+                .map(e -> e.getKey() + "×" + e.getValue())
+                .toList();
+    }
 
     /** search_local：本地曲库关键词检索 */
     public List<Map<String, Object>> searchLocal(String keyword, int limit) {

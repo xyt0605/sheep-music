@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -36,15 +35,18 @@ public class AgentOrchestrator {
 
     private final ChatClient chatClient;
     private final DjTools tools;
+    private final DjSessionStore sessionStore;
     private final ObjectMapper mapper = new ObjectMapper();
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
 
     @Value("${spring.ai.openai.api-key:not-configured}")
     private String apiKey;
 
-    public AgentOrchestrator(ChatClient.Builder chatClientBuilder, @Autowired DjTools tools) {
+    public AgentOrchestrator(ChatClient.Builder chatClientBuilder, @Autowired DjTools tools,
+                             @Autowired DjSessionStore sessionStore) {
         this.chatClient = chatClientBuilder.build();
         this.tools = tools;
+        this.sessionStore = sessionStore;
     }
 
     public boolean isConfigured() {
@@ -52,9 +54,9 @@ public class AgentOrchestrator {
     }
 
     /** 在工作线程中执行整轮编排（由 Controller 提交到线程池） */
-    public void run(Long userId, String query, SseEmitter emitter) {
+    public void run(Long userId, String sessionId, String query, SseEmitter emitter) {
         try {
-            doRun(userId, query, emitter);
+            doRun(userId, sessionId, query, emitter);
             emitter.complete();
         } catch (org.springframework.web.util.NestedServletException | IllegalStateException e) {
             log.warn("DJ 会话中断: {}", e.getMessage());
@@ -72,12 +74,31 @@ public class AgentOrchestrator {
         }
     }
 
-    private void doRun(Long userId, String query, SseEmitter emitter) throws Exception {
+    private void doRun(Long userId, String sessionId, String query, SseEmitter emitter) throws Exception {
+        // ---------- 会话记忆（P2）：session 事件回传 + 历史上下文 ----------
+        DjSessionStore.Session session = sessionId == null || sessionId.isBlank()
+                ? sessionStore.get(java.util.UUID.randomUUID().toString())
+                : sessionStore.get(sessionId);
+        send(emitter, "session", Map.of("sessionId", sessionId));
+        StringBuilder historyText = new StringBuilder();
+        if (!session.getTurns().isEmpty()) {
+            historyText.append("对话历史（最近在后）：\n");
+            session.getTurns().stream()
+                    .skip(Math.max(0, session.getTurns().size() - 6))
+                    .forEach(t -> historyText.append(t.role().equals("user") ? "用户: " : "DJ: ").append(t.text()).append('\n'));
+        }
+        if (!session.getLastTitles().isEmpty()) {
+            historyText.append("上一轮已推荐（除非用户点名，避免重复）：").append(String.join("、", session.getLastTitles())).append('\n');
+        }
+        Map<String, Object> taste = tools.tasteProfile(userId);
+        if (!taste.isEmpty()) {
+            historyText.append("听众口味画像：").append(toJson(taste)).append('\n');
+        }
+
         // ---------- ① Dispatcher：意图拆解 ----------
         send(emitter, "stage", Map.of("stage", "dispatcher", "status", "start"));
-        String intentJson = callLlm(AgentPrompts.DISPATCHER, "用户需求：" + query, 1024, 0.3);
+        String intentJson = callLlm(AgentPrompts.DISPATCHER, historyText + "用户需求：" + query, 1024, 0.3);
         Map<String, Object> intent = parseJson(intentJson);
-        String scope = str(intent, "scope", "mixed");
         int wantCount = intVal(intent, "count", 8);
         send(emitter, "stage", Map.of("stage", "dispatcher", "status", "done", "intent", intent));
 
@@ -95,8 +116,9 @@ public class AgentOrchestrator {
             String thought = null;
 
             for (int step = 1; step <= MAX_LIBRARIAN_STEPS && picked == null; step++) {
-                String userMsg = "用户需求原文：" + query
-                        + "\n意图：" + toJson(intent)
+                String userMsg = historyText
+                        + "用户需求原文：" + query
+                        + "\n意图：" + intentJson
                         + "\n\n已收集条目：\n" + describe(index)
                         + "\n\n动作历史：\n" + (history.isEmpty() ? "（无）" : history)
                         + "\n请输出下一步 JSON。";
@@ -179,27 +201,35 @@ public class AgentOrchestrator {
             return;
         }
 
-        // ---------- ③ DJ：串场词（流式） ----------
+        // ---------- ③ DJ：串场词 + 逐首理由（P2：单次 JSON 调用，intro 切片伪流式） ----------
         send(emitter, "stage", Map.of("stage", "dj", "status", "start"));
-        StringBuilder intro = new StringBuilder();
-        Flux<String> introFlux = chatClient.prompt()
-                .system(AgentPrompts.DJ)
-                .user("用户需求：" + query + "\n候选歌曲（按推荐顺序）：\n" + describe(picked))
-                .options(OpenAiChatOptions.builder().maxTokens(1200).temperature(0.85).build())
-                .stream()
-                .content();
-        introFlux.doOnNext(delta -> {
-            if (delta == null || delta.isBlank()) {
-                return;
+        String djRaw = callLlm(AgentPrompts.DJ,
+                historyText + "用户需求：" + query + "\n候选歌曲（按推荐顺序）：\n" + describe(picked),
+                1800, 0.85);
+        String intro = "";
+        List<String> reasons = List.of();
+        try {
+            Map<String, Object> djOut = parseJson(djRaw);
+            intro = str(djOut, "intro", "");
+            if (djOut.get("reasons") instanceof List<?> list) {
+                reasons = list.stream().map(String::valueOf).toList();
             }
-            intro.append(delta);
-            send(emitter, "text_delta", Map.of("delta", delta));
-        }).blockLast();
+        } catch (Exception e) {
+            log.debug("DJ 输出解析失败，退化为纯文本串场词: {}", e.getMessage());
+            intro = djRaw == null ? "" : djRaw.trim();
+        }
+        if (intro.isBlank()) {
+            intro = "这组歌为你挑好了，直接开听吧。";
+        }
+        for (int i = 0; i < intro.length(); i += 12) {
+            send(emitter, "text_delta", Map.of("delta", intro.substring(i, Math.min(i + 12, intro.length()))));
+        }
         send(emitter, "stage", Map.of("stage", "dj", "status", "done"));
 
-        // ---------- 末端：song_card（字段全部来自工具数据） ----------
+        // ---------- 末端：song_card（字段全部来自工具数据，reason 来自 DJ） ----------
         List<Map<String, Object>> cards = new ArrayList<>();
-        for (Map<String, Object> item : picked) {
+        for (int i = 0; i < picked.size(); i++) {
+            Map<String, Object> item = picked.get(i);
             Map<String, Object> card = new LinkedHashMap<>();
             boolean external = "gequhai".equals(item.get("type"));
             if (external) {
@@ -214,11 +244,17 @@ public class AgentOrchestrator {
             card.put("title", item.get("title"));
             card.put("artist", item.get("artist"));
             card.put("cover", item.get("cover"));
-            card.put("reason", item.get("reason"));
+            card.put("reason", i < reasons.size() && !reasons.get(i).isBlank() ? reasons.get(i) : item.get("reason"));
             send(emitter, "song_card", card);
             cards.add(card);
         }
-        send(emitter, "done", Map.of("count", cards.size(), "intro", intro.toString()));
+
+        // ---------- 会话记忆（P2）：写入本轮对话与已推荐清单 ----------
+        sessionStore.appendTurn(sessionId, "user", query);
+        sessionStore.appendTurn(sessionId, "dj", intro);
+        sessionStore.setLastTitles(sessionId,
+                picked.stream().map(i2 -> String.valueOf(i2.get("title"))).toList());
+        send(emitter, "done", Map.of("count", cards.size(), "intro", intro));
     }
 
     // ========== 工具结果收集与提名 ==========

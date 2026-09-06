@@ -84,6 +84,10 @@ ok('登录测试用户', r.json?.code === 200 && !!U)
 // ============ AC-1 降级 / AC-2/3 真实流程 ============
 console.log(`\n[2] DJ 对话（${HAS_KEY ? '真实 LLM 全流程' : '无密钥降级'}）`)
 const { events } = await readSse('/agent/dj/stream', U, { query: '来点适合下雨天听的歌' })
+
+const sessEv = events.find(e => e.event === 'session')
+ok('返回 session 事件（会话记忆标识）', !!sessEv && !!sessEv.data?.sessionId, JSON.stringify(sessEv?.data || {}).slice(0, 80))
+const SESSION_ID = sessEv?.data?.sessionId
 const byEvent = Object.fromEntries(events.map(e => [e.event])).constructor === Object
 const counts = events.reduce((m, e) => { m[e.event] = (m[e.event] || 0) + 1; return m }, {})
 console.log('  事件统计:', JSON.stringify(counts))
@@ -123,6 +127,24 @@ if (!HAS_KEY) {
       ok('外源卡片音频流可播（206/200，前 3 张外源卡至少一张可播）', playable, `lastStatus=${lastStatus}`)
     }
   }
+}
+
+// ============ AC-15 会话记忆：同 sessionId 追问"换成周杰伦的" ============
+if (HAS_KEY && SESSION_ID) {
+  console.log('\n[会话记忆]（AC-15，真实 LLM）')
+  const r2 = await readSse('/agent/dj/stream', U, { query: '换成周杰伦的，多来几首', sessionId: SESSION_ID })
+  const c2 = r2.events.reduce((mm, e) => { mm[e.event] = (mm[e.event] || 0) + 1; return mm }, {})
+  console.log('  事件统计:', JSON.stringify(c2))
+  const err2 = r2.events.find(e => e.event === 'error')
+  ok('第二轮无 error 事件', !err2, err2?.data?.message || '')
+  const cards2 = r2.events.filter(e => e.event === 'song_card').map(e => e.data)
+  ok('第二轮产出卡片', cards2.length >= 1, `cards=${cards2.length}`)
+  const jj = cards2.filter(c => `${c.title}${c.artist}`.includes('周杰伦'))
+  ok('第二轮命中周杰伦（会话上下文生效）', jj.length >= 1, `周杰伦 ${jj.length}/${cards2.length}`)
+  const reasons = cards2.filter(c => c.reason)
+  console.log(`  NOTE  逐首 reason 覆盖 ${reasons.length}/${cards2.length}`)
+  const sess2 = r2.events.find(e => e.event === 'session')
+  ok('第二轮返回同一 sessionId', sess2?.data?.sessionId === SESSION_ID, sess2?.data?.sessionId)
 }
 
 console.log(`\n========== 结果: ${pass} pass / ${fail} fail ==========`)

@@ -38,12 +38,13 @@ public class AgentController {
 
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
 
-    @Operation(summary = "小屋 DJ 对话（SSE 流式）")
+    @Operation(summary = "小屋 DJ 对话（SSE 流式，支持会话记忆）")
     @PostMapping(value = "/dj/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter djStream(@RequestBody Map<String, String> body, HttpServletRequest request) {
         SseEmitter emitter = new SseEmitter(0L);
         Long userId = jwtUtil.getUserIdFromRequest(request);
         String query = body == null || body.get("query") == null ? "" : body.get("query").trim();
+        String sessionId = body == null || body.get("sessionId") == null ? "" : body.get("sessionId").trim();
 
         if (query.isEmpty()) {
             sendAndComplete(emitter, "error", Map.of("message", "跟 DJ 说点想听什么吧～"));
@@ -55,7 +56,8 @@ public class AgentController {
                     "DJ 还没接上大模型：请配置环境变量 AGENT_API_KEY（智谱开放平台密钥）后重启服务"));
             return emitter;
         }
-        executor.submit(() -> orchestrator.run(userId, query, emitter));
+        String sid = sessionId.isBlank() ? java.util.UUID.randomUUID().toString() : sessionId;
+        executor.submit(() -> orchestrator.run(userId, sid, query, emitter));
         return emitter;
     }
 

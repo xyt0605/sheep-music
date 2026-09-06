@@ -7,17 +7,18 @@ const getToken = () => localStorage.getItem('token')
 /**
  * 小屋 DJ：fetch + ReadableStream 解析 SSE（EventSource 无法携带 JWT）
  * @param {string} query 用户需求
+ * @param {string} sessionId 会话 ID（同一抽屉生命周期复用，服务端据此维持多轮记忆）
  * @param {Object} handlers onEvent(event, data) 事件回调
  * @returns {Promise<void>} 流结束（done/error/断开）后 resolve
  */
-export async function streamDj(query, { onEvent } = {}) {
+export async function streamDj(query, sessionId, { onEvent } = {}) {
   const res = await fetch(BASE + '/agent/dj/stream', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${getToken()}`
     },
-    body: JSON.stringify({ query })
+    body: JSON.stringify({ query, sessionId })
   })
   if (!res.ok || !res.body) {
     // 401 等由拦截器语义约定：这里抛给调用方展示
