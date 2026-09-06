@@ -279,6 +279,7 @@ export default {
     })
     
     return {
+      ossThumb,
       artists,
       loading,
       searchKeyword,

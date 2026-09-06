@@ -275,6 +275,7 @@ export default {
     })
     
     return {
+      ossThumb,
       favorites,
       loading,
       pagination,

@@ -14,6 +14,19 @@
         </span>
       </div>
       <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <button
+            class="sidebar-item dj-sidebar-item"
+            :class="{ active: djVisible }"
+            @click="djVisible = true"
+          >
+            <el-icon class="menu-icon">
+              <MagicStick />
+            </el-icon>
+            <span class="menu-label">小屋 DJ</span>
+            <span class="dj-new-badge">NEW</span>
+          </button>
+        </div>
         <div
           v-for="(section, idx) in sidebarSections"
           :key="idx"
@@ -714,6 +727,7 @@ export default {
       desktopLyricVisible,
       djVisible,
       djDrawerRef,
+      ossThumb,
       expandedGroups,
       toggleMobileMenu,
       toggleDesktopLyric,
@@ -1642,4 +1656,36 @@ export default {
   .dj-fab {
     bottom: 84px;
   }
+}
+
+/* ========== 侧边栏小屋 DJ 入口 ========== */
+.dj-sidebar-item {
+  width: 100%;
+  border: 1px solid var(--border-color-light);
+  background: var(--sidebar-surface);
+  color: var(--color-primary);
+  font-family: inherit;
+  text-align: left;
+}
+
+.dj-sidebar-item .menu-icon {
+  color: var(--color-primary);
+}
+
+.dj-sidebar-item:hover,
+.dj-sidebar-item.active {
+  border-color: var(--color-primary);
+  background: var(--shadow-glow) var(--sidebar-surface);
+  color: var(--color-primary);
+}
+
+.dj-new-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #161812;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
+  padding: 1px 7px;
 }
