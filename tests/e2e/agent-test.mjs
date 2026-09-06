@@ -115,6 +115,13 @@ ok('测试连接 ok=true（用已保存配置）', code(r) === 200 && data(r)?.o
 r = await api('POST', '/agent/config/test', { token: U, body: { apiKey: 'invalid-key-for-test' } })
 ok('错误密钥测试 ok=false', code(r) === 200 && data(r)?.ok === false, JSON.stringify(data(r)).slice(0, 140))
 
+// 实时模型列表（有已保存配置即可）
+r = await api('GET', '/agent/config/models?baseUrl=https%3A%2F%2Fopen.bigmodel.cn%2Fapi%2Fpaas%2Fv4', { token: U })
+ok('模型列表接口返回（supported 判断正确）', code(r) === 200 && typeof data(r)?.supported === 'boolean', JSON.stringify(data(r)).slice(0, 120))
+if (data(r)?.supported) {
+  ok('智谱实时模型列表非空且含 glm 系', data(r).models.length > 0 && data(r).models.some(m => m.startsWith('glm')), JSON.stringify(data(r).models.slice(0, 5)))
+}
+
 // ============ AC-2/3 真实 DJ 全流程 ============
 console.log('\n[5] DJ 全流程（AC-2/3，真实 LLM）')
 const { events, error: sseErr } = await readSse('/agent/dj/stream', U, { query: '来点适合下雨天听的歌' })

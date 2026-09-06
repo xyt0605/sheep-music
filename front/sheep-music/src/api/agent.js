@@ -61,3 +61,5 @@ export const getAiConfig = () => request({ url: '/agent/config', method: 'get' }
 export const saveAiConfig = (data) => request({ url: '/agent/config', method: 'post', data })
 export const clearAiConfig = () => request({ url: '/agent/config', method: 'delete' })
 export const testAiConfig = (data) => request({ url: '/agent/config/test', method: 'post', data, timeout: 60000 })
+
+export const getModelList = (params) => request({ url: '/agent/config/models', method: 'get', params, timeout: 30000 })
