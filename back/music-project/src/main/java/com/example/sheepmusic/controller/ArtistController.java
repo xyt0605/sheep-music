@@ -6,8 +6,8 @@ import com.example.sheepmusic.dto.ArtistImportRequest;
 import com.example.sheepmusic.dto.ArtistImportResult;
 import com.example.sheepmusic.entity.Artist;
 import com.example.sheepmusic.service.ArtistService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,13 +15,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**
  * 歌手管理控制器（管理员）
  */
-@Api(tags = "歌手管理")
+@Tag(name = "歌手管理")
 @RestController
 @RequestMapping("/admin/artist")
 @CrossOrigin
@@ -33,7 +33,7 @@ public class ArtistController {
     /**
      * 创建歌手
      */
-    @ApiOperation("创建歌手")
+    @Operation(summary = "创建歌手")
     @PostMapping
     public Result<Artist> createArtist(@Valid @RequestBody ArtistRequest request) {
         try {
@@ -47,7 +47,7 @@ public class ArtistController {
     /**
      * 批量导入歌手名称，重复名称自动跳过。
      */
-    @ApiOperation("批量导入歌手")
+    @Operation(summary = "批量导入歌手")
     @PostMapping("/import")
     public Result<ArtistImportResult> importArtists(@RequestBody ArtistImportRequest request) {
         try {
@@ -61,7 +61,7 @@ public class ArtistController {
     /**
      * 更新歌手
      */
-    @ApiOperation("更新歌手")
+    @Operation(summary = "更新歌手")
     @PutMapping("/{id}")
     public Result<Artist> updateArtist(@PathVariable Long id, @Valid @RequestBody ArtistRequest request) {
         try {
@@ -75,7 +75,7 @@ public class ArtistController {
     /**
      * 删除歌手
      */
-    @ApiOperation("删除歌手")
+    @Operation(summary = "删除歌手")
     @DeleteMapping("/{id}")
     public Result<Void> deleteArtist(@PathVariable Long id) {
         try {
@@ -91,7 +91,7 @@ public class ArtistController {
     /**
      * 获取歌手详情
      */
-    @ApiOperation("获取歌手详情")
+    @Operation(summary = "获取歌手详情")
     @GetMapping("/{id}")
     public Result<Artist> getArtist(@PathVariable Long id) {
         try {
@@ -105,7 +105,7 @@ public class ArtistController {
     /**
      * 获取歌手列表（分页）
      */
-    @ApiOperation("获取歌手列表")
+    @Operation(summary = "获取歌手列表")
     @GetMapping("/list")
     public Result<Page<Artist>> getArtists(
             @RequestParam(defaultValue = "0") int page,
@@ -129,7 +129,7 @@ public class ArtistController {
     /**
      * 获取所有歌手（不分页，用于下拉选择）
      */
-    @ApiOperation("获取所有歌手")
+    @Operation(summary = "获取所有歌手")
     @GetMapping("/all")
     public Result<List<Artist>> getAllArtists() {
         try {

@@ -2,7 +2,7 @@ package com.example.sheepmusic.dto;
 
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * 分享请求DTO

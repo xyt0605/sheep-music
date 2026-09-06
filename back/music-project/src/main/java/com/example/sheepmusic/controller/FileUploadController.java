@@ -3,20 +3,20 @@ package com.example.sheepmusic.controller;
 import com.example.sheepmusic.common.Result;
 import com.example.sheepmusic.utils.JwtUtil;
 import com.example.sheepmusic.utils.OSSUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * 文件上传控制器（使用阿里云OSS）
  */
-@Api(tags = "文件上传")
+@Tag(name = "文件上传")
 @RestController
 @RequestMapping("/upload")
 @CrossOrigin
@@ -58,7 +58,7 @@ public class FileUploadController {
     /**
      * 上传头像到OSS
      */
-    @ApiOperation("上传头像")
+    @Operation(summary = "上传头像")
     @PostMapping("/avatar")
     public Result<Map<String, String>> uploadAvatar(@RequestParam("file") MultipartFile file) {
         try {
@@ -104,7 +104,7 @@ public class FileUploadController {
     /**
      * 上传音乐封面到OSS（仅管理员）
      */
-    @ApiOperation("上传音乐封面")
+    @Operation(summary = "上传音乐封面")
     @PostMapping("/cover")
     public Result<Map<String, String>> uploadCover(@RequestParam("file") MultipartFile file,
                                                    HttpServletRequest request) {
@@ -150,7 +150,7 @@ public class FileUploadController {
     /**
      * 上传音乐文件到OSS（仅管理员）
      */
-    @ApiOperation("上传音乐文件")
+    @Operation(summary = "上传音乐文件")
     @PostMapping("/music")
     public Result<Map<String, String>> uploadMusic(@RequestParam("file") MultipartFile file,
                                                    HttpServletRequest request) {

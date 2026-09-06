@@ -6,20 +6,20 @@ import com.example.sheepmusic.dto.ConversationVO;
 import com.example.sheepmusic.entity.ChatMessage;
 import com.example.sheepmusic.service.ChatService;
 import com.example.sheepmusic.utils.JwtUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**
  * 聊天Controller
  */
-@Api(tags = "聊天管理")
+@Tag(name = "聊天管理")
 @RestController
 @RequestMapping("/chat")
 @CrossOrigin
@@ -34,7 +34,7 @@ public class ChatController {
     /**
      * 发送消息
      */
-    @ApiOperation("发送消息")
+    @Operation(summary = "发送消息")
     @PostMapping("/send")
     public Result<ChatMessage> sendMessage(@Valid @RequestBody ChatMessageRequest request,
                                           HttpServletRequest httpRequest) {
@@ -58,7 +58,7 @@ public class ChatController {
     /**
      * 获取聊天记录
      */
-    @ApiOperation("获取聊天记录")
+    @Operation(summary = "获取聊天记录")
     @GetMapping("/history/{friendId}")
     public Result<Page<ChatMessage>> getChatHistory(
             @PathVariable Long friendId,
@@ -77,7 +77,7 @@ public class ChatController {
     /**
      * 获取会话列表
      */
-    @ApiOperation("获取会话列表")
+    @Operation(summary = "获取会话列表")
     @GetMapping("/conversations")
     public Result<List<ConversationVO>> getConversations(HttpServletRequest request) {
         try {
@@ -92,7 +92,7 @@ public class ChatController {
     /**
      * 标记消息为已读
      */
-    @ApiOperation("标记消息为已读")
+    @Operation(summary = "标记消息为已读")
     @PutMapping("/read/{messageId}")
     public Result<Void> markAsRead(@PathVariable Long messageId,
                                    HttpServletRequest request) {
@@ -111,7 +111,7 @@ public class ChatController {
     /**
      * 批量标记消息为已读
      */
-    @ApiOperation("批量标记消息为已读")
+    @Operation(summary = "批量标记消息为已读")
     @PutMapping("/read/batch")
     public Result<Void> markBatchAsRead(@RequestBody List<Long> messageIds,
                                         HttpServletRequest request) {
@@ -130,7 +130,7 @@ public class ChatController {
     /**
      * 标记与某人的所有未读消息为已读
      */
-    @ApiOperation("标记与某人的所有未读消息为已读")
+    @Operation(summary = "标记与某人的所有未读消息为已读")
     @PutMapping("/read/all/{friendId}")
     public Result<Void> markAllAsReadFrom(@PathVariable Long friendId,
                                          HttpServletRequest request) {
@@ -149,7 +149,7 @@ public class ChatController {
     /**
      * 撤回消息
      */
-    @ApiOperation("撤回消息")
+    @Operation(summary = "撤回消息")
     @PostMapping("/recall/{messageId}")
     public Result<Void> recallMessage(@PathVariable Long messageId,
                                       HttpServletRequest request) {
@@ -168,7 +168,7 @@ public class ChatController {
     /**
      * 获取未读消息数
      */
-    @ApiOperation("获取未读消息数")
+    @Operation(summary = "获取未读消息数")
     @GetMapping("/unread-count")
     public Result<Long> getUnreadCount(HttpServletRequest request) {
         try {
@@ -183,7 +183,7 @@ public class ChatController {
     /**
      * 获取来自某人的未读消息数
      */
-    @ApiOperation("获取来自某人的未读消息数")
+    @Operation(summary = "获取来自某人的未读消息数")
     @GetMapping("/unread-count/{friendId}")
     public Result<Long> getUnreadCountFrom(@PathVariable Long friendId,
                                            HttpServletRequest request) {

@@ -5,8 +5,8 @@ import com.example.sheepmusic.dto.LoginRequest;
 import com.example.sheepmusic.dto.RegisterRequest;
 import com.example.sheepmusic.entity.User;
 import com.example.sheepmusic.service.UserService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * 认证控制器（登录、注册）
  */
-@Api(tags = "用户认证")
+@Tag(name = "用户认证")
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin  // 允许跨域
@@ -28,7 +28,7 @@ public class AuthController {
     /**
      * 用户注册
      */
-    @ApiOperation("用户注册")
+    @Operation(summary = "用户注册")
     @PostMapping("/register")
     public Result<User> register(@Validated @RequestBody RegisterRequest request) {
         try {
@@ -42,7 +42,7 @@ public class AuthController {
     /**
      * 用户登录
      */
-    @ApiOperation("用户登录")
+    @Operation(summary = "用户登录")
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@Validated @RequestBody LoginRequest request) {
         try {

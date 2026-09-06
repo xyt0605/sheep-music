@@ -5,8 +5,8 @@ import com.example.sheepmusic.dto.PlayHistoryDTO;
 import com.example.sheepmusic.entity.PlayHistory;
 import com.example.sheepmusic.entity.User;
 import com.example.sheepmusic.service.PlayHistoryService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * 播放历史控制器
  */
-@Api(tags = "播放历史管理")
+@Tag(name = "播放历史管理")
 @RestController
 @RequestMapping("/api/user/play-history")
 public class PlayHistoryController {
@@ -35,7 +35,7 @@ public class PlayHistoryController {
      * POST /api/user/play-history
      * Body: { "songId": 123, "playDuration": 180 }
      */
-    @ApiOperation("添加播放历史")
+    @Operation(summary = "添加播放历史")
     @PostMapping
     public Result<?> addPlayHistory(
             @AuthenticationPrincipal User user,
@@ -59,7 +59,7 @@ public class PlayHistoryController {
      * GET /api/user/play-history/list?page=0&size=20
      * 注意：返回去重后的播放历史，每首歌只显示最新的播放记录，但会附带该歌曲的总播放次数
      */
-    @ApiOperation("获取播放历史列表")
+    @Operation(summary = "获取播放历史列表")
     @GetMapping("/list")
     public Result<Page<PlayHistoryDTO>> getPlayHistoryList(
             @AuthenticationPrincipal User user,
@@ -79,7 +79,7 @@ public class PlayHistoryController {
      * 统计播放历史数量
      * GET /api/user/play-history/count
      */
-    @ApiOperation("统计播放历史数量")
+    @Operation(summary = "统计播放历史数量")
     @GetMapping("/count")
     public Result<Map<String, Long>> countPlayHistory(
             @AuthenticationPrincipal User user
@@ -98,7 +98,7 @@ public class PlayHistoryController {
      * 清空播放历史
      * DELETE /api/user/play-history/clear
      */
-    @ApiOperation("清空播放历史")
+    @Operation(summary = "清空播放历史")
     @DeleteMapping("/clear")
     public Result<?> clearPlayHistory(
             @AuthenticationPrincipal User user
@@ -115,7 +115,7 @@ public class PlayHistoryController {
      * 删除单条播放历史
      * DELETE /api/user/play-history/{id}
      */
-    @ApiOperation("删除单条播放历史")
+    @Operation(summary = "删除单条播放历史")
     @DeleteMapping("/{id}")
     public Result<?> deletePlayHistory(
             @AuthenticationPrincipal User user,
@@ -133,7 +133,7 @@ public class PlayHistoryController {
      * 获取最近播放的歌曲
      * GET /api/user/play-history/recent?limit=10
      */
-    @ApiOperation("获取最近播放的歌曲")
+    @Operation(summary = "获取最近播放的歌曲")
     @GetMapping("/recent")
     public Result<?> getRecentPlayHistory(
             @AuthenticationPrincipal User user,

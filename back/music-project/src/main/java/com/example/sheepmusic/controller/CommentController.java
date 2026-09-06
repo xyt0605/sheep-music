@@ -5,20 +5,20 @@ import com.example.sheepmusic.dto.CommentRequest;
 import com.example.sheepmusic.entity.SongComment;
 import com.example.sheepmusic.service.CommentService;
 import com.example.sheepmusic.utils.JwtUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**
  * 评论Controller
  */
-@Api(tags = "评论管理")
+@Tag(name = "评论管理")
 @RestController
 @RequestMapping("/comment")
 @CrossOrigin
@@ -33,7 +33,7 @@ public class CommentController {
     /**
      * 发表评论
      */
-    @ApiOperation("发表评论")
+    @Operation(summary = "发表评论")
     @PostMapping
     public Result<SongComment> addComment(@Valid @RequestBody CommentRequest request,
                                           HttpServletRequest httpRequest) {
@@ -57,7 +57,7 @@ public class CommentController {
     /**
      * 获取歌曲评论
      */
-    @ApiOperation("获取歌曲评论")
+    @Operation(summary = "获取歌曲评论")
     @GetMapping("/song/{songId}")
     public Result<Page<SongComment>> getSongComments(
             @PathVariable Long songId,
@@ -75,7 +75,7 @@ public class CommentController {
     /**
      * 获取评论的回复
      */
-    @ApiOperation("获取评论的回复")
+    @Operation(summary = "获取评论的回复")
     @GetMapping("/{commentId}/replies")
     public Result<List<SongComment>> getCommentReplies(@PathVariable Long commentId) {
         try {
@@ -89,7 +89,7 @@ public class CommentController {
     /**
      * 删除评论
      */
-    @ApiOperation("删除评论")
+    @Operation(summary = "删除评论")
     @DeleteMapping("/{commentId}")
     public Result<Void> deleteComment(@PathVariable Long commentId,
                                       HttpServletRequest request) {
@@ -108,7 +108,7 @@ public class CommentController {
     /**
      * 点赞/取消点赞评论
      */
-    @ApiOperation("点赞/取消点赞评论")
+    @Operation(summary = "点赞/取消点赞评论")
     @PostMapping("/{commentId}/like")
     public Result<Boolean> toggleLike(@PathVariable Long commentId,
                                       HttpServletRequest request) {
@@ -125,7 +125,7 @@ public class CommentController {
     /**
      * 获取用户的评论
      */
-    @ApiOperation("获取用户的评论")
+    @Operation(summary = "获取用户的评论")
     @GetMapping("/user/{userId}")
     public Result<Page<SongComment>> getUserComments(
             @PathVariable Long userId,
@@ -142,7 +142,7 @@ public class CommentController {
     /**
      * 统计歌曲评论数
      */
-    @ApiOperation("统计歌曲评论数")
+    @Operation(summary = "统计歌曲评论数")
     @GetMapping("/count/{songId}")
     public Result<Long> countBySongId(@PathVariable Long songId) {
         try {
@@ -156,7 +156,7 @@ public class CommentController {
     /**
      * 检查是否点赞
      */
-    @ApiOperation("检查是否点赞")
+    @Operation(summary = "检查是否点赞")
     @GetMapping("/{commentId}/liked")
     public Result<Boolean> hasLiked(@PathVariable Long commentId,
                                     HttpServletRequest request) {

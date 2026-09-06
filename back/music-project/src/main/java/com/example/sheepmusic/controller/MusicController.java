@@ -5,8 +5,8 @@ import com.example.sheepmusic.entity.Artist;
 import com.example.sheepmusic.entity.Song;
 import com.example.sheepmusic.service.ArtistService;
 import com.example.sheepmusic.service.SongService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * 音乐浏览控制器（用户端）
  */
-@Api(tags = "音乐浏览")
+@Tag(name = "音乐浏览")
 @RestController
 @RequestMapping("/music")
 @CrossOrigin
@@ -34,7 +34,7 @@ public class MusicController {
     /**
      * 获取歌曲详情
      */
-    @ApiOperation("获取歌曲详情")
+    @Operation(summary = "获取歌曲详情")
     @GetMapping("/song/{id}")
     public Result<Song> getSong(@PathVariable Long id) {
         try {
@@ -48,7 +48,7 @@ public class MusicController {
     /**
      * 搜索歌曲
      */
-    @ApiOperation("搜索歌曲")
+    @Operation(summary = "搜索歌曲")
     @GetMapping("/search")
     public Result<Page<Song>> searchSongs(
             @RequestParam String keyword,
@@ -67,7 +67,7 @@ public class MusicController {
     /**
      * 获取热门歌曲
      */
-    @ApiOperation("获取热门歌曲")
+    @Operation(summary = "获取热门歌曲")
     @GetMapping("/hot")
     public Result<Page<Song>> getHotSongs(
             @RequestParam(defaultValue = "0") int page,
@@ -85,7 +85,7 @@ public class MusicController {
     /**
      * 获取最新歌曲
      */
-    @ApiOperation("获取最新歌曲")
+    @Operation(summary = "获取最新歌曲")
     @GetMapping("/new")
     public Result<Page<Song>> getNewSongs(
             @RequestParam(defaultValue = "0") int page,
@@ -103,7 +103,7 @@ public class MusicController {
     /**
      * 根据歌手获取歌曲
      */
-    @ApiOperation("根据歌手获取歌曲")
+    @Operation(summary = "根据歌手获取歌曲")
     @GetMapping("/artist/{artistId}/songs")
     public Result<List<Song>> getSongsByArtist(@PathVariable Long artistId) {
         try {
@@ -117,7 +117,7 @@ public class MusicController {
     /**
      * 播放歌曲（增加播放次数）
      */
-    @ApiOperation("播放歌曲")
+    @Operation(summary = "播放歌曲")
     @PostMapping("/play/{id}")
     public Result<Void> playSong(@PathVariable Long id) {
         try {
@@ -133,7 +133,7 @@ public class MusicController {
     /**
      * 获取歌手列表
      */
-    @ApiOperation("获取歌手列表")
+    @Operation(summary = "获取歌手列表")
     @GetMapping("/artists")
     public Result<Page<Artist>> getArtists(
             @RequestParam(defaultValue = "0") int page,
@@ -151,7 +151,7 @@ public class MusicController {
     /**
      * 获取歌手详情
      */
-    @ApiOperation("获取歌手详情")
+    @Operation(summary = "获取歌手详情")
     @GetMapping("/artist/{id}")
     public Result<Artist> getArtist(@PathVariable Long id) {
         try {
@@ -165,7 +165,7 @@ public class MusicController {
     /**
      * 获取歌曲歌词
      */
-    @ApiOperation("获取歌曲歌词")
+    @Operation(summary = "获取歌曲歌词")
     @GetMapping("/song/{id}/lyric")
     public Result<String> getSongLyric(@PathVariable Long id) {
         try {

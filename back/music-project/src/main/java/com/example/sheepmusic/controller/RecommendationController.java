@@ -6,19 +6,19 @@ import com.example.sheepmusic.entity.Playlist;
 import com.example.sheepmusic.entity.Song;
 import com.example.sheepmusic.service.RecommendationService;
 import com.example.sheepmusic.utils.JwtUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
  * 推荐系统控制器（v2：多路召回融合，响应携带推荐理由，见 docs/specs/推荐系统v2/）
  */
-@Api(tags = "推荐系统")
+@Tag(name = "推荐系统")
 @RestController
 @RequestMapping("/music/recommend")
 @CrossOrigin
@@ -33,13 +33,13 @@ public class RecommendationController {
     /**
      * 获取个性化推荐歌曲（多路召回融合，携带推荐理由）
      */
-    @ApiOperation("获取个性化推荐歌曲")
+    @Operation(summary = "获取个性化推荐歌曲")
     @GetMapping("/personalized")
     public Result<List<RecommendItemVO>> getPersonalizedSongs(
             HttpServletRequest request,
-            @ApiParam(value = "推荐数量", defaultValue = "20")
+            @Parameter(description = "推荐数量", example = "20")
             @RequestParam(defaultValue = "20") int limit,
-            @ApiParam(value = "绕过缓存并采样换一批", example = "true")
+            @Parameter(description = "绕过缓存并采样换一批", example = "true")
             @RequestParam(defaultValue = "false") boolean refresh
     ) {
         try {
@@ -59,13 +59,13 @@ public class RecommendationController {
     /**
      * 猜你喜欢（混合推荐策略，携带推荐理由）
      */
-    @ApiOperation("猜你喜欢")
+    @Operation(summary = "猜你喜欢")
     @GetMapping("/guess-you-like")
     public Result<List<RecommendItemVO>> getGuessYouLike(
             HttpServletRequest request,
-            @ApiParam(value = "推荐数量", defaultValue = "30")
+            @Parameter(description = "推荐数量", example = "30")
             @RequestParam(defaultValue = "30") int limit,
-            @ApiParam(value = "绕过缓存并采样换一批", example = "true")
+            @Parameter(description = "绕过缓存并采样换一批", example = "true")
             @RequestParam(defaultValue = "false") boolean refresh
     ) {
         try {
@@ -85,12 +85,12 @@ public class RecommendationController {
     /**
      * 获取相似歌曲（基于物品协同过滤）
      */
-    @ApiOperation("获取相似歌曲")
+    @Operation(summary = "获取相似歌曲")
     @GetMapping("/similar-songs/{songId}")
     public Result<List<Song>> getSimilarSongs(
-            @ApiParam(value = "歌曲ID", required = true)
+            @Parameter(description = "歌曲ID", required = true)
             @PathVariable Long songId,
-            @ApiParam(value = "推荐数量", defaultValue = "10")
+            @Parameter(description = "推荐数量", example = "10")
             @RequestParam(defaultValue = "10") int limit
     ) {
         try {
@@ -105,11 +105,11 @@ public class RecommendationController {
     /**
      * 推荐歌单
      */
-    @ApiOperation("推荐歌单")
+    @Operation(summary = "推荐歌单")
     @GetMapping("/playlists")
     public Result<List<Playlist>> getRecommendedPlaylists(
             HttpServletRequest request,
-            @ApiParam(value = "推荐数量", defaultValue = "10")
+            @Parameter(description = "推荐数量", example = "10")
             @RequestParam(defaultValue = "10") int limit
     ) {
         try {

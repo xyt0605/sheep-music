@@ -6,19 +6,19 @@ import com.example.sheepmusic.dto.UpdateUserRequest;
 import com.example.sheepmusic.entity.User;
 import com.example.sheepmusic.service.UserService;
 import com.example.sheepmusic.utils.JwtUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.util.Map;
 
 /**
  * 用户控制器
  */
-@Api(tags = "用户管理")
+@Tag(name = "用户管理")
 @RestController
 @RequestMapping("/user")
 @CrossOrigin
@@ -33,7 +33,7 @@ public class UserController {
     /**
      * 获取当前用户信息
      */
-    @ApiOperation("获取当前用户信息")
+    @Operation(summary = "获取当前用户信息")
     @GetMapping("/info")
     public Result<User> getUserInfo(HttpServletRequest request) {
         try {
@@ -59,7 +59,7 @@ public class UserController {
     /**
      * 更新用户信息
      */
-    @ApiOperation("更新用户信息")
+    @Operation(summary = "更新用户信息")
     @PutMapping("/update")
     public Result<Map<String, Object>> updateUser(@Valid @RequestBody UpdateUserRequest updateRequest, 
                                                     HttpServletRequest request) {
@@ -87,7 +87,7 @@ public class UserController {
     /**
      * 修改密码
      */
-    @ApiOperation("修改密码")
+    @Operation(summary = "修改密码")
     @PutMapping("/password")
     public Result<Void> updatePassword(@Valid @RequestBody UpdatePasswordRequest passwordRequest,
                                           HttpServletRequest request) {
