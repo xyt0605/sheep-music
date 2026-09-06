@@ -20,3 +20,12 @@ export const searchExternalSongs = (params) => {
     params
   })
 }
+
+// 外源歌词（LRC 文本，无歌词返回空串）
+export const getExternalLyric = (params) => {
+  return request({
+    url: '/music/external/lyric',
+    method: 'get',
+    params
+  })
+}

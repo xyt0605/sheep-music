@@ -56,6 +56,11 @@ public class CcmixterProvider implements MusicSourceProvider {
     }
 
     @Override
+    public boolean openLicensed() {
+        return true;
+    }
+
+    @Override
     public ExternalSearchResultVO search(String keyword, int page, int size) throws Exception {
         URI uri = UriComponentsBuilder.fromHttpUrl(API_BASE)
                 .queryParam("f", "json")

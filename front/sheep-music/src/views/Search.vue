@@ -244,12 +244,20 @@
             </el-icon>
             <h3>{{ section.label }}</h3>
             <el-tag
-              v-if="section.enabled"
+              v-if="section.enabled && section.openLicense"
               size="small"
               type="success"
               effect="plain"
             >
               CC 授权
+            </el-tag>
+            <el-tag
+              v-else-if="section.enabled"
+              size="small"
+              type="warning"
+              effect="plain"
+            >
+              聚合试听
             </el-tag>
             <el-tag
               v-else
@@ -511,6 +519,7 @@ const loadSources = () => {
         source: s.source,
         label: s.label,
         enabled: s.enabled,
+        openLicense: s.openLicense,
         message: '',
         total: 0,
         songs: [],
@@ -740,6 +749,7 @@ const mapExternalSong = (vo, source) => ({
   lyric: '',
   isExternal: true,
   source,
+  sourceTrackId: vo.sourceTrackId,
   licenseName: vo.licenseName,
   licenseUrl: vo.licenseUrl
 })

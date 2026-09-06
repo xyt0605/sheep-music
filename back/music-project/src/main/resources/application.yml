@@ -70,3 +70,6 @@ external:
       client-id: ${JAMENDO_CLIENT_ID:}
       api-base-url: https://api.jamendo.com/v3.0
       stream-base-url: https://prod-1.storage.jamendo.com
+    gequhai:
+      # 歌曲海聚合试听源（v1.2 用户指定接入；定性=试听层，不入库不进合规供应链）
+      enabled: ${GEQUHAI_ENABLED:true}

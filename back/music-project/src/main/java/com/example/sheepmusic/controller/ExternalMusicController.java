@@ -62,7 +62,7 @@ public class ExternalMusicController {
                 // 启用的源排前面，同状态按标识排序，保证分区顺序稳定
                 .sorted(Comparator.comparing((MusicSourceProvider p) -> !p.isEnabled())
                         .thenComparing(MusicSourceProvider::source))
-                .map(p -> new ExternalSourceVO(p.source(), p.label(), p.isEnabled()))
+                .map(p -> new ExternalSourceVO(p.source(), p.label(), p.isEnabled(), p.openLicensed()))
                 .toList();
         return Result.success(list);
     }
@@ -73,6 +73,26 @@ public class ExternalMusicController {
             return false;
         }
         return fileId.matches("[A-Za-z0-9._\\- ]{1,100}(?:/[A-Za-z0-9._\\- ]{1,150}){0,2}");
+    }
+
+    @Operation(summary = "外源歌词（LRC 文本，无歌词返回空串）")
+    @GetMapping("/lyric")
+    public Result<String> lyric(
+            @Parameter(description = "音源标识", example = "gequhai")
+            @RequestParam String source,
+            @Parameter(description = "外部曲目 ID（数字）", example = "326")
+            @RequestParam String trackId
+    ) {
+        MusicSourceProvider provider = registry.optionalGet(source).orElse(null);
+        if (provider == null || trackId == null || !trackId.matches("\\d{1,20}")) {
+            return Result.error(400, "参数错误");
+        }
+        try {
+            return Result.success(provider.resolveLyric(trackId));
+        } catch (Exception e) {
+            log.warn("外源歌词获取失败 [{}#{}]: {}", source, trackId, e.getMessage());
+            return Result.success("");
+        }
     }
 
     @Operation(summary = "搜索外源开放曲库歌曲")
@@ -111,14 +131,20 @@ public class ExternalMusicController {
         if (provider == null) {
             return ResponseEntity.badRequest().build();
         }
-        // 防开放代理：trackId 必须是纯数字；fileId 限定安全字符集且禁止 ".."（ccMixter 为 用户名/文件名 路径），
+        // 防开放代理：trackId 必须是纯数字；fileId 可缺省，提供时限定安全字符集且禁止 ".."（ccMixter 为 用户名/文件名 路径），
         // 上游 URL 只能由 Provider 内置白名单前缀 + 校验过的标识拼出
         if (trackId == null || !trackId.matches("\\d{1,20}")
-                || fileId == null || !isSafeFileId(fileId)) {
+                || (fileId != null && !isSafeFileId(fileId))) {
             return ResponseEntity.badRequest().build();
         }
 
-        String upstreamUrl = provider.resolveStreamUrl(trackId, fileId);
+        String upstreamUrl;
+        try {
+            upstreamUrl = provider.resolveStreamUrl(trackId, fileId);
+        } catch (Exception e) {
+            log.warn("外源音频地址解析失败 [{}#{}]: {}", source, trackId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
         HttpRequest.Builder reqBuilder = HttpRequest.newBuilder(URI.create(upstreamUrl))
                 .timeout(Duration.ofSeconds(30))
                 .header(HttpHeaders.USER_AGENT, "SheepMusic/1.0 (+stream-proxy)");

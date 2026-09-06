@@ -32,8 +32,9 @@ public interface MusicSourceProvider {
      *
      * @param trackId 已由调用方做过格式校验
      * @param fileHint 同一条目含多个音频文件时的文件标识（如 ccMixter 的 file_id），可为 null
+     * @throws Exception 解析失败——流式代理端统一转 502
      */
-    String resolveStreamUrl(String trackId, String fileHint);
+    String resolveStreamUrl(String trackId, String fileHint) throws Exception;
 
     /**
      * 流式代理访问该音源上游时附加的请求头（部分站点按 UA/Referer 防护，如 ccMixter）。
@@ -41,6 +42,18 @@ public interface MusicSourceProvider {
      */
     default Map<String, String> streamHeaders() {
         return Map.of();
+    }
+
+    /** 是否开放授权曲库（决定搜索分区展示"CC 授权"还是"聚合试听"标识） */
+    default boolean openLicensed() {
+        return false;
+    }
+
+    /**
+     * 解析歌词（LRC 文本；无歌词返回空串）。默认不支持。
+     */
+    default String resolveLyric(String trackId) {
+        return "";
     }
 
     /**

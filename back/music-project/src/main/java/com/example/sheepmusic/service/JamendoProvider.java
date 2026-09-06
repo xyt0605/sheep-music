@@ -56,6 +56,11 @@ public class JamendoProvider implements MusicSourceProvider {
     }
 
     @Override
+    public boolean openLicensed() {
+        return true;
+    }
+
+    @Override
     public ExternalSearchResultVO search(String keyword, int page, int size) throws Exception {
         URI uri = UriComponentsBuilder.fromHttpUrl(apiBaseUrl + "/tracks/")
                 .queryParam("client_id", clientId)

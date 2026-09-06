@@ -20,4 +20,7 @@ public class ExternalSourceVO {
 
     /** 是否已启用（未启用的源仅展示配置指引，不参与搜索） */
     private boolean enabled;
+
+    /** 是否开放授权曲库（CC 等；false 表示聚合试听源） */
+    private boolean openLicense;
 }

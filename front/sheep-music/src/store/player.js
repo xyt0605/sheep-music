@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { playSong as playSongAPI } from '@/api/song'
 import { addPlayHistory } from '@/api/playHistory'
+import { getExternalLyric } from '@/api/externalMusic'
 import { useUserStore } from '@/store/user'
 
 export const usePlayerStore = defineStore('player', () => {
@@ -157,6 +158,11 @@ export const usePlayerStore = defineStore('player', () => {
           } catch (error) {
             console.error('添加播放历史失败:', error)
           }
+        } else if (song.lyric === '' && song.source && song.sourceTrackId) {
+          // 外源歌词异步加载（gequhai 等来源播放页带 LRC）：加载完成写入歌曲对象，歌词面板响应式刷新
+          getExternalLyric({ source: song.source, trackId: song.sourceTrackId })
+            .then(res => { song.lyric = res.code === 200 ? (res.data || '') : '' })
+            .catch(() => { song.lyric = '' })
         }
       }
     } catch (error) {

@@ -115,6 +115,26 @@ if (ccItems.length > 0) {
   console.log('  SKIP  上游无结果或网络不可达（message=' + (data(r)?.message || '无') + '），跳过联测断言')
 }
 
+// ============ AC-13 歌曲海聚合源（v1.2，网络可达时） ============
+console.log('\n[7] 歌曲海聚合源实测（AC-13，网络可达时）')
+r = await api('GET', '/music/external/search?source=gequhai&keyword=' + encodeURIComponent('周杰伦') + '&page=0&size=10', { token: U })
+ok('gequhai 搜索 code=200 且 enabled=true', code(r) === 200 && data(r)?.enabled === true, `code=${code(r)} msg=${msg(r)}`)
+const gqItems = data(r)?.items || []
+if (gqItems.length > 0) {
+  const g1 = gqItems[0]
+  ok('gequhai 字段齐全（标题/歌手）', !!g1.title && !!g1.artist, JSON.stringify(g1).slice(0, 120))
+  ok('gequhai streamUrl 为同源代理且 trackId 为数字',
+    /\/music\/external\/stream\?source=gequhai&trackId=\d+$/.test(g1.streamUrl || ''), `streamUrl=${g1?.streamUrl}`)
+  const lrc = await api('GET', `/music/external/lyric?source=gequhai&trackId=${g1.sourceTrackId}`, { token: U })
+  ok('gequhai 歌词返回 LRC 文本', code(lrc) === 200 && /\[\d{2}:\d{2}/.test(data(lrc) || ''), `len=${(data(lrc) || '').length}`)
+  const gres = await fetch(BASE + g1.streamUrl.replace(/^\/api/, ''), { headers: { Range: 'bytes=0-1023' } })
+  ok('gequhai 流代理真实音频 206/200', gres.status === 206 || gres.status === 200, `status=${gres.status}`)
+  ok('gequhai Content-Type 为音频', /audio\//.test(gres.headers.get('content-type') || ''), gres.headers.get('content-type'))
+  await gres.body?.cancel().catch(() => {})
+} else {
+  console.log('  SKIP  上游无结果或网络不可达（message=' + (data(r)?.message || '无') + '），跳过联测断言')
+}
+
 // ============ 可选：真实上游联测（需外网 + 密钥，AC-10 冒烟） ============
 if (process.env.JAMENDO_CLIENT_ID && data(await api('GET', '/music/external/search?source=jamendo&keyword=love', { token: U }))?.items?.length > 0) {
   console.log('\n[5] 真实上游联测（AC-10 冒烟）')
