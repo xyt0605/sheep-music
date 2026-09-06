@@ -1,24 +1,23 @@
 package com.example.sheepmusic.dto;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * 修改密码请求
  */
 @Data
-@ApiModel("修改密码请求")
+@Schema(description = "修改密码请求")
 public class UpdatePasswordRequest {
     
-    @ApiModelProperty(value = "旧密码", required = true)
+    @Schema(description = "旧密码", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "旧密码不能为空")
     private String oldPassword;
     
-    @ApiModelProperty(value = "新密码", required = true)
+    @Schema(description = "新密码", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "新密码不能为空")
     @Size(min = 6, max = 20, message = "新密码长度为6-20个字符")
     private String newPassword;

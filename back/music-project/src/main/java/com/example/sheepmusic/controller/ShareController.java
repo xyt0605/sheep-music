@@ -6,20 +6,20 @@ import com.example.sheepmusic.entity.PlaylistShare;
 import com.example.sheepmusic.entity.SongShare;
 import com.example.sheepmusic.service.ShareService;
 import com.example.sheepmusic.utils.JwtUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**
  * 分享Controller
  */
-@Api(tags = "分享管理")
+@Tag(name = "分享管理")
 @RestController
 @RequestMapping("/share")
 @CrossOrigin
@@ -34,7 +34,7 @@ public class ShareController {
     /**
      * 分享歌单
      */
-    @ApiOperation("分享歌单")
+    @Operation(summary = "分享歌单")
     @PostMapping("/playlist")
     public Result<PlaylistShare> sharePlaylist(@Valid @RequestBody ShareRequest request,
                                                HttpServletRequest httpRequest) {
@@ -56,7 +56,7 @@ public class ShareController {
     /**
      * 获取分享广场
      */
-    @ApiOperation("获取分享广场")
+    @Operation(summary = "获取分享广场")
     @GetMapping("/square")
     public Result<Page<PlaylistShare>> getShareSquare(
             @RequestParam(defaultValue = "0") int page,
@@ -72,7 +72,7 @@ public class ShareController {
     /**
      * 获取热门分享
      */
-    @ApiOperation("获取热门分享")
+    @Operation(summary = "获取热门分享")
     @GetMapping("/hot")
     public Result<Page<PlaylistShare>> getHotShares(
             @RequestParam(defaultValue = "0") int page,
@@ -88,7 +88,7 @@ public class ShareController {
     /**
      * 获取好友分享
      */
-    @ApiOperation("获取好友分享")
+    @Operation(summary = "获取好友分享")
     @GetMapping("/friends")
     public Result<List<PlaylistShare>> getFriendsShares(HttpServletRequest request) {
         try {
@@ -103,7 +103,7 @@ public class ShareController {
     /**
      * 获取用户的分享
      */
-    @ApiOperation("获取用户的分享")
+    @Operation(summary = "获取用户的分享")
     @GetMapping("/user/{userId}")
     public Result<List<PlaylistShare>> getUserShares(@PathVariable Long userId) {
         try {
@@ -117,7 +117,7 @@ public class ShareController {
     /**
      * 增加浏览次数
      */
-    @ApiOperation("增加浏览次数")
+    @Operation(summary = "增加浏览次数")
     @PostMapping("/{shareId}/view")
     public Result<Void> incrementViewCount(@PathVariable Long shareId) {
         try {
@@ -134,7 +134,7 @@ public class ShareController {
     /**
      * 收藏分享的歌单
      */
-    @ApiOperation("收藏分享的歌单")
+    @Operation(summary = "收藏分享的歌单")
     @PostMapping("/{shareId}/collect")
     public Result<Void> collectSharedPlaylist(@PathVariable Long shareId,
                                               HttpServletRequest request) {
@@ -153,7 +153,7 @@ public class ShareController {
     /**
      * 删除分享
      */
-    @ApiOperation("删除分享")
+    @Operation(summary = "删除分享")
     @DeleteMapping("/{shareId}")
     public Result<Void> deleteShare(@PathVariable Long shareId,
                                     HttpServletRequest request) {
@@ -174,7 +174,7 @@ public class ShareController {
     /**
      * 分享歌曲
      */
-    @ApiOperation("分享歌曲")
+    @Operation(summary = "分享歌曲")
     @PostMapping("/song")
     public Result<SongShare> shareSong(@Valid @RequestBody ShareRequest request,
                                        HttpServletRequest httpRequest) {
@@ -196,7 +196,7 @@ public class ShareController {
     /**
      * 获取歌曲分享广场
      */
-    @ApiOperation("获取歌曲分享广场")
+    @Operation(summary = "获取歌曲分享广场")
     @GetMapping("/songs")
     public Result<Page<SongShare>> getSongShareSquare(
             @RequestParam(defaultValue = "0") int page,
@@ -212,7 +212,7 @@ public class ShareController {
     /**
      * 获取热门歌曲分享
      */
-    @ApiOperation("获取热门歌曲分享")
+    @Operation(summary = "获取热门歌曲分享")
     @GetMapping("/songs/hot")
     public Result<Page<SongShare>> getHotSongShares(
             @RequestParam(defaultValue = "0") int page,
@@ -228,7 +228,7 @@ public class ShareController {
     /**
      * 获取好友的歌曲分享
      */
-    @ApiOperation("获取好友的歌曲分享")
+    @Operation(summary = "获取好友的歌曲分享")
     @GetMapping("/songs/friends")
     public Result<List<SongShare>> getFriendsSongShares(HttpServletRequest request) {
         try {
@@ -243,7 +243,7 @@ public class ShareController {
     /**
      * 获取用户的歌曲分享
      */
-    @ApiOperation("获取用户的歌曲分享")
+    @Operation(summary = "获取用户的歌曲分享")
     @GetMapping("/songs/user/{userId}")
     public Result<List<SongShare>> getUserSongShares(@PathVariable Long userId) {
         try {
@@ -257,7 +257,7 @@ public class ShareController {
     /**
      * 增加歌曲分享浏览次数
      */
-    @ApiOperation("增加歌曲分享浏览次数")
+    @Operation(summary = "增加歌曲分享浏览次数")
     @PostMapping("/song/{shareId}/view")
     public Result<Void> incrementSongShareViewCount(@PathVariable Long shareId) {
         try {
@@ -274,7 +274,7 @@ public class ShareController {
     /**
      * 点赞歌曲分享
      */
-    @ApiOperation("点赞歌曲分享")
+    @Operation(summary = "点赞歌曲分享")
     @PostMapping("/song/{shareId}/like")
     public Result<Void> likeSongShare(@PathVariable Long shareId,
                                       HttpServletRequest request) {
@@ -293,7 +293,7 @@ public class ShareController {
     /**
      * 删除歌曲分享
      */
-    @ApiOperation("删除歌曲分享")
+    @Operation(summary = "删除歌曲分享")
     @DeleteMapping("/song/{shareId}")
     public Result<Void> deleteSongShare(@PathVariable Long shareId,
                                         HttpServletRequest request) {

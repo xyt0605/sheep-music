@@ -4,19 +4,19 @@ import com.example.sheepmusic.common.Result;
 import com.example.sheepmusic.entity.Notification;
 import com.example.sheepmusic.service.NotificationService;
 import com.example.sheepmusic.utils.JwtUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
  * 通知Controller
  */
-@Api(tags = "通知管理")
+@Tag(name = "通知管理")
 @RestController
 @RequestMapping("/notification")
 @CrossOrigin
@@ -31,7 +31,7 @@ public class NotificationController {
     /**
      * 获取通知列表
      */
-    @ApiOperation("获取通知列表")
+    @Operation(summary = "获取通知列表")
     @GetMapping("/list")
     public Result<Page<Notification>> getNotifications(
             @RequestParam(defaultValue = "0") int page,
@@ -49,7 +49,7 @@ public class NotificationController {
     /**
      * 获取未读通知
      */
-    @ApiOperation("获取未读通知")
+    @Operation(summary = "获取未读通知")
     @GetMapping("/unread")
     public Result<List<Notification>> getUnreadNotifications(HttpServletRequest request) {
         try {
@@ -64,7 +64,7 @@ public class NotificationController {
     /**
      * 获取未读通知数
      */
-    @ApiOperation("获取未读通知数")
+    @Operation(summary = "获取未读通知数")
     @GetMapping("/unread-count")
     public Result<Long> getUnreadCount(HttpServletRequest request) {
         try {
@@ -79,7 +79,7 @@ public class NotificationController {
     /**
      * 标记通知为已读
      */
-    @ApiOperation("标记通知为已读")
+    @Operation(summary = "标记通知为已读")
     @PutMapping("/read/{notificationId}")
     public Result<Void> markAsRead(@PathVariable Long notificationId,
                                    HttpServletRequest request) {
@@ -98,7 +98,7 @@ public class NotificationController {
     /**
      * 批量标记通知为已读
      */
-    @ApiOperation("批量标记通知为已读")
+    @Operation(summary = "批量标记通知为已读")
     @PutMapping("/read/batch")
     public Result<Void> markBatchAsRead(@RequestBody List<Long> notificationIds,
                                         HttpServletRequest request) {
@@ -117,7 +117,7 @@ public class NotificationController {
     /**
      * 标记所有通知为已读
      */
-    @ApiOperation("标记所有通知为已读")
+    @Operation(summary = "标记所有通知为已读")
     @PutMapping("/read/all")
     public Result<Void> markAllAsRead(HttpServletRequest request) {
         try {

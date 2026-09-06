@@ -2,7 +2,7 @@
 # 使用多阶段构建优化镜像大小
 
 # 阶段1：构建阶段
-FROM maven:3.8-eclipse-temurin-11 AS builder
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 # 设置工作目录
 WORKDIR /app
@@ -21,7 +21,7 @@ RUN mvn clean package -DskipTests
 RUN echo "=== Build completed ===" && ls -la target/
 
 # 阶段2：运行阶段
-FROM eclipse-temurin:11-jre-alpine
+FROM eclipse-temurin:17-jre-alpine
 
 # 设置工作目录
 WORKDIR /app

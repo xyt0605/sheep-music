@@ -1,57 +1,42 @@
 package com.example.sheepmusic.config;
 
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import springfox.documentation.builders.ApiInfoBuilder;
-import springfox.documentation.builders.ParameterBuilder;
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.schema.ModelRef;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.Contact;
-import springfox.documentation.service.Parameter;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger2.annotations.EnableSwagger2WebMvc;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Swagger配置
+ * 接口文档配置（springdoc / OpenAPI 3，knife4j 4.x 渲染 /doc.html）
+ *
+ * 旧版 springfox Docket 已随 Boot 3 移除，全局 Token 请求头改用
+ * OperationCustomizer 实现：每个接口都带一个可选的 Authorization 头参数。
  */
 @Configuration
-@EnableSwagger2WebMvc
 public class SwaggerConfig {
-    
+
     @Bean
-    public Docket api() {
-        // 添加全局请求头参数（Token）
-        List<Parameter> parameters = new ArrayList<>();
-        parameters.add(new ParameterBuilder()
-                .name("Authorization")
-                .description("JWT Token（格式：Bearer xxx）")
-                .modelRef(new ModelRef("string"))
-                .parameterType("header")
-                .required(false)
-                .build());
-        
-        return new Docket(DocumentationType.SWAGGER_2)
-                .apiInfo(apiInfo())
-                .select()
-                .apis(RequestHandlerSelectors.basePackage("com.example.sheepmusic.controller"))
-                .paths(PathSelectors.any())
-                .build()
-                .globalOperationParameters(parameters);
+    public OpenAPI sheepMusicOpenAPI() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("Sheep Music API文档")
+                        .description("在线音乐网站后端接口文档")
+                        .version("1.0.0")
+                        .contact(new Contact().name("Sheep Music Team")));
     }
-    
-    private ApiInfo apiInfo() {
-        return new ApiInfoBuilder()
-                .title("Sheep Music API文档")
-                .description("在线音乐网站后端接口文档")
-                .version("1.0.0")
-                .contact(new Contact("Sheep Music Team", "", ""))
-                .build();
+
+    @Bean
+    public OperationCustomizer globalTokenHeader() {
+        return (operation, handlerMethod) -> {
+            operation.addParametersItem(new Parameter()
+                    .in("header")
+                    .name("Authorization")
+                    .description("JWT Token（格式：Bearer xxx）")
+                    .required(false)
+                    .schema(new io.swagger.v3.oas.models.media.StringSchema()));
+            return operation;
+        };
     }
 }
-

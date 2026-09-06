@@ -5,8 +5,8 @@ import com.example.sheepmusic.dto.SearchHistoryRequest;
 import com.example.sheepmusic.entity.SearchHistory;
 import com.example.sheepmusic.entity.User;
 import com.example.sheepmusic.service.SearchHistoryService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * 搜索历史控制器
  */
-@Api(tags = "搜索历史管理")
+@Tag(name = "搜索历史管理")
 @RestController
 @RequestMapping("/api/user/search-history")
 @CrossOrigin
@@ -28,7 +28,7 @@ public class SearchHistoryController {
     /**
      * 获取热门搜索关键词（公开接口，无需登录）
      */
-    @ApiOperation("获取热门搜索")
+    @Operation(summary = "获取热门搜索")
     @GetMapping("/hot")
     public Result<List<String>> getHotSearchKeywords(
             @RequestParam(defaultValue = "10") int limit
@@ -44,7 +44,7 @@ public class SearchHistoryController {
     /**
      * 获取当前用户的搜索历史
      */
-    @ApiOperation("获取搜索历史")
+    @Operation(summary = "获取搜索历史")
     @GetMapping
     public Result<List<SearchHistory>> getSearchHistory(@AuthenticationPrincipal User user) {
         try {
@@ -58,7 +58,7 @@ public class SearchHistoryController {
     /**
      * 添加搜索记录
      */
-    @ApiOperation("添加搜索记录")
+    @Operation(summary = "添加搜索记录")
     @PostMapping
     public Result<Void> addSearchHistory(
             @AuthenticationPrincipal User user,
@@ -82,7 +82,7 @@ public class SearchHistoryController {
     /**
      * 删除单条搜索历史
      */
-    @ApiOperation("删除搜索历史")
+    @Operation(summary = "删除搜索历史")
     @DeleteMapping("/{id}")
     public Result<Void> deleteSearchHistory(
             @AuthenticationPrincipal User user,
@@ -101,7 +101,7 @@ public class SearchHistoryController {
     /**
      * 清空所有搜索历史
      */
-    @ApiOperation("清空搜索历史")
+    @Operation(summary = "清空搜索历史")
     @DeleteMapping("/clear")
     public Result<Void> clearSearchHistory(@AuthenticationPrincipal User user) {
         try {

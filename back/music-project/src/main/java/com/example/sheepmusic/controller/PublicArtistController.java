@@ -3,8 +3,8 @@ package com.example.sheepmusic.controller;
 import com.example.sheepmusic.common.Result;
 import com.example.sheepmusic.entity.Artist;
 import com.example.sheepmusic.service.ArtistService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * 公共歌手接口（所有登录用户可访问）
  */
-@Api(tags = "歌手浏览")
+@Tag(name = "歌手浏览")
 @RestController
 @RequestMapping("/api/artists")
 @CrossOrigin
@@ -30,7 +30,7 @@ public class PublicArtistController {
      * 获取所有歌手列表（分页）
      * 供普通用户浏览歌手使用
      */
-    @ApiOperation("获取歌手列表（分页）")
+    @Operation(summary = "获取歌手列表（分页）")
     @GetMapping
     public Result<Page<Artist>> getArtists(
             @RequestParam(defaultValue = "0") int page,
@@ -64,7 +64,7 @@ public class PublicArtistController {
      * 获取所有歌手（不分页）
      * 用于下拉选择等场景
      */
-    @ApiOperation("获取所有歌手（不分页）")
+    @Operation(summary = "获取所有歌手（不分页）")
     @GetMapping("/all")
     public Result<List<Artist>> getAllArtists() {
         try {
@@ -78,7 +78,7 @@ public class PublicArtistController {
     /**
      * 获取歌手详情
      */
-    @ApiOperation("获取歌手详情")
+    @Operation(summary = "获取歌手详情")
     @GetMapping("/{id}")
     public Result<Artist> getArtist(@PathVariable Long id) {
         try {
@@ -92,7 +92,7 @@ public class PublicArtistController {
     /**
      * 搜索歌手
      */
-    @ApiOperation("搜索歌手")
+    @Operation(summary = "搜索歌手")
     @GetMapping("/search")
     public Result<List<Artist>> searchArtists(@RequestParam String keyword) {
         try {

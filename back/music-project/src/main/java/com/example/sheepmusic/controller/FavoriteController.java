@@ -4,8 +4,8 @@ import com.example.sheepmusic.common.Result;
 import com.example.sheepmusic.entity.Favorite;
 import com.example.sheepmusic.entity.User;
 import com.example.sheepmusic.service.FavoriteService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,7 +20,7 @@ import java.util.Map;
 /**
  * 收藏控制器
  */
-@Api(tags = "收藏管理")
+@Tag(name = "收藏管理")
 @RestController
 @RequestMapping("/api/user/favorite")
 @CrossOrigin
@@ -32,7 +32,7 @@ public class FavoriteController {
     /**
      * 添加收藏
      */
-    @ApiOperation("添加收藏")
+    @Operation(summary = "添加收藏")
     @PostMapping("/{songId}")
     public Result<?> addFavorite(
             @AuthenticationPrincipal User user,
@@ -49,7 +49,7 @@ public class FavoriteController {
     /**
      * 取消收藏
      */
-    @ApiOperation("取消收藏")
+    @Operation(summary = "取消收藏")
     @DeleteMapping("/{songId}")
     public Result<?> removeFavorite(
             @AuthenticationPrincipal User user,
@@ -66,7 +66,7 @@ public class FavoriteController {
     /**
      * 切换收藏状态
      */
-    @ApiOperation("切换收藏状态")
+    @Operation(summary = "切换收藏状态")
     @PostMapping("/toggle/{songId}")
     public Result<Map<String, Boolean>> toggleFavorite(
             @AuthenticationPrincipal User user,
@@ -87,7 +87,7 @@ public class FavoriteController {
     /**
      * 检查是否已收藏
      */
-    @ApiOperation("检查是否已收藏")
+    @Operation(summary = "检查是否已收藏")
     @GetMapping("/check/{songId}")
     public Result<Map<String, Boolean>> checkFavorite(
             @AuthenticationPrincipal User user,
@@ -108,7 +108,7 @@ public class FavoriteController {
     /**
      * 批量检查收藏状态
      */
-    @ApiOperation("批量检查收藏状态")
+    @Operation(summary = "批量检查收藏状态")
     @PostMapping("/batch-check")
     public Result<Map<Long, Boolean>> batchCheckFavorites(
             @AuthenticationPrincipal User user,
@@ -125,7 +125,7 @@ public class FavoriteController {
     /**
      * 获取我的收藏列表
      */
-    @ApiOperation("获取我的收藏列表")
+    @Operation(summary = "获取我的收藏列表")
     @GetMapping("/list")
     public Result<Page<Favorite>> getMyFavorites(
             @AuthenticationPrincipal User user,
@@ -144,7 +144,7 @@ public class FavoriteController {
     /**
      * 统计我的收藏数量
      */
-    @ApiOperation("统计我的收藏数量")
+    @Operation(summary = "统计我的收藏数量")
     @GetMapping("/count")
     public Result<Map<String, Long>> countMyFavorites(
             @AuthenticationPrincipal User user

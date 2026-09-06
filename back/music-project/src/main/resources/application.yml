@@ -21,7 +21,7 @@ spring:
     properties:
       hibernate:
         format_sql: false
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.MySQLDialect  # Hibernate 6 统一方言，自动探测 MySQL 版本
   
   # 文件上传配置
   servlet:
@@ -29,6 +29,17 @@ spring:
       enabled: true  # 启用文件上传
       max-file-size: 30MB  # 单个文件最大大小
       max-request-size: 30MB  # 整个请求最大大小
+
+  # Spring AI（OpenAI 兼容协议：默认指向智谱 GLM 开放平台，可换 DeepSeek 等任意兼容端点）
+  # 密钥未配置时使用占位符——应用正常启动，仅 agent 实际调用时才需要真实密钥
+  ai:
+    openai:
+      api-key: ${AGENT_API_KEY:not-configured}
+      base-url: ${AGENT_API_BASE_URL:https://open.bigmodel.cn/api/paas/v4}
+      chat:
+        options:
+          model: ${AGENT_MODEL:glm-4.5-flash}
+          temperature: 0.7
 
 # JWT配置
 jwt:
@@ -44,3 +55,9 @@ aliyun:
     bucketName: ${ALIYUN_OSS_BUCKET_NAME:sheepmusic}
     urlPrefix: ${ALIYUN_OSS_URL_PREFIX:https://sheepmusic.oss-cn-hangzhou.aliyuncs.com/}
 
+# 接口文档（knife4j 4.x / springdoc）
+knife4j:
+  enable: true
+springdoc:
+  api-docs:
+    path: /v3/api-docs

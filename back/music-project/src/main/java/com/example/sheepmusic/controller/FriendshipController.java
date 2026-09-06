@@ -6,20 +6,20 @@ import com.example.sheepmusic.entity.Friendship;
 import com.example.sheepmusic.entity.User;
 import com.example.sheepmusic.service.FriendshipService;
 import com.example.sheepmusic.utils.JwtUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
 /**
  * 好友Controller
  */
-@Api(tags = "好友管理")
+@Tag(name = "好友管理")
 @RestController
 @RequestMapping("/friend")
 @CrossOrigin
@@ -34,7 +34,7 @@ public class FriendshipController {
     /**
      * 发送好友请求
      */
-    @ApiOperation("发送好友请求")
+    @Operation(summary = "发送好友请求")
     @PostMapping("/request")
     public Result<Friendship> sendFriendRequest(@Valid @RequestBody FriendRequest request,
                                                 HttpServletRequest httpRequest) {
@@ -56,7 +56,7 @@ public class FriendshipController {
     /**
      * 接受好友请求
      */
-    @ApiOperation("接受好友请求")
+    @Operation(summary = "接受好友请求")
     @PostMapping("/accept/{friendshipId}")
     public Result<Void> acceptFriendRequest(@PathVariable Long friendshipId,
                                             HttpServletRequest request) {
@@ -75,7 +75,7 @@ public class FriendshipController {
     /**
      * 拒绝好友请求
      */
-    @ApiOperation("拒绝好友请求")
+    @Operation(summary = "拒绝好友请求")
     @PostMapping("/reject/{friendshipId}")
     public Result<Void> rejectFriendRequest(@PathVariable Long friendshipId,
                                             HttpServletRequest request) {
@@ -94,7 +94,7 @@ public class FriendshipController {
     /**
      * 删除好友
      */
-    @ApiOperation("删除好友")
+    @Operation(summary = "删除好友")
     @DeleteMapping("/{friendshipId}")
     public Result<Void> deleteFriend(@PathVariable Long friendshipId,
                                      HttpServletRequest request) {
@@ -113,7 +113,7 @@ public class FriendshipController {
     /**
      * 获取好友列表
      */
-    @ApiOperation("获取好友列表")
+    @Operation(summary = "获取好友列表")
     @GetMapping("/list")
     public Result<List<Friendship>> getFriendList(HttpServletRequest request) {
         try {
@@ -128,7 +128,7 @@ public class FriendshipController {
     /**
      * 获取好友请求列表
      */
-    @ApiOperation("获取好友请求列表")
+    @Operation(summary = "获取好友请求列表")
     @GetMapping("/requests")
     public Result<List<Friendship>> getFriendRequests(HttpServletRequest request) {
         try {
@@ -143,7 +143,7 @@ public class FriendshipController {
     /**
      * 搜索用户
      */
-    @ApiOperation("搜索用户")
+    @Operation(summary = "搜索用户")
     @GetMapping("/search")
     public Result<List<User>> searchUsers(@RequestParam String keyword,
                                           HttpServletRequest request) {
@@ -159,7 +159,7 @@ public class FriendshipController {
     /**
      * 设置备注名
      */
-    @ApiOperation("设置备注名")
+    @Operation(summary = "设置备注名")
     @PutMapping("/{friendshipId}/remark")
     public Result<Void> setRemark(@PathVariable Long friendshipId,
                                   @RequestBody Map<String, String> body,
@@ -180,7 +180,7 @@ public class FriendshipController {
     /**
      * 检查是否为好友
      */
-    @ApiOperation("检查是否为好友")
+    @Operation(summary = "检查是否为好友")
     @GetMapping("/check/{friendId}")
     public Result<Boolean> areFriends(@PathVariable Long friendId,
                                       HttpServletRequest request) {

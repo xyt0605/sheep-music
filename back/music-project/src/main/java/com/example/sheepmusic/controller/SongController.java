@@ -5,8 +5,8 @@ import com.example.sheepmusic.dto.SongRequest;
 import com.example.sheepmusic.dto.SongImportRequest;
 import com.example.sheepmusic.entity.Song;
 import com.example.sheepmusic.service.SongService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,13 +15,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**
  * 歌曲管理控制器（管理员）
  */
-@Api(tags = "歌曲管理")
+@Tag(name = "歌曲管理")
 @RestController
 @RequestMapping("/admin/song")
 @CrossOrigin
@@ -33,7 +33,7 @@ public class SongController {
     /**
      * 创建歌曲
      */
-    @ApiOperation("创建歌曲")
+    @Operation(summary = "创建歌曲")
     @PostMapping
     public Result<Song> createSong(@Valid @RequestBody SongRequest request) {
         try {
@@ -47,7 +47,7 @@ public class SongController {
     /**
      * 一站式导入歌曲，支持按歌手名称自动创建歌手。
      */
-    @ApiOperation("导入歌曲")
+    @Operation(summary = "导入歌曲")
     @PostMapping("/import")
     public Result<Song> importSong(@Valid @RequestBody SongImportRequest request) {
         try {
@@ -61,7 +61,7 @@ public class SongController {
     /**
      * 更新歌曲
      */
-    @ApiOperation("更新歌曲")
+    @Operation(summary = "更新歌曲")
     @PutMapping("/{id}")
     public Result<Song> updateSong(@PathVariable Long id, @Valid @RequestBody SongRequest request) {
         try {
@@ -75,7 +75,7 @@ public class SongController {
     /**
      * 删除歌曲
      */
-    @ApiOperation("删除歌曲")
+    @Operation(summary = "删除歌曲")
     @DeleteMapping("/{id}")
     public Result<Void> deleteSong(@PathVariable Long id) {
         try {
@@ -91,7 +91,7 @@ public class SongController {
     /**
      * 获取歌曲详情
      */
-    @ApiOperation("获取歌曲详情")
+    @Operation(summary = "获取歌曲详情")
     @GetMapping("/{id}")
     public Result<Song> getSong(@PathVariable Long id) {
         try {
@@ -105,7 +105,7 @@ public class SongController {
     /**
      * 获取歌曲列表（分页）
      */
-    @ApiOperation("获取歌曲列表")
+    @Operation(summary = "获取歌曲列表")
     @GetMapping("/list")
     public Result<Page<Song>> getSongs(
             @RequestParam(defaultValue = "0") int page,
@@ -130,7 +130,7 @@ public class SongController {
     /**
      * 根据歌手获取歌曲
      */
-    @ApiOperation("根据歌手获取歌曲")
+    @Operation(summary = "根据歌手获取歌曲")
     @GetMapping("/artist/{artistId}")
     public Result<List<Song>> getSongsByArtist(@PathVariable Long artistId) {
         try {
@@ -144,7 +144,7 @@ public class SongController {
     /**
      * 批量更新歌曲类型和语言
      */
-    @ApiOperation("批量更新歌曲类型和语言")
+    @Operation(summary = "批量更新歌曲类型和语言")
     @PutMapping("/batch-update-genre-language")
     public Result<Void> batchUpdateGenreAndLanguage(@RequestBody List<SongGenreLanguageUpdate> updates) {
         try {

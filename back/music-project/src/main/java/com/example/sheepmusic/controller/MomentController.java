@@ -7,19 +7,19 @@ import com.example.sheepmusic.entity.MomentComment;
 import com.example.sheepmusic.entity.UserMoment;
 import com.example.sheepmusic.service.MomentService;
 import com.example.sheepmusic.utils.JwtUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 /**
  * 动态Controller
  */
-@Api(tags = "动态管理")
+@Tag(name = "动态管理")
 @RestController
 @RequestMapping("/moment")
 @CrossOrigin
@@ -34,7 +34,7 @@ public class MomentController {
     /**
      * 发布动态
      */
-    @ApiOperation("发布动态")
+    @Operation(summary = "发布动态")
     @PostMapping
     public Result<UserMoment> publishMoment(@Valid @RequestBody MomentRequest request,
                                             HttpServletRequest httpRequest) {
@@ -59,7 +59,7 @@ public class MomentController {
     /**
      * 获取好友动态
      */
-    @ApiOperation("获取好友动态")
+    @Operation(summary = "获取好友动态")
     @GetMapping("/friends")
     public Result<Page<UserMoment>> getFriendsMoments(
             @RequestParam(defaultValue = "0") int page,
@@ -77,7 +77,7 @@ public class MomentController {
     /**
      * 获取公开动态
      */
-    @ApiOperation("获取公开动态")
+    @Operation(summary = "获取公开动态")
     @GetMapping("/public")
     public Result<Page<UserMoment>> getPublicMoments(
             @RequestParam(defaultValue = "0") int page,
@@ -93,7 +93,7 @@ public class MomentController {
     /**
      * 获取用户的动态
      */
-    @ApiOperation("获取用户的动态")
+    @Operation(summary = "获取用户的动态")
     @GetMapping("/user/{userId}")
     public Result<Page<UserMoment>> getUserMoments(
             @PathVariable Long userId,
@@ -112,7 +112,7 @@ public class MomentController {
     /**
      * 点赞/取消点赞动态
      */
-    @ApiOperation("点赞/取消点赞动态")
+    @Operation(summary = "点赞/取消点赞动态")
     @PostMapping("/{momentId}/like")
     public Result<Boolean> toggleLike(@PathVariable Long momentId,
                                       HttpServletRequest request) {
@@ -129,7 +129,7 @@ public class MomentController {
     /**
      * 评论动态
      */
-    @ApiOperation("评论动态")
+    @Operation(summary = "评论动态")
     @PostMapping("/comment")
     public Result<MomentComment> commentMoment(@Valid @RequestBody MomentCommentRequest request,
                                                HttpServletRequest httpRequest) {
@@ -152,7 +152,7 @@ public class MomentController {
     /**
      * 获取动态评论
      */
-    @ApiOperation("获取动态评论")
+    @Operation(summary = "获取动态评论")
     @GetMapping("/{momentId}/comments")
     public Result<Page<MomentComment>> getMomentComments(
             @PathVariable Long momentId,
@@ -169,7 +169,7 @@ public class MomentController {
     /**
      * 删除动态
      */
-    @ApiOperation("删除动态")
+    @Operation(summary = "删除动态")
     @DeleteMapping("/{momentId}")
     public Result<Void> deleteMoment(@PathVariable Long momentId,
                                      HttpServletRequest request) {
@@ -188,7 +188,7 @@ public class MomentController {
     /**
      * 检查是否点赞
      */
-    @ApiOperation("检查是否点赞")
+    @Operation(summary = "检查是否点赞")
     @GetMapping("/{momentId}/liked")
     public Result<Boolean> hasLiked(@PathVariable Long momentId,
                                     HttpServletRequest request) {
