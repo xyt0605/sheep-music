@@ -334,6 +334,19 @@
       </router-view>
     </main>
     
+    <!-- 小屋 DJ 悬浮入口 -->
+    <button
+      class="dj-fab"
+      title="小屋 DJ"
+      @click="djVisible = true"
+    >
+      <el-icon><MagicStick /></el-icon>
+    </button>
+    <DjDrawer
+      v-model="djVisible"
+      ref="djDrawerRef"
+    />
+
     <!-- 桌面歌词 -->
     <DesktopLyric ref="desktopLyricRef" />
   </div>
@@ -348,6 +361,8 @@ import { usePlayerStore } from '@/store/player'
 import { useSocialStore } from '@/store/social'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import DesktopLyric from '@/components/DesktopLyric.vue'
+import DjDrawer from '@/components/DjDrawer.vue'
+import { MagicStick } from '@element-plus/icons-vue'
 import wsClient from '@/ws/client'
 import { notifyInfo } from '@/utils/message'
 
@@ -357,7 +372,9 @@ export default {
   name: 'Layout',
   components: {
     ThemeToggle,
-    DesktopLyric
+    DesktopLyric,
+    DjDrawer,
+    MagicStick
   },
   setup() {
     const router = useRouter()
@@ -368,6 +385,8 @@ export default {
     const mobileMenuOpen = ref(false)
     const desktopLyricRef = ref(null)
     const desktopLyricVisible = computed(() => playerStore.showDesktopLyric)
+    const djVisible = ref(false)
+    const djDrawerRef = ref(null)
     
     // 移动端分组展开状态
     const expandedGroups = ref({})
@@ -693,6 +712,8 @@ export default {
       mobileMenuOpen,
       desktopLyricRef,
       desktopLyricVisible,
+      djVisible,
+      djDrawerRef,
       expandedGroups,
       toggleMobileMenu,
       toggleDesktopLyric,
@@ -1589,4 +1610,36 @@ export default {
 .menu-label {
   display: inline-block;
   line-height: 18px;
+}
+
+/* ========== 小屋 DJ 悬浮入口 ========== */
+.dj-fab {
+  position: fixed;
+  right: 24px;
+  bottom: calc(var(--player-height, 88px) + 20px);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color-light);
+  background: var(--gradient-primary);
+  color: #161812;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1500;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dj-fab:hover {
+  transform: translateY(-3px) rotate(-8deg);
+  box-shadow: var(--shadow-glow), var(--shadow-lg);
+}
+
+@media (max-width: 1180px) {
+  .dj-fab {
+    bottom: 84px;
+  }
 }

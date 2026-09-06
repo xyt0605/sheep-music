@@ -37,6 +37,8 @@ spring:
       api-key: ${AGENT_API_KEY:not-configured}
       base-url: ${AGENT_API_BASE_URL:https://open.bigmodel.cn/api/paas/v4}
       chat:
+        # Spring AI 默认拼 /v1/chat/completions，智谱是 /v4/chat/completions
+        completions-path: /chat/completions
         options:
           model: ${AGENT_MODEL:glm-4.5-flash}
           temperature: 0.7

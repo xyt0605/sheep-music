@@ -9,6 +9,7 @@
 | `api-test.mjs` | 全站 16 个模块 111 项断言：注册幂等/登录、歌曲浏览、收藏、播放历史、歌单（含隐私越权）、评论（原子计数+级联删除）、动态（可见性）、好友互接受、聊天（IDOR）、通知（IDOR）、分享（去重）、管理员、401 统一响应、推荐、用户资料、搜索历史 | 全部 PASS |
 | `rec-test.mjs` | 推荐系统 v2 规格验收 20 项（docs/specs/推荐系统v2/01-需求规格.md §6）：响应结构/理由、硬过滤、去重、冷启动、通道命中、缓存与换一批、similar-songs 兼容、性能冒烟 | 全部 PASS |
 | `ws-test.mjs` | WebSocket(STOMP) 鉴权 7 项：匿名拒连、合法连接、订阅自己频道收推送、订阅他人频道被拒、好友实时收发 | 全部 PASS |
+| `agent-test.mjs` | 小屋 DJ（docs/specs/agent-v1/）：鉴权；无密钥降级（error 事件含配置指引）；配置 `AGENT_API_KEY` 时真实 LLM 全流程（stage/ReAct 过程/text_delta/song_card 防幻觉字段/done + 外源卡片可播抽查，前 3 张外源卡至少一张可播） | 全部 PASS |
 | `external-test.mjs` | 曲库供应链（docs/specs/曲库供应链v1/）：外源搜索鉴权/参数校验、流代理 permitAll 与非法 trackId/fileId 拦截、音源列表（v1.3 起仅歌曲海聚合源）、歌曲海真实上游联测（搜索→歌词 LRC→stream 206/Range，网络可达时） | 全部 PASS |
 
 ## 运行前提
@@ -46,6 +47,7 @@ E2E_BASE=http://localhost:19000 node tests/e2e/api-test.mjs   # 111 项
 E2E_BASE=http://localhost:19000 node tests/e2e/rec-test.mjs   # 20 项
 E2E_BASE=http://localhost:19000 node tests/e2e/external-test.mjs # 曲库供应链（无密钥环境不访问外网）
 node tests/e2e/ws-test.mjs                                     # 内部默认 19000，7 项
+AGENT_API_KEY=... node tests/e2e/agent-test.mjs                # 小屋 DJ（无密钥时验证降级路径）
 ```
 
 脚本可重复执行（用户名带时间戳、结束自动清理资源）。退出码非 0 即存在失败项。
