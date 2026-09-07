@@ -62,8 +62,45 @@
             v-else
             class="dj-msg dj-msg-dj"
           >
+            <!-- 过程时间线（可视化小羊驼的工作步骤） -->
             <div
-              v-if="msg.statusText"
+              v-if="msg.steps && msg.steps.length && !msg.done && !msg.error"
+              class="dj-timeline"
+            >
+              <div
+                v-for="(st, i) in msg.steps"
+                :key="st.key"
+                class="dj-step"
+                :class="{ active: i === msg.activeStep, done: st.done }"
+              >
+                <span class="dj-step-dot">
+                  <el-icon
+                    v-if="i === msg.activeStep"
+                    class="is-loading"
+                  ><Loading /></el-icon>
+                  <el-icon
+                    v-else-if="st.done"
+                  ><Check />
+                  </el-icon>
+                  <span
+                    v-else
+                    class="dj-step-num"
+                  >{{ i + 1 }}</span>
+                </span>
+                <span class="dj-step-label">{{ st.label }}</span>
+                <span
+                  v-if="st.ms"
+                  class="dj-step-ms"
+                >{{ st.ms >= 1000 ? (st.ms / 1000).toFixed(1) + 's' : st.ms + 'ms' }}</span>
+              </div>
+              <div
+                v-if="msg.thought"
+                class="dj-thought"
+              >💭 {{ msg.thought }}</div>
+            </div>
+            <!-- 兜底：无步骤数据时保留单行状态 -->
+            <div
+              v-else-if="msg.statusText"
               class="dj-stage"
             >
               <el-icon
@@ -154,7 +191,15 @@
             <div
               v-if="msg.error"
               class="dj-error"
-            >{{ msg.error }}</div>
+            >
+              <span>{{ msg.error }}</span>
+              <el-button
+                size="small"
+                text
+                type="primary"
+                @click="retry(msg)"
+              >重试</el-button>
+            </div>
           </div>
         </template>
       </div>
@@ -286,7 +331,7 @@
 <script setup>
 import { ref, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Loading, Setting } from '@element-plus/icons-vue'
+import { Loading, Setting, Check } from '@element-plus/icons-vue'
 import { streamDj, getAiConfig, saveAiConfig, clearAiConfig, testAiConfig, getModelList } from '@/api/agent'
 import { getExternalCover } from '@/api/externalMusic'
 import { usePlayerStore } from '@/store/player'
@@ -372,6 +417,37 @@ import { computed, watch } from 'vue'
 watch(visible, v => { if (v) loadConfig() })
 const playerStore = usePlayerStore()
 
+// 过程时间线的步骤定义：key 唯一，label 展示
+const STEP_DEFS = [
+  { key: 'dispatcher', label: '理解需求' },
+  { key: 'search_local', label: '翻本地曲库' },
+  { key: 'search_web', label: '逛歌曲海' },
+  { key: 'recommend', label: '翻你的口味' },
+  { key: 'critic', label: '自我质检' },
+  { key: 'dj', label: '组织推荐语' }
+]
+
+const ensureStep = (msg, key) => {
+  const def = STEP_DEFS.find(d => d.key === key)
+  if (!def) return null
+  let st = msg.steps.find(x => x.key === key)
+  if (!st) {
+    st = { key, label: def.label, done: false, ms: 0 }
+    msg.steps.push(st)
+  }
+  return st
+}
+
+const markPrevDone = (msg, elapsedMs) => {
+  // 新步骤开始时：把上一个未完成步骤标记完成并记录耗时
+  msg.steps.forEach((st, i) => {
+    if (i === msg.activeStep && !st.done) {
+      st.done = true
+      st.ms = Math.max(0, (elapsedMs || 0) - (st.startMs || 0))
+    }
+  })
+}
+
 const STAGE_TEXT = {
   dispatcher: '正在理解你的需求…',
   librarian: '正在翻找曲库和歌曲海…',
@@ -406,6 +482,18 @@ const fillCardCover = (card) => {
   }
 }
 
+// 重试：找到该 DJ 消息对应的用户请求重发
+const retry = (djMsg) => {
+  const idx = messages.value.indexOf(djMsg)
+  for (let i = idx - 1; i >= 0; i--) {
+    if (messages.value[i].role === 'user') {
+      draft.value = messages.value[i].text
+      ask()
+      return
+    }
+  }
+}
+
 const ask = async () => {
   const query = draft.value.trim()
   if (!query || loading.value) return
@@ -413,7 +501,10 @@ const ask = async () => {
   loading.value = true
   messages.value.push({ role: 'user', text: query })
 
-  const dj = { role: 'dj', text: '', statusText: STAGE_TEXT.dispatcher, cards: [], done: false, error: '' }
+  const dj = { role: 'dj', text: '', statusText: STAGE_TEXT.dispatcher, cards: [], done: false, error: '', steps: [], activeStep: -1, thought: '' }
+  // 请求一发出就显示第一步（不等后端事件——LLM 排队也能看到时间线）
+  ensureStep(dj, 'dispatcher')
+  dj.activeStep = 0
   messages.value.push(dj)
   scrollBottom()
 
@@ -426,14 +517,43 @@ const ask = async () => {
         if (event === 'stage') {
           dj.statusText = STAGE_TEXT[data.stage] || dj.statusText
           if (data.stage === 'librarian' && data.round > 1) {
-            dj.statusText = `DJ 在自我改进（第 ${data.round} 轮检索）…`
+            dj.statusText = `小羊驼在自我改进（第 ${data.round} 轮检索）…`
           }
+          // 时间线：新阶段开始 → 结算上一步、点亮当前步
+          if (data.status === 'start') {
+            markPrevDone(dj, data.elapsedMs)
+            const st = ensureStep(dj, data.stage === 'librarian' ? 'search_local' : data.stage)
+            if (st) {
+              st.startMs = data.elapsedMs || 0
+              dj.activeStep = dj.steps.indexOf(st)
+            }
+          } else if (data.status === 'done') {
+            dj.steps.forEach(st => {
+              if (dj.steps.indexOf(st) <= dj.activeStep && !st.done) {
+                st.done = true
+                st.ms = Math.max(0, (data.elapsedMs || 0) - (st.startMs || 0))
+              }
+            })
+          }
+        } else if (event === 'thought') {
+          dj.thought = data.text || ''
         } else if (event === 'action') {
           const argText = data.args?.keyword ? `“${data.args.keyword}”` : ''
-          const actionText = { search_local: '本地曲库', search_web: '歌曲海', recommend: '你的听歌偏好', finish: '整理候选' }[data.action] || data.action
+          const st = ensureStep(dj, data.action === 'finish' ? 'critic' : data.action)
+          if (st) {
+            // 先结算之前的步骤（elapsed 用 stage 事件锚点，这里没有就跳过）
+            dj.steps.forEach(x => {
+              if (dj.steps.indexOf(x) < dj.steps.indexOf(st) && !x.done) x.done = true
+            })
+            if (!st.startMs) st.startMs = dj.steps.filter(x => x.done).reduce((a, b) => a + (b.ms || 0), 0)
+            dj.activeStep = dj.steps.indexOf(st)
+          }
+          const actionText = { search_local: '翻本地曲库', search_web: '逛歌曲海', recommend: '翻你的口味', finish: '整理候选' }[data.action] || data.action
           dj.statusText = `${actionText}${argText}…`
         } else if (event === 'text_delta') {
           dj.statusText = ''
+          dj.steps.forEach(st => { st.done = true })
+          dj.activeStep = -1
           dj.text += data.delta || ''
         } else if (event === 'song_card') {
           const card = {
@@ -456,6 +576,11 @@ const ask = async () => {
         } else if (event === 'done') {
           dj.done = true
           dj.statusText = ''
+          dj.steps.forEach(st => { st.done = true })
+          dj.activeStep = -1
+          if (data.elapsedMs) {
+            dj.textDoneMs = data.elapsedMs
+          }
         }
         scrollBottom()
       }
@@ -816,4 +941,81 @@ defineExpose({ open: () => { visible.value = true } })
   color: var(--text-tertiary);
   margin-top: 4px;
   line-height: 1.4;
+}
+
+/* ========== 过程时间线 ========== */
+.dj-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.dj-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  padding: 1px 0;
+  transition: color 0.2s;
+}
+
+.dj-step.active {
+  color: var(--color-primary-light);
+}
+
+.dj-step.done {
+  color: var(--text-tertiary);
+}
+
+.dj-step-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.dj-step.active .dj-step-dot {
+  border-color: var(--color-primary);
+}
+
+.dj-step.done .dj-step-dot {
+  border-color: var(--border-color-light);
+  color: var(--color-primary-light);
+}
+
+.dj-step-num {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.dj-step-label {
+  flex: 1;
+}
+
+.dj-step-ms {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.dj-thought {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 4px 8px;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }

@@ -72,6 +72,7 @@ public class AgentOrchestrator {
     }
 
     private void doRun(Long userId, String sessionId, String query, SseEmitter emitter) throws Exception {
+        long turnStart = System.currentTimeMillis();
         // ---------- BYOK：解析用户自己的 AI 配置（无配置 → 明确提示） ----------
         UserAiConfigService.AiConfig cfg = configService.resolve(userId);
         if (cfg == null) {
@@ -99,11 +100,11 @@ public class AgentOrchestrator {
         }
 
         // ---------- ① Dispatcher：意图拆解 ----------
-        send(emitter, "stage", Map.of("stage", "dispatcher", "status", "start"));
+        send(emitter, "stage", Map.of("stage", "dispatcher", "status", "start", "elapsedMs", System.currentTimeMillis() - turnStart));
         String intentJson = callLlm(chatClient, AgentPrompts.DISPATCHER, historyText + "用户需求：" + query, 1024, 0.3);
         Map<String, Object> intent = parseJson(intentJson);
         int wantCount = intVal(intent, "count", 8);
-        send(emitter, "stage", Map.of("stage", "dispatcher", "status", "done", "intent", intent));
+        send(emitter, "stage", Map.of("stage", "dispatcher", "status", "done", "intent", intent, "elapsedMs", System.currentTimeMillis() - turnStart));
 
         // ---------- ② Librarian ReAct（Critic 不过时回炉，最多 2 轮） ----------
         List<Map<String, Object>> index = new ArrayList<>();   // ref → 条目
@@ -112,7 +113,7 @@ public class AgentOrchestrator {
         String criticFeedback = null;
 
         for (int round = 1; round <= MAX_ROUNDS && picked == null; round++) {
-            send(emitter, "stage", Map.of("stage", "librarian", "status", "start", "round", round));
+            send(emitter, "stage", Map.of("stage", "librarian", "status", "start", "round", round, "elapsedMs", System.currentTimeMillis() - turnStart));
             String history = round > 1
                     ? "上一轮质检未通过，改进意见：" + criticFeedback + "\n"
                     : "";
@@ -176,7 +177,7 @@ public class AgentOrchestrator {
             }
 
             // ---------- ④ Critic：Reflection ----------
-            send(emitter, "stage", Map.of("stage", "critic", "status", "start", "round", round));
+            send(emitter, "stage", Map.of("stage", "critic", "status", "start", "round", round, "elapsedMs", System.currentTimeMillis() - turnStart));
             Map<String, Object> verdict = null;
             try {
                 verdict = parseJson(callLlm(chatClient, AgentPrompts.CRITIC,
@@ -187,7 +188,7 @@ public class AgentOrchestrator {
             int score = verdict == null ? 80 : intVal(verdict, "score", 80);
             boolean pass = verdict != null && Boolean.TRUE.equals(verdict.get("pass")) || score >= 70;
             String feedback = verdict == null ? "" : str(verdict, "feedback", "");
-            send(emitter, "stage", Map.of("stage", "critic", "status", "done", "round", round,
+            send(emitter, "stage", Map.of("stage", "critic", "status", "done", "round", round, "elapsedMs", System.currentTimeMillis() - turnStart,
                     "score", score, "pass", pass, "feedback", feedback));
             if (pass) {
                 break;
@@ -205,7 +206,7 @@ public class AgentOrchestrator {
         }
 
         // ---------- ③ DJ：串场词 + 逐首理由（P2：单次 JSON 调用，intro 切片伪流式） ----------
-        send(emitter, "stage", Map.of("stage", "dj", "status", "start"));
+        send(emitter, "stage", Map.of("stage", "dj", "status", "start", "elapsedMs", System.currentTimeMillis() - turnStart));
         String djRaw = callLlm(chatClient, AgentPrompts.DJ,
                 historyText + "用户需求：" + query + "\n候选歌曲（按推荐顺序）：\n" + describe(picked),
                 1800, 0.85);
@@ -227,7 +228,7 @@ public class AgentOrchestrator {
         for (int i = 0; i < intro.length(); i += 12) {
             send(emitter, "text_delta", Map.of("delta", intro.substring(i, Math.min(i + 12, intro.length()))));
         }
-        send(emitter, "stage", Map.of("stage", "dj", "status", "done"));
+        send(emitter, "stage", Map.of("stage", "dj", "status", "done", "elapsedMs", System.currentTimeMillis() - turnStart));
 
         // ---------- 末端：song_card（字段全部来自工具数据，reason 来自 DJ） ----------
         List<Map<String, Object>> cards = new ArrayList<>();
@@ -256,7 +257,7 @@ public class AgentOrchestrator {
         sessionStore.appendTurn(userId, sessionId, "user", query, null);
         sessionStore.appendTurn(userId, sessionId, "dj", intro,
                 picked.stream().map(i2 -> String.valueOf(i2.get("title"))).toList());
-        send(emitter, "done", Map.of("count", cards.size(), "intro", intro));
+        send(emitter, "done", Map.of("count", cards.size(), "intro", intro, "elapsedMs", System.currentTimeMillis() - turnStart));
     }
 
     // ========== 工具结果收集与提名 ==========
