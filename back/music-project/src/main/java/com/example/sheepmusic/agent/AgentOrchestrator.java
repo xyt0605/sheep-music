@@ -354,6 +354,7 @@ public class AgentOrchestrator {
             } else {
                 card.put("source", "local");
                 card.put("songId", song.get("songId"));
+                card.put("url", song.get("url"));
             }
             card.put("title", song.get("title"));
             card.put("artist", song.get("artist"));

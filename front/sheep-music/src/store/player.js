@@ -134,9 +134,13 @@ export const usePlayerStore = defineStore('player', () => {
           await audio.value.play()
           isPlaying.value = true
         } catch (e) {
-          // 某些浏览器需要用户交互后才能自动播放
+          // 某些浏览器需要用户交互后才能自动播放（如 agent 点歌、队列自动切歌）
           console.warn('音频播放受限或中断，将在用户交互后恢复：', e?.message || e)
           isPlaying.value = false
+          try {
+            const { ElMessage } = await import('element-plus')
+            ElMessage.info(`浏览器拦住了自动播放，点一下播放键就能听《${song.title}》啦`)
+          } catch (_) {}
           return
         }
         

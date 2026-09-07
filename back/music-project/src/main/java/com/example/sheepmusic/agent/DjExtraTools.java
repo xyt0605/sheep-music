@@ -45,6 +45,28 @@ public class DjExtraTools {
     @Autowired
     private GequhaiProvider gequhaiProvider;
 
+    /** 本地歌可播性预检（OSS 死链是历史遗留，交接文档 §7.4）：HEAD 5s 超时 */
+    private final java.net.http.HttpClient headClient = java.net.http.HttpClient.newBuilder()
+            .connectTimeout(java.time.Duration.ofSeconds(3))
+            .followRedirects(java.net.http.HttpClient.Redirect.ALWAYS)
+            .build();
+
+    private boolean isPlayableUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return false;
+        }
+        try {
+            java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder(java.net.URI.create(url))
+                    .method("HEAD", java.net.http.HttpRequest.BodyPublishers.noBody())
+                    .timeout(java.time.Duration.ofSeconds(5))
+                    .build();
+            java.net.http.HttpResponse<Void> resp = headClient.send(req, java.net.http.HttpResponse.BodyHandlers.discarding());
+            return resp.statusCode() == 200;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     /** 校验播放命令是否合法 */
     public boolean isValidPlayerCommand(String command) {
         return command != null && PLAYER_COMMANDS.contains(command);
@@ -55,10 +77,13 @@ public class DjExtraTools {
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> candidates = new ArrayList<>();
 
-        // 本地曲库优先
-        Pageable pageable = PageRequest.of(0, 3);
+        // 本地曲库优先（OSS 死链预检：失效的本地歌直接跳过，避免"切歌成功但放不出"）
+        Pageable pageable = PageRequest.of(0, 5);
         for (Song s : songService.searchSongs(keyword, pageable).getContent()) {
-            if (s.getStatus() == null || s.getStatus() != 1) {
+            if (s.getStatus() == null || s.getStatus() != 1 || candidates.size() >= 2) {
+                continue;
+            }
+            if (!isPlayableUrl(s.getUrl())) {
                 continue;
             }
             Map<String, Object> item = new LinkedHashMap<>();

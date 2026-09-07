@@ -25,6 +25,32 @@
         ref="listRef"
         class="dj-messages"
       >
+        <!-- 待播卡片：DJ 已找到歌，点击开始播放（浏览器需要用户手势） -->
+        <div
+          v-if="djPending"
+          class="dj-pending-card"
+        >
+          <img
+            :src="djPending.cover || defaultCover"
+            class="dj-pending-cover"
+          >
+          <div class="dj-pending-info">
+            <div class="dj-pending-title">{{ djPending.title }}</div>
+            <div class="dj-pending-artist">{{ djPending.artist }}</div>
+          </div>
+          <el-button
+            type="primary"
+            round
+            @click="playPending"
+          >▶ 播放</el-button>
+          <el-button
+            text
+            circle
+            @click="djPending = null"
+          >
+            <el-icon><Close /></el-icon>
+          </el-button>
+        </div>
         <div
           v-if="messages.length === 0"
           class="dj-empty"
@@ -344,7 +370,7 @@
 <script setup>
 import { ref, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Loading, Setting, Check, FolderAdd } from '@element-plus/icons-vue'
+import { Loading, Setting, Check, FolderAdd, Close } from '@element-plus/icons-vue'
 import { streamDj, getAiConfig, saveAiConfig, clearAiConfig, testAiConfig, getModelList } from '@/api/agent'
 import { getExternalCover } from '@/api/externalMusic'
 import { usePlayerStore } from '@/store/player'
@@ -362,6 +388,8 @@ const testResult = ref('')
 const cfg = ref({ configured: false, defaultBaseUrl: '', defaultModel: '' })
 const cfgForm = ref({ apiKey: '', baseUrl: '', model: '' })
 const fetchedModels = ref([])
+// 待播卡片（play_ref 命令的歌，等用户点击播放——绕开 autoplay 拦截）
+const djPending = ref(null)
 const fetchingModels = ref(false)
 
 // 模型下拉选项 = 厂商预设 + 实时拉取（去重）
@@ -488,6 +516,25 @@ const scrollBottom = () => nextTick(() => {
   if (el) el.scrollTop = el.scrollHeight
 })
 
+// 点击待播卡片（用户手势 → 不会被 autoplay 拦截）
+const playPending = () => {
+  const card = djPending.value
+  if (!card) return
+  const song = {
+    id: card.source === 'local' ? card.songId : `ext:gequhai:${card.sourceTrackId}`,
+    title: card.title,
+    artists: [{ name: card.artist }],
+    cover: card.cover,
+    url: card.source === 'local' ? (card.url || '') : (card.streamUrl || ''),
+    lyric: '',
+    isExternal: !!card.isExternal,
+    source: card.source,
+    sourceTrackId: card.sourceTrackId
+  }
+  djPending.value = null
+  playerStore.play(song, [song])
+}
+
 // ===== 播放控制（能力扩展第一批） =====
 const execPlayerCommand = (data) => {
   const cmd = data.command
@@ -504,20 +551,11 @@ const execPlayerCommand = (data) => {
       case 'mode_single': playerStore.setPlayMode('single'); break
       case 'queue_clear': playerStore.playlist.splice(0, playerStore.playlist.length); playerStore.pause(); break
       case 'play_ref': {
+        // 不直接播放：SSE 事件无用户手势，audio.play() 会被浏览器 autoplay 策略拒绝
+        // （表现为切歌成功但停在 00:00）。改为把歌挂到当前消息的“待播卡片”，用户点击即播。
         const card = data.song
         if (card) {
-          const song = {
-            id: card.source === 'local' ? card.songId : `ext:gequhai:${card.sourceTrackId}`,
-            title: card.title,
-            artists: [{ name: card.artist }],
-            cover: card.cover,
-            url: card.streamUrl || '',
-            lyric: '',
-            isExternal: !!card.isExternal,
-            source: card.source,
-            sourceTrackId: card.sourceTrackId
-          }
-          playerStore.play(song, [song])
+          djPending.value = card
         }
         break
       }
@@ -1097,4 +1135,40 @@ defineExpose({ open: () => { visible.value = true } })
   border-radius: var(--radius-md);
   padding: 6px 10px;
   margin-top: 10px;
+}
+
+.dj-pending-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-glow);
+}
+
+.dj-pending-cover {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.dj-pending-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dj-pending-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dj-pending-artist {
+  font-size: 12px;
+  color: var(--text-tertiary);
 }
