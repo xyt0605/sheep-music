@@ -34,6 +34,7 @@ public class AgentOrchestrator {
     private static final int MAX_CANDIDATES = 10;
 
     private final DjTools tools;
+    private final DjExtraTools extraTools;
     private final DjSessionStore sessionStore;
     private final UserAiConfigService configService;
     private final ChatClientFactory clientFactory;
@@ -43,11 +44,13 @@ public class AgentOrchestrator {
     public AgentOrchestrator(@Autowired DjTools tools,
                              @Autowired DjSessionStore sessionStore,
                              @Autowired UserAiConfigService configService,
-                             @Autowired ChatClientFactory clientFactory) {
+                             @Autowired ChatClientFactory clientFactory,
+                             @Autowired DjExtraTools extraTools) {
         this.tools = tools;
         this.sessionStore = sessionStore;
         this.configService = configService;
         this.clientFactory = clientFactory;
+        this.extraTools = extraTools;
     }
 
     /** 在工作线程中执行整轮编排（由 Controller 提交到线程池） */
@@ -99,12 +102,30 @@ public class AgentOrchestrator {
             historyText.append("听众口味画像：").append(toJson(taste)).append('\n');
         }
 
-        // ---------- ① Dispatcher：意图拆解 ----------
+        // ---------- ① Dispatcher：意图拆解（含 capability 能力路由） ----------
         send(emitter, "stage", Map.of("stage", "dispatcher", "status", "start", "elapsedMs", System.currentTimeMillis() - turnStart));
         String intentJson = callLlm(chatClient, AgentPrompts.DISPATCHER, historyText + "用户需求：" + query, 1024, 0.3);
         Map<String, Object> intent = parseJson(intentJson);
         int wantCount = intVal(intent, "count", 8);
         send(emitter, "stage", Map.of("stage", "dispatcher", "status", "done", "intent", intent, "elapsedMs", System.currentTimeMillis() - turnStart));
+
+        // ---------- 能力路由（第一批扩展）：player / info / playlist 走轻量分支 ----------
+        String capability = str(intent, "capability", "recommend");
+        switch (capability) {
+            case "player" -> {
+                runPlayer(userId, query, intent, historyText, chatClient, sessionId, emitter);
+                return;
+            }
+            case "info" -> {
+                runInfo(userId, query, intent, historyText, chatClient, sessionId, emitter);
+                return;
+            }
+            case "playlist" -> {
+                runPlaylistCreate(userId, sessionId, query, historyText, chatClient, emitter);
+                return;
+            }
+            default -> { /* recommend：走下方主链路 */ }
+        }
 
         // ---------- ② Librarian ReAct（Critic 不过时回炉，最多 2 轮） ----------
         List<Map<String, Object>> index = new ArrayList<>();   // ref → 条目
@@ -281,6 +302,199 @@ public class AgentOrchestrator {
                     .append("（来源: ").append(item.get("type")).append("）\n");
         }
         return sb.isEmpty() ? "没有新结果（均为重复条目）" : sb.toString();
+    }
+
+    // ========== 能力分支（第一批扩展） ==========
+
+    /** 播放控制：1 次 LLM 调用出命令 → player_command 事件由前端执行；点歌时带卡片数据 */
+    private void runPlayer(Long userId, String query, Map<String, Object> intent, StringBuilder historyText,
+                           ChatClient chatClient, String sessionId, SseEmitter emitter) throws Exception {
+        send(emitter, "stage", Map.of("stage", "player", "status", "start", "elapsedMs", 0));
+        Map<String, Object> cmd = null;
+        for (int attempt = 0; attempt < 2 && cmd == null; attempt++) {
+            try {
+                cmd = parseJson(callLlm(chatClient, AgentPrompts.PLAYER,
+                        historyText.toString() + "用户需求：" + query, 700, 0.2));
+            } catch (Exception e) {
+                log.debug("PLAYER 输出解析失败: {}", e.getMessage());
+            }
+        }
+        if (cmd == null) {
+            send(emitter, "error", Map.of("message", "没听清要做什么操作，再说一次试试？"));
+            return;
+        }
+        String command = str(cmd, "command", "");
+        if (!extraTools.isValidPlayerCommand(command)) {
+            send(emitter, "error", Map.of("message", "这个播放操作小羊驼还不会，试试：播放/暂停/下一首/上一首/声音大小/播放模式"));
+            return;
+        }
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("command", command);
+        // 点歌播放：本地/歌曲海找歌，附带卡片数据（前端直接播）
+        if ("play_ref".equals(command)) {
+            String keyword = str(cmd, "keyword", str(intent, "keyword", ""));
+            if (keyword.isBlank()) {
+                send(emitter, "error", Map.of("message", "想听哪首？告诉小羊驼歌名～"));
+                return;
+            }
+            Map<String, Object> found = extraTools.findSongForPlay(keyword);
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> candidates = (List<Map<String, Object>>) found.get("candidates");
+            if (candidates == null || candidates.isEmpty()) {
+                send(emitter, "error", Map.of("message", "没找到「" + keyword + "」，换个说法或先搜一下？"));
+                return;
+            }
+            Map<String, Object> song = candidates.get(0);
+            Map<String, Object> card = new LinkedHashMap<>();
+            if (Boolean.TRUE.equals(song.get("isExternal"))) {
+                card.put("source", "gequhai");
+                card.put("sourceTrackId", song.get("sourceTrackId"));
+                card.put("streamUrl", song.get("streamUrl"));
+                card.put("isExternal", true);
+            } else {
+                card.put("source", "local");
+                card.put("songId", song.get("songId"));
+            }
+            card.put("title", song.get("title"));
+            card.put("artist", song.get("artist"));
+            card.put("cover", song.get("cover"));
+            payload.put("song", card);
+        }
+        send(emitter, "player_command", payload);
+        String reply = str(cmd, "reply", "好嘞～");
+        for (int i = 0; i < reply.length(); i += 12) {
+            send(emitter, "text_delta", Map.of("delta", reply.substring(i, Math.min(i + 12, reply.length()))));
+        }
+        send(emitter, "stage", Map.of("stage", "player", "status", "done"));
+        sessionStore.appendTurn(userId, sessionId, "user", query, null);
+        sessionStore.appendTurn(userId, sessionId, "dj", reply, null);
+        send(emitter, "done", Map.of("capability", "player"));
+    }
+
+    /** 知识问答：歌词/详情工具取数 → INFO 提示词基于事实回答（禁编造） */
+    private void runInfo(Long userId, String query, Map<String, Object> intent, StringBuilder historyText,
+                         ChatClient chatClient, String sessionId, SseEmitter emitter) throws Exception {
+        send(emitter, "stage", Map.of("stage", "info", "status", "start", "elapsedMs", 0));
+        String keyword = str(intent, "keyword", "");
+        StringBuilder dataText = new StringBuilder();
+
+        if (keyword.isBlank()) {
+            keyword = query;
+        }
+        // 取数策略：歌名优先（keyword/intentSummary 中的《》或引号内文本、歌手名），
+        // 歌词片段兜底——用多个候选词搜歌曲海，选与歌名匹配度最高的一条
+        List<Map<String, Object>> found = extraTools.lyricSearch(keyword);
+        String summary = str(intent, "intentSummary", "");
+        if (found.isEmpty() && !summary.isBlank()) {
+            found = extraTools.lyricSearch(summary);
+        }
+        // 双候选词都有结果时：若用户点名了歌（intentSummary 提到歌名），优先标题含歌名的结果
+        if (!found.isEmpty() && !summary.isBlank()) {
+            final String kw = keyword;
+            List<Map<String, Object>> alt = extraTools.lyricSearch(summary);
+            if (!alt.isEmpty()) {
+                java.util.function.Predicate<Map<String, Object>> titleHit = m ->
+                        summary.contains(String.valueOf(m.get("title"))) || String.valueOf(m.get("title")).contains(kw);
+                java.util.Optional<Map<String, Object>> better = alt.stream().filter(titleHit).findFirst();
+                if (better.isPresent() && !titleHit.test(found.get(0))) {
+                    found = alt;
+                }
+            }
+        }
+        if (!found.isEmpty()) {
+            Map<String, Object> first = found.get(0);
+            Map<String, Object> info = extraTools.songInfo("gequhai",
+                    String.valueOf(first.get("sourceTrackId")), String.valueOf(first.get("title")));
+            dataText.append("搜到的歌曲：").append(first.get("title")).append(" - ").append(first.get("artist")).append('\n');
+            if (Boolean.TRUE.equals(info.get("supported"))) {
+                if (info.get("metaTitle") != null) {
+                    dataText.append("标题: ").append(info.get("metaTitle")).append('\n');
+                }
+                if (info.get("metaArtist") != null) {
+                    dataText.append("歌手: ").append(info.get("metaArtist")).append('\n');
+                }
+                if (info.get("metaAlbum") != null) {
+                    dataText.append("专辑: ").append(info.get("metaAlbum")).append('\n');
+                }
+                String lyric = String.valueOf(info.get("lyric"));
+                if (lyric.length() > 2500) {
+                    lyric = lyric.substring(0, 2500);
+                }
+                dataText.append("歌词（LRC，含时间戳）：\n").append(lyric).append('\n');
+            } else {
+                dataText.append("详情不可用：").append(info.get("note")).append('\n');
+            }
+            // 附带候选卡片（用户可以直接播放）
+            Map<String, Object> card = new LinkedHashMap<>();
+            card.put("source", "gequhai");
+            card.put("sourceTrackId", first.get("sourceTrackId"));
+            card.put("streamUrl", first.get("streamUrl"));
+            card.put("isExternal", true);
+            card.put("title", first.get("title"));
+            card.put("artist", first.get("artist"));
+            card.put("cover", first.get("cover"));
+            send(emitter, "song_card", card);
+        } else {
+            dataText.append("（搜索没有找到相关歌曲数据）\n");
+        }
+
+        String answer = callLlm(chatClient, AgentPrompts.INFO,
+                historyText.toString() + "用户问题：" + query + "\n\n工具数据：\n" + dataText.toString(), 1200, 0.5);
+        if (answer == null || answer.isBlank()) {
+            answer = "这个我还不确定，数据里没有足够的线索～";
+        }
+        for (int i = 0; i < answer.length(); i += 12) {
+            send(emitter, "text_delta", Map.of("delta", answer.substring(i, Math.min(i + 12, answer.length()))));
+        }
+        send(emitter, "stage", Map.of("stage", "info", "status", "done"));
+        sessionStore.appendTurn(userId, sessionId, "user", query, null);
+        send(emitter, "done", Map.of("capability", "info"));
+    }
+
+    /** 歌单生成：把会话里最近一轮候选存为用户歌单（仅本地 songId 入库） */
+    private void runPlaylistCreate(Long userId, String sessionId, String query, StringBuilder historyText,
+                                   ChatClient chatClient, SseEmitter emitter) throws Exception {
+        send(emitter, "stage", Map.of("stage", "playlist", "status", "start", "elapsedMs", 0));
+        // 取本会话最近一轮的候选（titlesJson 派生不了 songId，这里重新按标题检索本地库）
+        DjSessionStore.Context ctx = sessionStore.load(userId, sessionId);
+        List<String> lastTitles = ctx.lastTitles();
+        if (lastTitles.isEmpty()) {
+            send(emitter, "error", Map.of("message", "这轮对话还没有推荐过歌曲，先让小羊驼荐一组再存歌单吧"));
+            return;
+        }
+        List<Map<String, Object>> picked = new ArrayList<>();
+        for (String title : lastTitles) {
+            try {
+                List<Map<String, Object>> hits = tools.searchLocal(title, 1);
+                if (!hits.isEmpty()) {
+                    picked.add(hits.get(0));
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        String playlistName = str(null, "name", "小羊驼精选");
+        Map<String, Object> result = extraTools.createPlaylist(userId, playlistName, picked);
+        String reply;
+        if (Boolean.TRUE.equals(result.get("ok"))) {
+            send(emitter, "playlist_created", Map.of(
+                    "playlistId", result.get("playlistId"),
+                    "name", result.get("name"),
+                    "count", result.get("count"),
+                    "skipped", result.getOrDefault("skipped", 0)));
+            reply = callLlm(chatClient, AgentPrompts.PLAYLIST,
+                    "创建结果：歌单「" + result.get("name") + "」收录 " + result.get("count")
+                            + " 首，" + result.getOrDefault("skipped", 0) + " 首试听源未入库", 400, 0.7);
+        } else {
+            reply = String.valueOf(result.get("message"));
+        }
+        if (reply == null || reply.isBlank()) {
+            reply = "歌单建好啦～";
+        }
+        for (int i = 0; i < reply.length(); i += 12) {
+            send(emitter, "text_delta", Map.of("delta", reply.substring(i, Math.min(i + 12, reply.length()))));
+        }
+        send(emitter, "stage", Map.of("stage", "playlist", "status", "done"));
+        send(emitter, "done", Map.of("capability", "playlist"));
     }
 
     private List<Map<String, Object>> pickByRefs(List<Number> refs, List<Map<String, Object>> index) {

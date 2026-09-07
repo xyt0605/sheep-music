@@ -154,6 +154,19 @@
               </div>
             </div>
             <div
+              v-if="msg.playlistInfo"
+              class="dj-playlist-tip"
+            >
+              <el-icon><FolderAdd /></el-icon>
+              歌单「{{ msg.playlistInfo.name }}」已创建（{{ msg.playlistInfo.count }} 首）
+              <el-button
+                size="small"
+                text
+                type="primary"
+                @click="goPlaylist(msg.playlistInfo.playlistId)"
+              >查看</el-button>
+            </div>
+            <div
               v-if="msg.cards.length && msg.done"
               class="dj-msg-actions"
             >
@@ -331,10 +344,11 @@
 <script setup>
 import { ref, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Loading, Setting, Check } from '@element-plus/icons-vue'
+import { Loading, Setting, Check, FolderAdd } from '@element-plus/icons-vue'
 import { streamDj, getAiConfig, saveAiConfig, clearAiConfig, testAiConfig, getModelList } from '@/api/agent'
 import { getExternalCover } from '@/api/externalMusic'
 import { usePlayerStore } from '@/store/player'
+import { useRouter } from 'vue-router'
 
 const visible = ref(false)
 const draft = ref('')
@@ -415,6 +429,7 @@ const defaultCover = '/default-cover.svg'
 
 import { computed, watch } from 'vue'
 watch(visible, v => { if (v) loadConfig() })
+const router = useRouter()
 const playerStore = usePlayerStore()
 
 // 过程时间线的步骤定义：key 唯一，label 展示
@@ -473,6 +488,46 @@ const scrollBottom = () => nextTick(() => {
   if (el) el.scrollTop = el.scrollHeight
 })
 
+// ===== 播放控制（能力扩展第一批） =====
+const execPlayerCommand = (data) => {
+  const cmd = data.command
+  try {
+    switch (cmd) {
+      case 'play': playerStore.resume(); break
+      case 'pause': playerStore.pause(); break
+      case 'next': playerStore.next(); break
+      case 'prev': playerStore.prev(); break
+      case 'volume_up': playerStore.setVolume(Math.min(1, playerStore.volume + 0.15)); break
+      case 'volume_down': playerStore.setVolume(Math.max(0, playerStore.volume - 0.15)); break
+      case 'mode_list': playerStore.setPlayMode('list'); break
+      case 'mode_random': playerStore.setPlayMode('random'); break
+      case 'mode_single': playerStore.setPlayMode('single'); break
+      case 'queue_clear': playerStore.playlist.splice(0, playerStore.playlist.length); playerStore.pause(); break
+      case 'play_ref': {
+        const card = data.song
+        if (card) {
+          const song = {
+            id: card.source === 'local' ? card.songId : `ext:gequhai:${card.sourceTrackId}`,
+            title: card.title,
+            artists: [{ name: card.artist }],
+            cover: card.cover,
+            url: card.streamUrl || '',
+            lyric: '',
+            isExternal: !!card.isExternal,
+            source: card.source,
+            sourceTrackId: card.sourceTrackId
+          }
+          playerStore.play(song, [song])
+        }
+        break
+      }
+      default: console.warn('未知播放命令', cmd)
+    }
+  } catch (e) {
+    console.error('播放命令执行失败', e)
+  }
+}
+
 // 外源卡片封面异步回填（与搜索页同款逻辑）
 const fillCardCover = (card) => {
   if (card.isExternal && !card.cover && card.sourceTrackId) {
@@ -501,7 +556,7 @@ const ask = async () => {
   loading.value = true
   messages.value.push({ role: 'user', text: query })
 
-  const dj = { role: 'dj', text: '', statusText: STAGE_TEXT.dispatcher, cards: [], done: false, error: '', steps: [], activeStep: -1, thought: '' }
+  const dj = { role: 'dj', text: '', statusText: STAGE_TEXT.dispatcher, cards: [], done: false, error: '', steps: [], activeStep: -1, thought: '', playlistInfo: null }
   // 请求一发出就显示第一步（不等后端事件——LLM 排队也能看到时间线）
   ensureStep(dj, 'dispatcher')
   dj.activeStep = 0
@@ -555,6 +610,11 @@ const ask = async () => {
           dj.steps.forEach(st => { st.done = true })
           dj.activeStep = -1
           dj.text += data.delta || ''
+        } else if (event === 'player_command') {
+          execPlayerCommand(data)
+        } else if (event === 'playlist_created') {
+          dj.playlistInfo = data
+          ElMessage.success(`歌单「${data.name}」已创建（${data.count} 首）`)
         } else if (event === 'song_card') {
           const card = {
             source: data.source,
@@ -677,6 +737,13 @@ const clearCfg = async () => {
     }
   } catch (e) {
     ElMessage.error('清除失败')
+  }
+}
+
+const goPlaylist = (id) => {
+  if (id) {
+    visible.value = false
+    router.push(`/playlist/${id}`)
   }
 }
 
@@ -1018,4 +1085,16 @@ defineExpose({ open: () => { visible.value = true } })
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+.dj-playlist-tip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-primary-dark);
+  background: rgba(201, 255, 69, 0.12);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  margin-top: 10px;
 }

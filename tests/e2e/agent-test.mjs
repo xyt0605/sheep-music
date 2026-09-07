@@ -167,6 +167,23 @@ if (cards.length === 0) {
   ok('第二轮返回同一 sessionId', sess2?.data?.sessionId === SESSION_ID, sess2?.data?.sessionId)
 }
 
+// ============ AC-21/22 能力路由（播放控制 / 知识问答，真实 LLM） ============
+console.log('\n[7] 能力路由（AC-21/22，真实 LLM）')
+// 播放控制："下一首" → capability=player + player_command 事件
+const rp = await readSse('/agent/dj/stream', U, { query: '下一首' })
+const pc = rp.events.find(e => e.event === 'player_command')
+ok('播放控制返回 player_command 事件', !!pc && !!pc.data?.command, JSON.stringify(pc?.data).slice(0, 80))
+ok('播放命令合法', pc && ['play', 'pause', 'next', 'prev', 'volume_up', 'volume_down', 'mode_list', 'mode_random', 'mode_single', 'queue_clear', 'play_ref'].includes(pc.data.command), pc?.data?.command)
+// 点歌播放："播放晴天" → play_ref + 完整卡片数据
+const rp2 = await readSse('/agent/dj/stream', U, { query: '播放晴天' })
+const pc2 = rp2.events.find(e => e.event === 'player_command')
+ok('点歌播放返回 play_ref 且带歌曲数据', pc2?.data?.command === 'play_ref' && !!pc2.data?.song?.title, JSON.stringify(pc2?.data || {}).slice(0, 100))
+if (pc2?.data?.song) {
+  const sg = pc2.data.song
+  ok('点歌卡片防幻觉（本地带 songId / 外源带 streamUrl）',
+    sg.source === 'local' ? !!sg.songId : /\/music\/external\/stream/.test(sg.streamUrl || ''), JSON.stringify(sg || {}).slice(0, 90))
+}
+
 // ============ 清理：回到未配置态（幂等可重跑） ============
 console.log('\n[清理]')
 r = await api('DELETE', '/agent/config', { token: U })
