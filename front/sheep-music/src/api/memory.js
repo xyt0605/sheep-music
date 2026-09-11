@@ -21,6 +21,47 @@ export const toggleMemoryStar = (itemId) => {
 }
 
 /**
+ * 婉婉小屋：星图（我的星星 + 关联素材）
+ */
+export const getStarMap = () => {
+  return request({
+    url: '/memory/star-map',
+    method: 'get'
+  })
+}
+
+/**
+ * 婉婉小屋：抱抱（通知管理员，返回安全歌配置）
+ */
+export const sendHug = () => {
+  return request({
+    url: '/memory/hug',
+    method: 'post'
+  })
+}
+
+/**
+ * 婉婉小屋管理：抱抱安全歌配置
+ */
+export const getHugConfig = () => {
+  return request({
+    url: '/memory/admin/hug-config',
+    method: 'get'
+  })
+}
+
+/**
+ * 婉婉小屋管理：保存/清除抱抱安全歌（songId 与 songExternalId 都空 = 清除）
+ */
+export const saveHugConfig = (data) => {
+  return request({
+    url: '/memory/admin/hug-config',
+    method: 'put',
+    data
+  })
+}
+
+/**
  * 婉婉小屋管理：全量素材列表（含下架）
  */
 export const getMemoryAdminList = () => {

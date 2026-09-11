@@ -25,6 +25,15 @@
           小屋里珍藏着 <b>{{ total }}</b> 个瞬间<template v-if="myStarCount > 0">
             · 你点亮过 <b>{{ myStarCount }}</b> 颗星</template>
         </p>
+        <div class="mem-actions">
+          <button
+            v-if="myStarCount > 0"
+            class="mem-star-map-btn"
+            @click="starMapOpen = true"
+          >
+            ✦ 星图
+          </button>
+        </div>
       </header>
 
       <!-- 加载中 -->
@@ -157,6 +166,30 @@
       </template>
     </div>
 
+    <!-- 抱抱悬浮按钮 -->
+    <button
+      class="hug-fab"
+      :disabled="hugging"
+      title="需要抱抱"
+      @click="onHug"
+    >
+      <span class="hug-fab-emoji">🫂</span>
+      <span class="hug-fab-label">需要抱抱</span>
+    </button>
+
+    <!-- 星图 -->
+    <StarMapOverlay
+      v-model="starMapOpen"
+      @open-item="openStarMapItem"
+    />
+
+    <!-- 拥抱动画 -->
+    <HugOverlay
+      v-if="hugVisible"
+      :song="hugSong"
+      @close="hugVisible = false"
+    />
+
     <!-- 灯箱 -->
     <MemoryLightbox
       v-if="lightboxItem"
@@ -177,8 +210,10 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useUserStore } from '@/store/user'
 import { ossThumb } from '@/utils/image'
-import { getMemoryList } from '@/api/memory'
+import { getMemoryList, sendHug } from '@/api/memory'
 import MemoryLightbox from '@/components/MemoryLightbox.vue'
+import StarMapOverlay from '@/components/StarMapOverlay.vue'
+import HugOverlay from '@/components/HugOverlay.vue'
 
 const userStore = useUserStore()
 const loading = ref(true)
@@ -206,6 +241,33 @@ const visibleGroups = computed(() => {
 const flatItems = computed(() => visibleGroups.value.flatMap(g => g.items))
 const lightboxItem = ref(null)
 const lightboxIndex = computed(() => flatItems.value.findIndex(i => i.id === lightboxItem.value?.id))
+
+// ===== v1.2：星图 + 抱抱 =====
+const starMapOpen = ref(false)
+const hugVisible = ref(false)
+const hugSong = ref(null)
+const hugging = ref(false)
+
+// 星图上的星星 → 直接打开该瞬间的灯箱（星图里的星必然是当前用户点亮的）
+const openStarMapItem = (item) => {
+  starMapOpen.value = false
+  starMap.value[item.id] = true
+  lightboxItem.value = item
+}
+
+const onHug = async () => {
+  if (hugging.value) return
+  hugging.value = true
+  try {
+    const res = await sendHug()
+    hugSong.value = res.data || null
+    hugVisible.value = true
+  } catch (e) {
+    // 冷却等错误由拦截器提示
+  } finally {
+    hugging.value = false
+  }
+}
 
 const openLightbox = (item) => { lightboxItem.value = item }
 const stepLightbox = (dir) => {
@@ -621,6 +683,58 @@ onBeforeUnmount(() => {
   .mem-title { font-size: 27px; }
   .mem-masonry { column-count: 1; }
   .polaroid { max-width: 100%; }
+}
+
+/* ===== 星图入口 + 抱抱 FAB ===== */
+.mem-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+.mem-star-map-btn {
+  border: 1.5px solid rgba(201, 24, 74, 0.25);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--mem-deep);
+  border-radius: 999px;
+  padding: 7px 22px;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mem-star-map-btn:hover {
+  border-color: var(--mem-primary);
+  box-shadow: 0 6px 18px rgba(255, 143, 171, 0.3);
+  transform: translateY(-1px);
+}
+
+.hug-fab {
+  position: absolute;
+  right: 22px;
+  bottom: 26px;
+  z-index: 5;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff8fab, #ff5d8f);
+  color: #fff;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  box-shadow: 0 10px 26px rgba(255, 93, 143, 0.45);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.hug-fab:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 14px 32px rgba(255, 93, 143, 0.55);
+}
+.hug-fab:disabled { opacity: 0.7; cursor: wait; }
+.hug-fab-emoji { font-size: 18px; }
+.hug-fab-label { font-size: 13px; letter-spacing: 0.06em; }
+
+@media (max-width: 560px) {
+  .hug-fab { right: 14px; bottom: 18px; padding: 9px 14px; }
 }
 
 /* ===== 动效降级 ===== */

@@ -153,6 +153,46 @@
       </el-table-column>
     </el-table>
 
+    <!-- 抱抱按钮配置 -->
+    <div class="star-feed-card hug-card">
+      <h4 class="star-feed-title">
+        🫂 抱抱按钮 · 安全歌
+      </h4>
+      <p class="hug-desc">
+        她按下「需要抱抱」时会播放这首歌，同时你会收到一条提醒。不选也可以，拥抱照常。
+      </p>
+      <div class="hug-row">
+        <div
+          v-if="hugConfig.configured"
+          class="bound-song"
+        >
+          <span>{{ hugConfig.songTitle }} · {{ hugConfig.songArtist || '未知歌手' }}</span>
+          <span
+            v-if="hugConfig.songSource === 'gequhai'"
+            class="source-tag"
+          >试听</span>
+        </div>
+        <span
+          v-else
+          class="dim"
+        >
+          还没有设置安全歌
+        </span>
+        <el-button
+          size="small"
+          text
+          type="primary"
+          @click="hugSongSelectorVisible = true"
+        >{{ hugConfig.configured ? '换一首' : '选歌' }}</el-button>
+        <el-button
+          v-if="hugConfig.configured"
+          size="small"
+          text
+          @click="clearHugSong"
+        >清除</el-button>
+      </div>
+    </div>
+
     <!-- 星星动态（近 14 天） -->
     <div class="star-feed-card">
       <h4 class="star-feed-title">
@@ -263,6 +303,10 @@
       v-model="editSongSelectorVisible"
       @select="onEditSongSelected"
     />
+    <SongSelector
+      v-model="hugSongSelectorVisible"
+      @select="onHugSongSelected"
+    />
     <MemoryUploadDialog
       ref="uploadRef"
       @saved="load"
@@ -274,7 +318,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Plus } from '@element-plus/icons-vue'
-import { getMemoryAdminList, updateMemoryItem, changeMemoryStatus, deleteMemoryItem, getMemoryStarFeed } from '@/api/memory'
+import { getMemoryAdminList, updateMemoryItem, changeMemoryStatus, deleteMemoryItem, getMemoryStarFeed, getHugConfig, saveHugConfig } from '@/api/memory'
 import { ossThumb } from '@/utils/image'
 import SongSelector from '@/components/SongSelector.vue'
 import MemoryUploadDialog from '@/components/admin/MemoryUploadDialog.vue'
@@ -305,6 +349,50 @@ const fmtTime = (t) => {
 
 const videoPosterFallback = (row) => row.mediaUrl
 
+const hugConfig = ref({})
+const hugSongSelectorVisible = ref(false)
+
+const loadHugConfig = async () => {
+  try {
+    const res = await getHugConfig()
+    hugConfig.value = res.data || {}
+  } catch (e) {
+    // 拦截器已提示
+  }
+}
+
+const onHugSongSelected = async (song) => {
+  const external = !!song.isExternal
+  try {
+    const res = await saveHugConfig({
+      songSource: external ? 'gequhai' : 'local',
+      songId: external ? null : song.id,
+      songExternalId: external ? String(song.sourceTrackId) : null,
+      songTitle: song.name || song.title || '',
+      songArtist: song.artist || '',
+      songCover: song.cover || ''
+    })
+    if (res.code === 200) {
+      hugConfig.value = res.data || {}
+      ElMessage.success('安全歌已设置')
+    }
+  } catch (e) {
+    // 拦截器已提示
+  }
+}
+
+const clearHugSong = async () => {
+  try {
+    const res = await saveHugConfig({ songSource: 'local', songId: null, songExternalId: null })
+    if (res.code === 200) {
+      hugConfig.value = res.data || {}
+      ElMessage.success('已清除安全歌')
+    }
+  } catch (e) {
+    // 拦截器已提示
+  }
+}
+
 const load = async () => {
   loading.value = true
   try {
@@ -317,7 +405,10 @@ const load = async () => {
     loading.value = false
   }
 }
-onMounted(load)
+onMounted(() => {
+  load()
+  loadHugConfig()
+})
 
 // ===== 编辑 =====
 const editVisible = ref(false)
@@ -484,6 +575,9 @@ const remove = async (row) => {
 .star-feed-text { color: var(--text-primary); }
 
 .bound-song { display: flex; align-items: center; gap: 10px; }
+.hug-card { border-color: rgba(255, 143, 171, 0.5); }
+.hug-desc { font-size: 12px; color: var(--text-tertiary); margin: 0 0 10px; line-height: 1.6; }
+.hug-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .source-tag {
   font-size: 10px;
   color: #b8860b;
