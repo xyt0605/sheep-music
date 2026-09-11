@@ -26,17 +26,27 @@
         <template #label><span class="tab-label"><el-icon><Headset /></el-icon>歌曲管理</span></template>
         <SongManagement />
       </el-tab-pane>
+      <el-tab-pane name="memories">
+        <template #label><span class="tab-label"><el-icon><Sunny /></el-icon>记忆管理</span></template>
+        <MemoryManagePanel />
+      </el-tab-pane>
+      <el-tab-pane name="settings">
+        <template #label><span class="tab-label"><el-icon><Setting /></el-icon>系统设置</span></template>
+        <SystemSettingsPanel />
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { Headset, Microphone, Upload } from '@element-plus/icons-vue'
+import { Headset, Microphone, Setting, Sunny, Upload } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
 import ArtistManagement from '@/components/admin/ArtistManagement.vue'
 import ContentImport from '@/components/admin/ContentImport.vue'
 import SongManagement from '@/components/admin/SongManagement.vue'
+import MemoryManagePanel from '@/components/admin/MemoryManagePanel.vue'
+import SystemSettingsPanel from '@/components/admin/SystemSettingsPanel.vue'
 
 const userStore = useUserStore()
 const activeTab = ref('import')
