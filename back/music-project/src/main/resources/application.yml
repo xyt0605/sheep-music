@@ -27,8 +27,8 @@ spring:
   servlet:
     multipart:
       enabled: true  # 启用文件上传
-      max-file-size: 30MB  # 单个文件最大大小
-      max-request-size: 30MB  # 整个请求最大大小
+      max-file-size: 200MB  # 单个文件最大大小（婉婉小屋视频素材；各接口另有自身大小校验）
+      max-request-size: 210MB  # 整个请求最大大小
 
   # Spring AI（OpenAI 兼容协议：默认指向智谱 GLM 开放平台，可换 DeepSeek 等任意兼容端点）
   # 密钥未配置时使用占位符——应用正常启动，仅 agent 实际调用时才需要真实密钥

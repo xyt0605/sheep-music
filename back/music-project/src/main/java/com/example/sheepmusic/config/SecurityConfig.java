@@ -67,6 +67,10 @@ public class SecurityConfig {
                         .requestMatchers("/music/external/stream", "/api/music/external/stream").permitAll()
                         // 管理员接口（只有管理员可访问）
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
+                        // 婉婉小屋管理接口（素材 CRUD + 星星动态）
+                        .requestMatchers("/memory/admin/**", "/api/memory/admin/**").hasRole("ADMIN")
+                        // 系统设置（OSS 配置等，仅管理员）
+                        .requestMatchers("/system/config/**", "/api/system/config/**").hasRole("ADMIN")
                         // 其他请求需要认证
                         .anyRequest().authenticated()
                 )

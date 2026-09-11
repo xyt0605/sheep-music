@@ -23,7 +23,7 @@
             <el-icon class="menu-icon">
               <MagicStick />
             </el-icon>
-            <span class="menu-label">小屋 DJ</span>
+            <span class="menu-label">奶包</span>
             <span class="dj-new-badge">NEW</span>
           </button>
         </div>
@@ -347,10 +347,10 @@
       </router-view>
     </main>
     
-    <!-- 小屋 DJ 悬浮入口 -->
+    <!-- 奶包悬浮入口 -->
     <button
       class="dj-fab"
-      title="小屋 DJ"
+      title="奶包"
       @click="djVisible = true"
     >
       <el-icon><MagicStick /></el-icon>
@@ -504,6 +504,12 @@ export default {
             { name: '动态', path: '/moments', icon: 'Camera' },
             { name: '分享广场', path: '/share-square', icon: 'Share' }
           ]
+        },
+        {
+          name: '婉婉小屋',
+          path: '/memories',
+          icon: 'Sunny',
+          type: 'link'
         }
       ]
       

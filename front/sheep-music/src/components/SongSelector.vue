@@ -3,6 +3,7 @@
     v-model="visible"
     title="选择歌曲"
     width="600px"
+    append-to-body
     @close="handleClose"
   >
     <div class="song-selector">
@@ -166,6 +167,55 @@
             </div>
           </div>
         </el-tab-pane>
+        <el-tab-pane
+          label="歌曲海"
+          name="web"
+        >
+          <div
+            v-loading="webLoading"
+            class="song-list"
+          >
+            <div
+              v-if="webResults.length === 0 && !webLoading"
+              class="empty-state"
+            >
+              <el-empty :description="searchKeyword ? '歌曲海没有找到相关歌曲' : '输入关键词搜索歌曲海'" />
+            </div>
+            <div
+              v-for="song in webResults"
+              :key="song.id"
+              class="song-item"
+              @click="selectSong(song)"
+            >
+              <el-image
+                :src="ossThumb(song.cover, 100)"
+                fit="cover"
+                class="song-cover"
+              >
+                <template #error>
+                  <div class="image-error">
+                    <el-icon><Picture /></el-icon>
+                  </div>
+                </template>
+              </el-image>
+              <div class="song-info">
+                <div class="song-name">
+                  {{ song.name }}
+                </div>
+                <div class="song-artist">
+                  {{ song.artist }}
+                </div>
+              </div>
+              <span class="web-badge">试听</span>
+              <el-button
+                type="primary"
+                size="small"
+              >
+                选择
+              </el-button>
+            </div>
+          </div>
+        </el-tab-pane>
       </el-tabs>
     </div>
   </el-dialog>
@@ -177,6 +227,7 @@ import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
 import { usePlayerStore } from '@/store/player'
+import { searchExternalSongs } from '@/api/externalMusic'
 import { searchSongs } from '@/api/song'
 
 const props = defineProps({
@@ -199,6 +250,8 @@ const activeTab = ref('current')
 const searchKeyword = ref('')
 const loading = ref(false)
 const searchResults = ref([])
+const webLoading = ref(false)
+const webResults = ref([])
 let searchTimer = null
 
 // 当前播放的歌曲
@@ -248,26 +301,34 @@ const handleTabChange = (tab) => {
   if (tab === 'search' && searchKeyword.value) {
     performSearch()
   }
+  if (tab === 'web' && searchKeyword.value) {
+    performWebSearch()
+  }
 }
 
 // 处理搜索输入
 const handleSearch = () => {
-  if (activeTab.value !== 'search') {
+  if (activeTab.value !== 'search' && activeTab.value !== 'web') {
     activeTab.value = 'search'
   }
-  
+
   // 防抖搜索
   if (searchTimer) {
     clearTimeout(searchTimer)
   }
-  
+
   if (!searchKeyword.value.trim()) {
     searchResults.value = []
+    webResults.value = []
     return
   }
-  
+
   searchTimer = setTimeout(() => {
-    performSearch()
+    if (activeTab.value === 'web') {
+      performWebSearch()
+    } else {
+      performSearch()
+    }
   }, 500)
 }
 
@@ -344,6 +405,40 @@ const performSearch = async () => {
   }
 }
 
+// 执行歌曲海搜索（外源试听源；选中后绑定需支持外源播放）
+const performWebSearch = async () => {
+  if (!searchKeyword.value.trim()) {
+    webResults.value = []
+    return
+  }
+
+  webLoading.value = true
+  try {
+    const res = await searchExternalSongs({
+      source: 'gequhai',
+      keyword: searchKeyword.value,
+      page: 0,
+      size: 20
+    })
+    if (res.code === 200) {
+      const items = res.data?.items || []
+      webResults.value = items.map(vo => ({
+        id: `ext:gequhai:${vo.sourceTrackId}`,
+        name: vo.title,
+        cover: vo.cover || '',
+        artist: vo.artist || '未知歌手',
+        isExternal: true,
+        source: 'gequhai',
+        sourceTrackId: vo.sourceTrackId
+      }))
+    }
+  } catch (error) {
+    console.error('搜索歌曲海失败:', error)
+  } finally {
+    webLoading.value = false
+  }
+}
+
 // 选择歌曲
 const selectSong = (song) => {
   if (!song) return
@@ -355,6 +450,7 @@ const selectSong = (song) => {
 const handleClose = () => {
   searchKeyword.value = ''
   searchResults.value = []
+  webResults.value = []
   activeTab.value = 'current'
 }
 
@@ -398,6 +494,16 @@ watch(visible, (val) => {
 
 .song-item:hover {
   background: #f5f7fa;
+}
+
+.web-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: #b8860b;
+  background: #fdf6ec;
+  border: 1px solid #f5dab1;
+  border-radius: 4px;
+  padding: 1px 5px;
 }
 
 .song-cover {

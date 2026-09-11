@@ -188,4 +188,56 @@ public class FileUploadController {
             return Result.error("文件上传失败：" + e.getMessage());
         }
     }
+
+    /**
+     * 上传婉婉小屋素材到OSS（仅管理员）：图片 ≤10MB，视频（mp4/mov/webm）≤200MB
+     */
+    @Operation(summary = "上传婉婉小屋素材")
+    @PostMapping("/memory")
+    public Result<Map<String, String>> uploadMemory(@RequestParam("file") MultipartFile file,
+                                                    HttpServletRequest request) {
+        try {
+            if (!isAdmin(request)) {
+                return Result.error("无权限上传小屋素材");
+            }
+            if (file.isEmpty()) {
+                return Result.error("文件不能为空");
+            }
+
+            String contentType = file.getContentType();
+            String extension = getImageExtension(file);
+            boolean isImage = contentType != null && contentType.startsWith("image/") && extension != null;
+            boolean isVideo = contentType != null && contentType.matches("video/mp4|video/quicktime|video/webm")
+                    && file.getOriginalFilename() != null
+                    && file.getOriginalFilename().toLowerCase().matches(".*\\.(mp4|mov|webm)$");
+
+            if (isImage) {
+                long maxSize = 10 * 1024 * 1024; // 10MB
+                if (file.getSize() > maxSize) {
+                    return Result.error("图片大小不能超过10MB");
+                }
+            } else if (isVideo) {
+                long maxSize = 200 * 1024 * 1024; // 200MB
+                if (file.getSize() > maxSize) {
+                    return Result.error("视频大小不能超过200MB（建议 1 分钟内的 1080p 素材）");
+                }
+            } else {
+                return Result.error("仅支持图片（jpg/png/gif/webp 等）或视频（mp4/mov/webm）");
+            }
+
+            // 上传到OSS（memory/ 文件夹）
+            String url = ossUtil.uploadFile(file, "memory/");
+
+            Map<String, String> result = new HashMap<>();
+            result.put("url", url);
+            result.put("filename", url.substring(url.lastIndexOf("/") + 1));
+            result.put("kind", isImage ? "photo" : "video");
+
+            return Result.success("上传成功", result);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("文件上传失败：" + e.getMessage());
+        }
+    }
 }

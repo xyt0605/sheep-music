@@ -138,6 +138,14 @@ const routes = [
         component: () => import('@/views/Social/ShareSquare.vue'),
         meta: { requiresAuth: true }
       },
+
+      // 婉婉小屋（照片墙 + 视频墙）
+      {
+        path: '/memories',
+        name: 'Memories',
+        component: () => import('@/views/Memories.vue'),
+        meta: { requiresAuth: true }
+      },
       
       // 管理后台（只有管理员可访问）
       {
