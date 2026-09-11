@@ -92,6 +92,30 @@ public class MemoryAdminController {
         return Result.success("已删除", null);
     }
 
+    @Operation(summary = "抱抱安全歌配置")
+    @GetMapping("/hug-config")
+    public Result<Map<String, Object>> hugConfig() {
+        return Result.success(memoryService.getHugConfig());
+    }
+
+    @Operation(summary = "保存/清除抱抱安全歌（songId 与 songExternalId 都空 = 清除）")
+    @PutMapping("/hug-config")
+    public Result<Map<String, Object>> saveHugConfig(@RequestBody Map<String, Object> body) {
+        try {
+            Long songId = body.get("songId") == null ? null : Long.valueOf(String.valueOf(body.get("songId")));
+            memoryService.saveHugConfig(
+                    (String) body.get("songSource"),
+                    songId,
+                    (String) body.get("songExternalId"),
+                    (String) body.get("songTitle"),
+                    (String) body.get("songArtist"),
+                    (String) body.get("songCover"));
+            return Result.success("已保存", memoryService.getHugConfig());
+        } catch (IllegalArgumentException e) {
+            return Result.error(400, e.getMessage());
+        }
+    }
+
     @Operation(summary = "星星动态（近 14 天点亮记录）")
     @GetMapping("/star-feed")
     public Result<List<Map<String, Object>>> starFeed() {

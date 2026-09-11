@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +46,24 @@ public class MemoryController {
             return Result.success(memoryService.toggleStar(itemId, userId));
         } catch (IllegalArgumentException e) {
             return Result.error(404, e.getMessage());
+        }
+    }
+
+    @Operation(summary = "星图（当前用户的星星 + 关联素材）")
+    @GetMapping("/star-map")
+    public Result<List<Map<String, Object>>> starMap(HttpServletRequest request) {
+        Long userId = jwtUtil.getUserIdFromRequest(request);
+        return Result.success(memoryService.starMap(userId));
+    }
+
+    @Operation(summary = "抱抱（30s 冷却；通知管理员；返回安全歌）")
+    @PostMapping("/hug")
+    public Result<Map<String, Object>> hug(HttpServletRequest request) {
+        Long userId = jwtUtil.getUserIdFromRequest(request);
+        try {
+            return Result.success(memoryService.sendHug(userId));
+        } catch (IllegalStateException e) {
+            return Result.error(429, e.getMessage());
         }
     }
 }

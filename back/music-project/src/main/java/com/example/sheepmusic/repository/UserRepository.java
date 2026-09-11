@@ -41,5 +41,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * 按 ID 升序找第一个指定角色的用户（AI 配置回退：定位 admin 账号）
      */
     Optional<User> findFirstByRoleOrderByIdAsc(String role);
+
+    /**
+     * 全部指定角色用户（抱抱按钮通知收件人）
+     */
+    java.util.List<User> findAllByRole(String role);
 }
 

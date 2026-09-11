@@ -4,9 +4,14 @@ import com.example.sheepmusic.entity.Artist;
 import com.example.sheepmusic.entity.MemoryItem;
 import com.example.sheepmusic.entity.MemoryStar;
 import com.example.sheepmusic.entity.Song;
+import com.example.sheepmusic.entity.SystemConfig;
+import com.example.sheepmusic.entity.User;
 import com.example.sheepmusic.repository.MemoryItemRepository;
 import com.example.sheepmusic.repository.MemoryStarRepository;
 import com.example.sheepmusic.repository.SongRepository;
+import com.example.sheepmusic.repository.SystemConfigRepository;
+import com.example.sheepmusic.repository.UserRepository;
+import com.example.sheepmusic.service.NotificationService;
 import com.example.sheepmusic.utils.OSSUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +38,9 @@ public class MemoryService {
     private final MemoryStarRepository starRepo;
     private final SongRepository songRepo;
     private final OSSUtil ossUtil;
+    private final SystemConfigRepository systemConfigRepo;
+    private final UserRepository userRepo;
+    private final NotificationService notificationService;
 
     /**
      * 展示页列表：published 素材按月分组 + todayPick + 我的星星数
@@ -187,6 +195,132 @@ public class MemoryService {
      */
     public List<MemoryStar> starFeed() {
         return starRepo.findByCreateTimeAfterOrderByCreateTimeDesc(LocalDateTime.now().minusDays(14));
+    }
+
+    // ===== v1.2：星图 + 抱抱按钮 =====
+
+    /**
+     * 星图：当前用户的全部星星 + 关联素材信息（缩略图/配文/日期），按点亮时间升序
+     */
+    public List<Map<String, Object>> starMap(Long userId) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        int i = 0;
+        for (MemoryStar s : starRepo.findByUserId(userId)) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("starId", s.getId());
+            row.put("index", i++);
+            row.put("createTime", s.getCreateTime());
+            MemoryItem item = itemRepo.findById(s.getItemId()).orElse(null);
+            if (item == null || !"published".equals(item.getStatus())) {
+                continue; // 素材已删/下架：星星失去落点，星图不显示
+            }
+            row.put("itemId", item.getId());
+            row.put("type", item.getType());
+            row.put("thumb", "photo".equals(item.getType()) ? item.getMediaUrl() : item.getCoverUrl());
+            row.put("title", item.getTitle());
+            row.put("caption", item.getCaption());
+            row.put("memoryDate", item.getMemoryDate() != null ? item.getMemoryDate().toString()
+                    : item.getCreateTime().toLocalDate().toString());
+            out.add(row);
+        }
+        return out;
+    }
+
+    /** 抱抱安全歌配置（hug.* 键，存 tb_system_config，非密钥明文） */
+    public Map<String, Object> getHugConfig() {
+        Map<String, String> rows = hugRows();
+        Map<String, Object> out = new LinkedHashMap<>();
+        boolean enabled = rows.get("hug.songTitle") != null && !rows.get("hug.songTitle").isBlank();
+        out.put("configured", enabled);
+        if (enabled) {
+            out.put("songSource", rows.getOrDefault("hug.songSource", "local"));
+            out.put("songId", rows.get("hug.songId"));
+            out.put("songExternalId", rows.get("hug.songExternalId"));
+            out.put("songTitle", rows.get("hug.songTitle"));
+            out.put("songArtist", rows.get("hug.songArtist"));
+            out.put("songCover", rows.get("hug.songCover"));
+        }
+        return out;
+    }
+
+    /** 保存抱抱安全歌：校验与素材绑定同源（local 回填曲库冗余 / gequhai 必须带外部 ID） */
+    @Transactional
+    public void saveHugConfig(String songSource, Long songId, String songExternalId,
+                              String songTitle, String songArtist, String songCover) {
+        if (songId == null && (songExternalId == null || songExternalId.isBlank())) {
+            // 清除配置
+            repoDeleteByPrefix("hug.");
+            return;
+        }
+        boolean external = "gequhai".equals(songSource);
+        upsertHug("hug.songSource", external ? "gequhai" : "local");
+        upsertHug("hug.songId", external ? null : String.valueOf(songId));
+        upsertHug("hug.songExternalId", external ? songExternalId.trim() : null);
+        if (external) {
+            upsertHug("hug.songTitle", songTitle);
+            upsertHug("hug.songArtist", songArtist);
+            upsertHug("hug.songCover", songCover);
+        } else {
+            Song song = songRepo.findById(songId).orElse(null);
+            if (song == null) {
+                throw new IllegalArgumentException("本地歌曲不存在");
+            }
+            upsertHug("hug.songTitle", song.getTitle());
+            upsertHug("hug.songArtist", artistNames(song));
+            upsertHug("hug.songCover", song.getCover());
+        }
+    }
+
+    private Map<String, String> hugRows() {
+        Map<String, String> m = new LinkedHashMap<>();
+        systemConfigRepo.findByConfigKeyStartingWith("hug.")
+                .forEach(c -> m.put(c.getConfigKey(), c.getConfigValue()));
+        return m;
+    }
+
+    private void upsertHug(String key, String value) {
+        if (value == null) {
+            return;
+        }
+        SystemConfig c = systemConfigRepo.findByConfigKey(key).orElseGet(() -> {
+            SystemConfig n = new SystemConfig();
+            n.setConfigKey(key);
+            return n;
+        });
+        c.setConfigValue(value);
+        c.setUpdateTime(LocalDateTime.now());
+        systemConfigRepo.save(c);
+    }
+
+    private void repoDeleteByPrefix(String prefix) {
+        systemConfigRepo.deleteByConfigKeyStartingWith(prefix);
+    }
+
+    /** 抱抱冷却（单实例内存态即可：重启丢失最多多收一次通知，无伤大雅） */
+    private final java.util.concurrent.ConcurrentHashMap<Long, Long> hugCooldown = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long HUG_COOLDOWN_MS = 30_000L;
+
+    /**
+     * 抱抱：冷却校验 → 给管理员发通知；返回安全歌配置（前端决定放不放歌）
+     */
+    @Transactional
+    public Map<String, Object> sendHug(Long userId) {
+        long now = System.currentTimeMillis();
+        Long last = hugCooldown.get(userId);
+        if (last != null && now - last < HUG_COOLDOWN_MS) {
+            throw new IllegalStateException("刚刚已经抱过啦，歇一会儿再来");
+        }
+        hugCooldown.put(userId, now);
+
+        User hugger = userRepo.findById(userId).orElse(null);
+        String nickname = hugger == null ? "她" : (hugger.getNickname() != null && !hugger.getNickname().isBlank() ? hugger.getNickname() : hugger.getUsername());
+        for (User admin : userRepo.findAllByRole("admin")) {
+            notificationService.createNotification(admin.getId(), userId, "hug",
+                    "🫂 有一个抱抱请求",
+                    nickname + " 刚刚按下了「需要抱抱」按钮，去看看吧",
+                    null, "memory", "/memories");
+        }
+        return getHugConfig();
     }
 
     /**
