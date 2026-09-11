@@ -8,15 +8,13 @@
   >
     <template #header>
       <div class="dj-header">
-        <span class="dj-header-title">小屋 DJ</span>
-        <el-button
-          size="small"
-          text
-          @click="openSettings"
+        <span class="dj-header-title">奶包</span>
+        <el-tooltip
+          :content="isAdmin ? 'AI 连接在 管理后台 → 系统设置 中配置' : 'AI 连接由管理员统一配置'"
+          placement="bottom"
         >
-          <el-icon><Setting /></el-icon>
-          AI 连接
-        </el-button>
+          <span class="dj-cfg-badge">{{ cfgLoaded ? (cfg.configured ? 'AI 已就绪' : 'AI 未配置') : '' }}</span>
+        </el-tooltip>
       </div>
     </template>
     <div class="dj-body">
@@ -56,18 +54,13 @@
           class="dj-empty"
         >
           <div class="dj-empty-icon">🎧</div>
-          <p>跟 DJ 说一句你想听什么</p>
+          <p>跟奶包说一句你想听什么</p>
           <p class="dj-empty-hint">比如："来点适合下雨天听的歌"</p>
           <div
             v-if="cfgLoaded && !cfg.configured"
             class="dj-config-tip"
           >
-            当前用户还没有配置密钥，无法使用
-            <el-button
-              size="small"
-              type="primary"
-              @click="openSettings"
-            >去配置</el-button>
+            管理员还没有配置 AI 连接，奶包暂时不能营业
           </div>
         </div>
 
@@ -80,7 +73,21 @@
             v-if="msg.role === 'user'"
             class="dj-msg dj-msg-user"
           >
-            {{ msg.text }}
+            <div
+              v-if="msg.images && msg.images.length"
+              class="dj-msg-images"
+            >
+              <img
+                v-for="(img, ii) in msg.images"
+                :key="ii"
+                :src="img"
+                class="dj-msg-thumb"
+              >
+            </div>
+            <span
+              v-if="msg.text"
+              class="dj-msg-text"
+            >{{ msg.text }}</span>
           </div>
 
           <!-- DJ 消息 -->
@@ -134,6 +141,27 @@
                 v-if="!msg.done && !msg.error"
               ><Loading /></el-icon>
               {{ msg.statusText }}
+            </div>
+            <!-- 思考链：推理模型的 reasoning_content 实时流（可折叠，完成后自动收起） -->
+            <div
+              v-if="msg.reasoning"
+              class="dj-reasoning"
+            >
+              <div
+                class="dj-reasoning-head"
+                @click="msg.reasoningOpen = !msg.reasoningOpen"
+              >
+                <el-icon><MagicStick /></el-icon>
+                <span>思考过程</span>
+                <el-icon
+                  class="dj-reasoning-caret"
+                  :class="{ open: msg.reasoningOpen }"
+                ><ArrowRight /></el-icon>
+              </div>
+              <pre
+                v-show="msg.reasoningOpen"
+                class="dj-reasoning-body"
+              >{{ msg.reasoning }}</pre>
             </div>
             <div
               v-if="msg.text"
@@ -243,125 +271,53 @@
         </template>
       </div>
 
-      <!-- AI 连接设置对话框（P3 BYOK 可视化配置板块） -->
-      <el-dialog
-        v-model="cfgVisible"
-        title="AI 连接设置"
-        width="420px"
-        append-to-body
-      >
-        <el-form label-position="top">
-          <el-form-item label="厂商">
-            <el-select
-              v-model="providerKey"
-              style="width: 100%"
-              @change="applyPreset"
-            >
-              <el-option
-                v-for="p in PROVIDER_PRESETS"
-                :key="p.key"
-                :label="p.label"
-                :value="p.key"
-              />
-            </el-select>
-            <div
-              v-if="activePreset?.hint"
-              class="dj-cfg-hint"
-            >{{ activePreset.hint }}</div>
-          </el-form-item>
-          <el-form-item
-            label="API Key"
-            required
-          >
-            <el-input
-              v-model="cfgForm.apiKey"
-              type="password"
-              show-password
-              :placeholder="cfg.apiKeyMasked || '该厂商的 API Key'"
-            />
-          </el-form-item>
-          <el-form-item label="接口地址">
-            <el-input
-              v-model="cfgForm.baseUrl"
-              :placeholder="activePreset?.baseUrl || cfg.defaultBaseUrl"
-            />
-          </el-form-item>
-          <el-form-item>
-            <template #label>
-              <span>模型</span>
-              <el-button
-                size="small"
-                text
-                type="primary"
-                :loading="fetchingModels"
-                :disabled="!cfgForm.baseUrl"
-                style="margin-left: 8px"
-                @click="fetchModels"
-              >获取实时列表</el-button>
-            </template>
-            <el-select
-              v-model="cfgForm.model"
-              filterable
-              allow-create
-              default-first-option
-              placeholder="选择或输入模型名"
-              style="width: 100%"
-            >
-              <el-option
-                v-for="m in modelOptions"
-                :key="m"
-                :label="m"
-                :value="m"
-              />
-            </el-select>
-          </el-form-item>
-        </el-form>
-        <div class="dj-cfg-status">
-          <template v-if="cfg.configured">
-            已配置：{{ cfg.model }} @ {{ cfg.baseUrl }}（Key: {{ cfg.apiKeyMasked }}）
-          </template>
-          <template v-else>
-            未配置
-          </template>
+
+      <!-- 输入区（多模态：文字 + 图片） -->
+      <div class="dj-input-wrap">
+        <div
+          v-if="pendingImages.length"
+          class="dj-image-preview"
+        >
           <div
-            v-if="testResult"
-            class="dj-cfg-test"
-          >{{ testResult }}</div>
+            v-for="(img, i) in pendingImages"
+            :key="i"
+            class="dj-preview-item"
+          >
+            <img :src="img">
+            <button
+              class="dj-preview-remove"
+              type="button"
+              @click="removeImage(i)"
+            >✕</button>
+          </div>
         </div>
-        <template #footer>
-          <el-button
-            size="small"
-            type="danger"
-            text
-            @click="clearCfg"
-          >清除配置</el-button>
-          <el-button
-            size="small"
-            :loading="testing"
-            @click="testCfg"
-          >测试连接</el-button>
+        <div class="dj-input">
+          <el-upload
+            :show-file-list="false"
+            :auto-upload="false"
+            accept="image/*"
+            :on-change="onPickImage"
+          >
+            <el-button
+              circle
+              :disabled="loading"
+              title="附一张图片（最多 3 张）"
+            >
+              <el-icon><Picture /></el-icon>
+            </el-button>
+          </el-upload>
+          <el-input
+            v-model="draft"
+            placeholder="跟奶包说点想听什么，也可以附图…"
+            :disabled="loading"
+            @keyup.enter="ask"
+          />
           <el-button
             type="primary"
-            size="small"
-            :loading="saving"
-            @click="saveCfg"
-          >保存</el-button>
-        </template>
-      </el-dialog>
-
-      <!-- 输入区 -->
-      <div class="dj-input">
-        <el-input
-          v-model="draft"
-          placeholder="跟 DJ 说点想听什么…"
-          :disabled="loading"
-          @keyup.enter="ask"
-        />
-        <el-button
-          type="primary"
-          :loading="loading"
-          @click="ask"
-        >发送</el-button>
+            :loading="loading"
+            @click="ask"
+          >发送</el-button>
+        </div>
       </div>
     </div>
   </el-drawer>
@@ -370,82 +326,64 @@
 <script setup>
 import { ref, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Loading, Setting, Check, FolderAdd, Close } from '@element-plus/icons-vue'
-import { streamDj, getAiConfig, saveAiConfig, clearAiConfig, testAiConfig, getModelList } from '@/api/agent'
+import { Loading, Check, FolderAdd, Close, MagicStick, ArrowRight, Picture } from '@element-plus/icons-vue'
+import { streamDj, getAiConfig } from '@/api/agent'
 import { getExternalCover } from '@/api/externalMusic'
 import { usePlayerStore } from '@/store/player'
+import { useUserStore } from '@/store/user'
 import { useRouter } from 'vue-router'
 
 const visible = ref(false)
 const draft = ref('')
 const loading = ref(false)
 const sessionId = ref(genSessionId())
-const cfgVisible = ref(false)
 const cfgLoaded = ref(false)
-const saving = ref(false)
-const testing = ref(false)
-const testResult = ref('')
-const cfg = ref({ configured: false, defaultBaseUrl: '', defaultModel: '' })
-const cfgForm = ref({ apiKey: '', baseUrl: '', model: '' })
-const fetchedModels = ref([])
+const cfg = ref({ configured: false })
+// 多模态附图：data URL（前端压缩后 ≤3 张），随下一轮对话发给 DJ
+const pendingImages = ref([])
 // 待播卡片（play_ref 命令的歌，等用户点击播放——绕开 autoplay 拦截）
 const djPending = ref(null)
-const fetchingModels = ref(false)
 
-// 模型下拉选项 = 厂商预设 + 实时拉取（去重）
-const modelOptions = computed(() => {
-  const merged = [...(activePreset.value?.models || []), ...fetchedModels.value]
-  return [...new Set(merged)]
+// ===== 附图：压缩到 1024px JPEG（≈两三百 KB），控制 SSE 请求体体积 =====
+const compressImage = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onload = () => {
+    const img = new Image()
+    img.onload = () => {
+      const MAX = 1024
+      const scale = Math.min(1, MAX / Math.max(img.width, img.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(img.width * scale)
+      canvas.height = Math.round(img.height * scale)
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+      resolve(canvas.toDataURL('image/jpeg', 0.82))
+    }
+    img.onerror = () => reject(new Error('图片解析失败'))
+    img.src = reader.result
+  }
+  reader.onerror = () => reject(new Error('图片读取失败'))
+  reader.readAsDataURL(file)
 })
 
-// 厂商预设：任何 OpenAI 兼容端点均可（选"自定义"后手填）
-const PROVIDER_PRESETS = [
-  { key: 'zhipu', label: '智谱 BigModel', baseUrl: 'https://open.bigmodel.cn/api/paas/v4', models: ['glm-4.6', 'glm-4.5-air', 'glm-4.5-flash', 'glm-4-plus'], hint: 'glm-4.6 为当前旗舰；flash 免费但当前响应慢' },
-  { key: 'deepseek', label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', models: ['deepseek-chat', 'deepseek-reasoner'], hint: '两个别名自动跟随 DeepSeek 最新版；reasoner 思考耗大量 token' },
-  { key: 'moonshot', label: '月之暗面 Kimi', baseUrl: 'https://api.moonshot.cn/v1', models: ['kimi-latest', 'kimi-k2-turbo-preview', 'kimi-k2-0905-preview', 'moonshot-v1-8k'] },
-  { key: 'qwen', label: '阿里通义千问', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', models: ['qwen3-max', 'qwen-plus-latest', 'qwen-turbo-latest', 'qwen-max'] },
-  { key: 'doubao', label: '字节豆包（火山方舟）', baseUrl: 'https://ark.cn-beijing.volces.com/api/v3', models: ['（填你的接入点 ID）'], hint: '模型填方舟控制台的接入点 ID' },
-  { key: 'siliconflow', label: '硅基流动（聚合）', baseUrl: 'https://api.siliconflow.cn/v1', models: ['deepseek-ai/DeepSeek-V3.1', 'Qwen/Qwen3-235B-A22B', 'moonshotai/Kimi-K2-Instruct'] },
-  { key: 'openai', label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: ['gpt-5', 'gpt-5-mini', 'gpt-4.1', 'gpt-4o'] },
-  { key: 'gemini', label: 'Google Gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', models: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash'] },
-  { key: 'ollama', label: 'Ollama 本地（零成本）', baseUrl: 'http://localhost:11434/v1', models: ['qwen3:8b', 'deepseek-r1:8b', 'gpt-oss:20b', 'llama3.1:8b'], hint: '需本机已装 Ollama 并拉取模型；或用 ollama pull 拉新模型' },
-  { key: 'custom', label: '自定义', baseUrl: '', models: [] }
-]
-const providerKey = ref('zhipu')
-const activePreset = computed(() => PROVIDER_PRESETS.find(pp => pp.key === providerKey.value))
-
-const applyPreset = () => {
-  const preset = activePreset.value
-  if (preset && preset.baseUrl) {
-    cfgForm.value.baseUrl = preset.baseUrl
+const onPickImage = async (file) => {
+  if (!file?.raw) return
+  if (!file.raw.type || !file.raw.type.startsWith('image/')) {
+    ElMessage.error('只能附图片')
+    return
   }
-  cfgForm.value.model = ''
-  fetchedModels.value = []
+  if (pendingImages.value.length >= 3) {
+    ElMessage.warning('最多附 3 张图片')
+    return
+  }
+  try {
+    pendingImages.value.push(await compressImage(file.raw))
+  } catch (e) {
+    ElMessage.error('图片处理失败')
+  }
 }
 
-const fetchModels = async () => {
-  if (!cfgForm.value.baseUrl || fetchingModels.value) return
-  fetchingModels.value = true
-  try {
-    const res = await getModelList({
-      baseUrl: cfgForm.value.baseUrl,
-      apiKey: cfgForm.value.apiKey || undefined
-    })
-    if (res.code === 200 && res.data) {
-      if (res.data.supported && res.data.models?.length) {
-        fetchedModels.value = res.data.models
-        ElMessage.success(`已拉取 ${res.data.models.length} 个模型`)
-      } else {
-        ElMessage.info(res.data.message || '该厂商不支持模型列表，请手动输入模型名')
-      }
-    } else {
-      ElMessage.error(res.message || '拉取失败')
-    }
-  } catch (e) {
-    ElMessage.error('拉取失败：' + (e?.message || '网络错误'))
-  } finally {
-    fetchingModels.value = false
-  }
+const removeImage = (i) => {
+  pendingImages.value.splice(i, 1)
 }
 
 function genSessionId() {
@@ -459,6 +397,9 @@ import { computed, watch } from 'vue'
 watch(visible, v => { if (v) loadConfig() })
 const router = useRouter()
 const playerStore = usePlayerStore()
+const userStore = useUserStore()
+// P4：AI 连接由管理员统一配置——⚙ 入口与配置对话框仅管理员可见
+const isAdmin = computed(() => userStore.isAdmin)
 
 // 过程时间线的步骤定义：key 唯一，label 展示
 const STEP_DEFS = [
@@ -494,17 +435,29 @@ const markPrevDone = (msg, elapsedMs) => {
 const STAGE_TEXT = {
   dispatcher: '正在理解你的需求…',
   librarian: '正在翻找曲库和歌曲海…',
-  critic: 'DJ 在自我质检…',
+  critic: '奶包在自我质检…',
   dj: '正在组织语言…'
 }
 
+// 思考链分段标签（reasoning_delta 事件按阶段切换时插入小标题）
+const REASON_STAGE_LABEL = {
+  dispatcher: '理解需求',
+  librarian: '翻找曲库',
+  critic: '自我质检',
+  dj: '组织推荐语',
+  player: '解析操作',
+  info: '查阅资料',
+  playlist: '整理歌单'
+}
+
 // 后端 song_card → player 歌曲对象（写操作只认 songId：外源卡只有播放/入队）
+// 本地卡用 url、外源卡用 streamUrl（此前统一取 streamUrl 导致本地卡 url 为空、自动切歌卡住）
 const toPlayerSong = (card) => ({
   id: card.source === 'local' ? card.songId : `ext:gequhai:${card.sourceTrackId}`,
   title: card.title,
   artists: [{ name: card.artist }],
   cover: card.cover,
-  url: card.streamUrl || card.url || '',
+  url: card.source === 'local' ? (card.url || '') : (card.streamUrl || ''),
   lyric: '',
   isExternal: !!card.isExternal,
   source: card.source,
@@ -581,6 +534,7 @@ const retry = (djMsg) => {
   for (let i = idx - 1; i >= 0; i--) {
     if (messages.value[i].role === 'user') {
       draft.value = messages.value[i].text
+      pendingImages.value = (messages.value[i].images || []).slice()
       ask()
       return
     }
@@ -589,12 +543,14 @@ const retry = (djMsg) => {
 
 const ask = async () => {
   const query = draft.value.trim()
-  if (!query || loading.value) return
+  if ((!query && !pendingImages.value.length) || loading.value) return
+  const images = pendingImages.value.slice()
   draft.value = ''
+  pendingImages.value = []
   loading.value = true
-  messages.value.push({ role: 'user', text: query })
+  messages.value.push({ role: 'user', text: query, images })
 
-  const dj = { role: 'dj', text: '', statusText: STAGE_TEXT.dispatcher, cards: [], done: false, error: '', steps: [], activeStep: -1, thought: '', playlistInfo: null }
+  const dj = { role: 'dj', text: '', statusText: STAGE_TEXT.dispatcher, cards: [], done: false, error: '', steps: [], activeStep: -1, thought: '', playlistInfo: null, reasoning: '', reasoningOpen: true, _reasonStage: '' }
   // 请求一发出就显示第一步（不等后端事件——LLM 排队也能看到时间线）
   ensureStep(dj, 'dispatcher')
   dj.activeStep = 0
@@ -603,6 +559,7 @@ const ask = async () => {
 
   try {
     await streamDj(query, sessionId.value, {
+      images,
       onEvent: (event, data) => {
         if (event === 'session' && data.sessionId) {
           sessionId.value = data.sessionId  // 服务端归一化后的会话 ID（P2 会话记忆）
@@ -610,7 +567,7 @@ const ask = async () => {
         if (event === 'stage') {
           dj.statusText = STAGE_TEXT[data.stage] || dj.statusText
           if (data.stage === 'librarian' && data.round > 1) {
-            dj.statusText = `小羊驼在自我改进（第 ${data.round} 轮检索）…`
+            dj.statusText = `奶包在自我改进（第 ${data.round} 轮检索）…`
           }
           // 时间线：新阶段开始 → 结算上一步、点亮当前步
           if (data.status === 'start') {
@@ -630,6 +587,15 @@ const ask = async () => {
           }
         } else if (event === 'thought') {
           dj.thought = data.text || ''
+        } else if (event === 'reasoning_delta') {
+          // 模型思考链实时展示（推理模型的 reasoning_content）；按阶段切换插入小标题
+          const stage = data.stage || ''
+          if (stage && stage !== dj._reasonStage) {
+            const label = REASON_STAGE_LABEL[stage] || stage
+            dj.reasoning += (dj.reasoning ? '\n\n' : '') + `【${label}】\n`
+            dj._reasonStage = stage
+          }
+          dj.reasoning += data.delta || ''
         } else if (event === 'action') {
           const argText = data.args?.keyword ? `“${data.args.keyword}”` : ''
           const st = ensureStep(dj, data.action === 'finish' ? 'critic' : data.action)
@@ -661,6 +627,7 @@ const ask = async () => {
             title: data.title,
             artist: data.artist,
             cover: data.cover || '',
+            url: data.url,
             streamUrl: data.streamUrl,
             reason: data.reason || '',
             isExternal: !!data.isExternal,
@@ -670,12 +637,15 @@ const ask = async () => {
           fillCardCover(card)
         } else if (event === 'error') {
           dj.error = data.message || 'DJ 开小差了，稍后再试'
-          if (/还没有配置密钥/.test(dj.error)) openSettings()
+          if (data.message && /还没有配置/.test(data.message)) {
+            loadConfig()
+          }
         } else if (event === 'done') {
           dj.done = true
           dj.statusText = ''
           dj.steps.forEach(st => { st.done = true })
           dj.activeStep = -1
+          dj.reasoningOpen = false // 完成后自动收起思考链，突出正文/卡片（可点开回看）
           if (data.elapsedMs) {
             dj.textDoneMs = data.elapsedMs
           }
@@ -690,91 +660,20 @@ const ask = async () => {
     dj.statusText = ''
     loading.value = false
     scrollBottom()
+    loadConfig() // 每轮结束刷新 AI 状态徽标（管理员可能在系统设置里刚改配置）
   }
 }
 
-// ===== AI 连接配置（P3 BYOK 可视化配置板块） =====
+// ===== AI 连接状态徽标（配置唯一入口：管理后台 → 系统设置） =====
 const loadConfig = async () => {
   try {
     const res = await getAiConfig()
     if (res.code === 200) {
       cfg.value = res.data || {}
-      cfgForm.value.baseUrl = cfg.value.baseUrl || ''
-      cfgForm.value.model = cfg.value.model || ''
-      cfgForm.value.apiKey = ''
-      const match = PROVIDER_PRESETS.find(pp => pp.baseUrl && pp.baseUrl === cfg.value.baseUrl)
-      providerKey.value = match ? match.key : (cfg.value.baseUrl ? 'custom' : 'zhipu')
       cfgLoaded.value = true
     }
   } catch (e) {
     console.error('加载 AI 配置失败:', e)
-  }
-}
-
-const openSettings = () => {
-  testResult.value = ''
-  cfgVisible.value = true
-  loadConfig()
-}
-
-const saveCfg = async () => {
-  if (!cfgForm.value.apiKey && !cfg.value.configured) {
-    ElMessage.warning('请填写 API Key')
-    return
-  }
-  saving.value = true
-  try {
-    const res = await saveAiConfig({
-      apiKey: cfgForm.value.apiKey || undefined,
-      baseUrl: cfgForm.value.baseUrl || undefined,
-      model: cfgForm.value.model || undefined
-    })
-    if (res.code === 200) {
-      cfg.value = res.data || {}
-      cfgForm.value.apiKey = ''
-      testResult.value = ''
-      ElMessage.success('AI 连接配置已保存')
-    } else {
-      ElMessage.error(res.message || '保存失败')
-    }
-  } catch (e) {
-    ElMessage.error(e?.message || '保存失败')
-  } finally {
-    saving.value = false
-  }
-}
-
-const testCfg = async () => {
-  testing.value = true
-  testResult.value = '测试中…'
-  try {
-    const res = await testAiConfig({
-      apiKey: cfgForm.value.apiKey || undefined,
-      baseUrl: cfgForm.value.baseUrl || undefined,
-      model: cfgForm.value.model || undefined
-    })
-    if (res.code === 200 && res.data) {
-      testResult.value = (res.data.ok ? '✓ ' : '✗ ') + (res.data.message || '') + `（${res.data.latencyMs}ms）`
-    } else {
-      testResult.value = res.message || '测试失败'
-    }
-  } catch (e) {
-    testResult.value = '测试失败：' + (e?.message || '网络错误')
-  } finally {
-    testing.value = false
-  }
-}
-
-const clearCfg = async () => {
-  try {
-    const res = await clearAiConfig()
-    if (res.code === 200) {
-      cfg.value = res.data || { configured: false }
-      cfgForm.value = { apiKey: '', baseUrl: '', model: '' }
-      ElMessage.success('已清除 AI 连接配置')
-    }
-  } catch (e) {
-    ElMessage.error('清除失败')
   }
 }
 
@@ -870,6 +769,53 @@ defineExpose({ open: () => { visible.value = true } })
 .dj-text {
   color: var(--text-primary);
   white-space: pre-wrap;
+}
+
+/* 思考链（reasoning_content 实时流） */
+.dj-reasoning {
+  margin: 6px 0 10px;
+  border: 1px dashed var(--border-color, #d9d9d9);
+  border-radius: 8px;
+  background: var(--bg-tertiary, rgba(127, 127, 127, 0.06));
+  overflow: hidden;
+}
+
+.dj-reasoning-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+  user-select: none;
+}
+
+.dj-reasoning-head:hover {
+  color: var(--color-primary, #667eea);
+}
+
+.dj-reasoning-caret {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+.dj-reasoning-caret.open {
+  transform: rotate(90deg);
+}
+
+.dj-reasoning-body {
+  margin: 0;
+  padding: 8px 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-secondary, #999);
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-top: 1px dashed var(--border-color, #eee);
 }
 
 .dj-cards {
@@ -969,11 +915,81 @@ defineExpose({ open: () => { visible.value = true } })
   margin-top: 6px;
 }
 
+.dj-input-wrap {
+  border-top: 1px solid var(--border-color-light);
+  padding-top: 10px;
+}
+
+.dj-image-preview {
+  display: flex;
+  gap: 8px;
+  padding: 0 4px 8px;
+  flex-wrap: wrap;
+}
+
+.dj-preview-item {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color-light);
+}
+
+.dj-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dj-preview-remove {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 9px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .dj-input {
   display: flex;
   gap: 8px;
-  padding: 12px 4px 4px;
-  border-top: 1px solid var(--border-color-light);
+  padding: 0 4px 4px;
+  align-items: center;
+}
+
+.dj-input :deep(.el-upload) {
+  display: inline-flex;
+}
+
+.dj-msg-images {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.dj-msg-thumb {
+  max-width: 132px;
+  max-height: 132px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+}
+
+.dj-msg-text {
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* 抽屉本体融入主题 */
@@ -1028,6 +1044,14 @@ defineExpose({ open: () => { visible.value = true } })
   align-items: center;
   gap: 8px;
   justify-content: center;
+}
+
+.dj-cfg-badge {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  padding: 2px 8px;
+  border: 1px solid var(--border-color-light);
+  border-radius: 999px;
 }
 
 .dj-cfg-status {

@@ -39,5 +39,9 @@ public class UserAiConfig {
     @Column(nullable = false, length = 64)
     private String model;
 
+    /** 思考模式：auto(默认,不干预)/enabled(强制思考)/disabled(关闭思考,更快)。仅对支持 thinking 开关的推理模型(如智谱 GLM-4.5+)生效 */
+    @Column(length = 16)
+    private String thinkingMode;
+
     private LocalDateTime updateTime;
 }

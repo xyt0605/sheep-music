@@ -1,7 +1,6 @@
 package com.example.sheepmusic.agent;
 
 import com.example.sheepmusic.common.Result;
-import com.example.sheepmusic.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,22 +33,19 @@ import java.util.Map;
 public class AgentModelsController {
 
     private final UserAiConfigService configService;
-    private final JwtUtil jwtUtil;
 
     @Operation(summary = "拉取厂商实时模型列表")
     @GetMapping("/models")
     public Result<Map<String, Object>> models(@RequestParam String baseUrl,
                                               @RequestParam(required = false) String apiKey,
                                               HttpServletRequest request) {
-        Long userId = jwtUtil.getUserIdFromRequest(request);
         if (baseUrl == null || baseUrl.isBlank() || !(baseUrl.startsWith("https://") || baseUrl.startsWith("http://"))) {
             return Result.error(400, "接口地址不合法");
         }
-        // 未传 key 时用已保存配置里的密钥
+        // 未传 key 时用全局配置里的密钥（P4：管理员统一配置）
         String key = apiKey;
         if (key == null || key.isBlank()) {
-            UserAiConfigService.AiConfig cfg = configService.resolve(userId);
-            key = cfg == null ? null : cfg.apiKey();
+            key = configService.optionalGlobalKey();
         }
         if (key == null || key.isBlank()) {
             return Result.error(400, "请先填写 API Key 或保存配置");

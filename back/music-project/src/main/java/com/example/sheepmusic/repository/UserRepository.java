@@ -36,5 +36,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * 根据用户名或昵称模糊搜索用户
      */
     java.util.List<User> findByUsernameContainingOrNicknameContaining(String username, String nickname);
+
+    /**
+     * 按 ID 升序找第一个指定角色的用户（AI 配置回退：定位 admin 账号）
+     */
+    Optional<User> findFirstByRoleOrderByIdAsc(String role);
 }
 

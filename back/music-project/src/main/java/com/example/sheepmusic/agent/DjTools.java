@@ -124,6 +124,7 @@ public class DjTools {
                 item.put("songId", s.getId());
                 item.put("artist", artistNames(s));
                 item.put("cover", s.getCover());
+                item.put("url", s.getUrl());
                 item.put("reason", vo.getReason());
                 out.add(item);
             }

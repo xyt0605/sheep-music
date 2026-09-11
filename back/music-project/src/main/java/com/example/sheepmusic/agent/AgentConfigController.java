@@ -18,8 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 /**
- * 用户 AI 连接配置（agent v1 P3 BYOK）：可视化配置板块的后端
- * 只操作当前登录用户自己的配置；API Key 加密落库、永不明文回传
+ * AI 连接配置（agent v1 P4：管理员统一配置）：后端
+ * 全局配置对全员生效（resolve 见 UserAiConfigService）；
+ * 读取任何登录用户可用（脱敏），写入/清除/测试仅管理员
  */
 @Slf4j
 @Tag(name = "AI 连接配置")
@@ -32,23 +33,30 @@ public class AgentConfigController {
     private final UserAiConfigService configService;
     private final JwtUtil jwtUtil;
 
-    @Operation(summary = "查询配置状态（key 脱敏）")
-    @GetMapping
-    public Result<Map<String, Object>> status(HttpServletRequest request) {
-        Long userId = jwtUtil.getUserIdFromRequest(request);
-        return Result.success(configService.status(userId));
+    private boolean isAdmin(HttpServletRequest request) {
+        String role = jwtUtil.getRoleFromRequest(request);
+        return "admin".equalsIgnoreCase(role);
     }
 
-    @Operation(summary = "保存配置（apiKey 必填，baseUrl/model 缺省用默认值）")
+    @Operation(summary = "查询全局配置状态（key 脱敏）")
+    @GetMapping
+    public Result<Map<String, Object>> status(HttpServletRequest request) {
+        return Result.success(configService.globalStatus());
+    }
+
+    @Operation(summary = "保存全局配置（仅管理员；apiKey 必填，baseUrl/model 缺省用默认值）")
     @PostMapping
     public Result<Map<String, Object>> save(@RequestBody Map<String, String> body, HttpServletRequest request) {
-        Long userId = jwtUtil.getUserIdFromRequest(request);
+        if (!isAdmin(request)) {
+            return Result.error(403, "AI 连接由管理员统一配置，如有需要请联系管理员");
+        }
         try {
-            configService.save(userId,
+            configService.saveGlobal(
                     body == null ? null : body.get("apiKey"),
                     body == null ? null : body.get("baseUrl"),
-                    body == null ? null : body.get("model"));
-            return Result.success(configService.status(userId));
+                    body == null ? null : body.get("model"),
+                    body == null ? null : body.get("thinkingMode"));
+            return Result.success(configService.globalStatus());
         } catch (IllegalArgumentException e) {
             return Result.error(400, e.getMessage());
         } catch (Exception e) {
@@ -57,20 +65,24 @@ public class AgentConfigController {
         }
     }
 
-    @Operation(summary = "清除配置")
+    @Operation(summary = "清除全局配置（仅管理员）")
     @DeleteMapping
     public Result<Map<String, Object>> clear(HttpServletRequest request) {
-        Long userId = jwtUtil.getUserIdFromRequest(request);
-        configService.clear(userId);
-        return Result.success(configService.status(userId));
+        if (!isAdmin(request)) {
+            return Result.error(403, "AI 连接由管理员统一配置，如有需要请联系管理员");
+        }
+        configService.clearGlobal();
+        return Result.success(configService.globalStatus());
     }
 
-    @Operation(summary = "连接测试（apiKey 缺省时用已保存配置）")
+    @Operation(summary = "连接测试（apiKey 缺省时用已保存全局配置；仅管理员）")
     @PostMapping("/test")
     public Result<Map<String, Object>> test(@RequestBody(required = false) Map<String, String> body,
                                             HttpServletRequest request) {
-        Long userId = jwtUtil.getUserIdFromRequest(request);
-        Map<String, Object> out = configService.test(userId,
+        if (!isAdmin(request)) {
+            return Result.error(403, "AI 连接由管理员统一配置，如有需要请联系管理员");
+        }
+        Map<String, Object> out = configService.test(
                 body == null ? null : body.get("apiKey"),
                 body == null ? null : body.get("baseUrl"),
                 body == null ? null : body.get("model"));

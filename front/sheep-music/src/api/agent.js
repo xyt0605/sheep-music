@@ -7,20 +7,20 @@ import request from '@/utils/request'
 const getToken = () => localStorage.getItem('token')
 
 /**
- * 小屋 DJ：fetch + ReadableStream 解析 SSE（EventSource 无法携带 JWT）
+ * 奶包（小屋 DJ Agent）：fetch + ReadableStream 解析 SSE（EventSource 无法携带 JWT）
  * @param {string} query 用户需求
  * @param {string} sessionId 会话 ID（同一抽屉生命周期复用，服务端据此维持多轮记忆）
- * @param {Object} handlers onEvent(event, data) 事件回调
+ * @param {Object} handlers onEvent(event, data) 事件回调；images 为 data URL 数组（多模态附图，可空）
  * @returns {Promise<void>} 流结束（done/error/断开）后 resolve
  */
-export async function streamDj(query, sessionId, { onEvent } = {}) {
+export async function streamDj(query, sessionId, { onEvent, images } = {}) {
   const res = await fetch(BASE + '/agent/dj/stream', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${getToken()}`
     },
-    body: JSON.stringify({ query, sessionId })
+    body: JSON.stringify({ query, sessionId, images: images && images.length ? images : undefined })
   })
   if (!res.ok || !res.body) {
     // 401 等由拦截器语义约定：这里抛给调用方展示

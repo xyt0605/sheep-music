@@ -4,8 +4,6 @@ import com.example.sheepmusic.entity.Song;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -37,26 +35,26 @@ public class AgentOrchestrator {
     private final DjExtraTools extraTools;
     private final DjSessionStore sessionStore;
     private final UserAiConfigService configService;
-    private final ChatClientFactory clientFactory;
+    private final LlmStreamClient llm;
     private final ObjectMapper mapper = new ObjectMapper();
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
 
     public AgentOrchestrator(@Autowired DjTools tools,
                              @Autowired DjSessionStore sessionStore,
                              @Autowired UserAiConfigService configService,
-                             @Autowired ChatClientFactory clientFactory,
+                             @Autowired LlmStreamClient llm,
                              @Autowired DjExtraTools extraTools) {
         this.tools = tools;
         this.sessionStore = sessionStore;
         this.configService = configService;
-        this.clientFactory = clientFactory;
+        this.llm = llm;
         this.extraTools = extraTools;
     }
 
-    /** 在工作线程中执行整轮编排（由 Controller 提交到线程池） */
-    public void run(Long userId, String sessionId, String query, SseEmitter emitter) {
+    /** 在工作线程中执行整轮编排（由 Controller 提交到线程池）；images 为用户附图的 data URL（可空） */
+    public void run(Long userId, String sessionId, String query, java.util.List<String> images, SseEmitter emitter) {
         try {
-            doRun(userId, sessionId, query, emitter);
+            doRun(userId, sessionId, query, images, emitter);
             emitter.complete();
         } catch (org.springframework.web.util.NestedServletException | IllegalStateException e) {
             log.warn("DJ 会话中断: {}", e.getMessage());
@@ -74,15 +72,14 @@ public class AgentOrchestrator {
         }
     }
 
-    private void doRun(Long userId, String sessionId, String query, SseEmitter emitter) throws Exception {
+    private void doRun(Long userId, String sessionId, String query, java.util.List<String> images, SseEmitter emitter) throws Exception {
         long turnStart = System.currentTimeMillis();
-        // ---------- BYOK：解析用户自己的 AI 配置（无配置 → 明确提示） ----------
+        // ---------- P4：管理员统一配置（全局行优先，回退 admin 账号个人行；无配置 → 明确提示） ----------
         UserAiConfigService.AiConfig cfg = configService.resolve(userId);
         if (cfg == null) {
-            send(emitter, "error", Map.of("message", "当前用户还没有配置密钥，无法使用。请点击抽屉右上角 ⚙ 完成 AI 连接配置"));
+            send(emitter, "error", Map.of("message", "管理员还没有配置 AI 连接，奶包暂时不能营业。请在 管理后台 → 系统设置 完成 AI 连接配置"));
             return;
         }
-        ChatClient chatClient = clientFactory.create(cfg.apiKey(), cfg.baseUrl(), cfg.model());
 
         // ---------- 会话记忆（P3）：MySQL 持久化，session 事件回传 + 历史上下文 ----------
         DjSessionStore.Context ctx = sessionStore.load(userId, sessionId);
@@ -102,26 +99,40 @@ public class AgentOrchestrator {
             historyText.append("听众口味画像：").append(toJson(taste)).append('\n');
         }
 
-        // ---------- ① Dispatcher：意图拆解（含 capability 能力路由） ----------
+        // ---------- ① Dispatcher：意图拆解（含 capability 能力路由；带图时走视觉多模态） ----------
         send(emitter, "stage", Map.of("stage", "dispatcher", "status", "start", "elapsedMs", System.currentTimeMillis() - turnStart));
-        String intentJson = callLlm(chatClient, AgentPrompts.DISPATCHER, historyText + "用户需求：" + query, 1024, 0.3);
+        String intentJson;
+        try {
+            intentJson = callLlm(cfg, emitter, "dispatcher", AgentPrompts.DISPATCHER, historyText + "用户需求：" + query, images, 1024, 0.3);
+        } catch (Exception e) {
+            if (images != null && !images.isEmpty()) {
+                throw new IllegalStateException("图片理解失败：当前模型可能不支持看图。可在 管理后台 → 系统设置 换成视觉模型（如 glm-4.5v / glm-4v-plus），或去掉图片只用文字再试");
+            }
+            throw e;
+        }
         Map<String, Object> intent = parseJson(intentJson);
         int wantCount = intVal(intent, "count", 8);
         send(emitter, "stage", Map.of("stage", "dispatcher", "status", "done", "intent", intent, "elapsedMs", System.currentTimeMillis() - turnStart));
+
+        // ---------- 图片理解的桥接：Dispatcher 看图 → imageSummary 文本注入下游（检索/文案阶段仍纯文本） ----------
+        String imageSummary = str(intent, "imageSummary", "");
+        if (imageSummary != null && !imageSummary.isBlank()) {
+            historyText.append("用户附了图片，画面内容：").append(imageSummary).append('\n');
+        }
 
         // ---------- 能力路由（第一批扩展）：player / info / playlist 走轻量分支 ----------
         String capability = str(intent, "capability", "recommend");
         switch (capability) {
             case "player" -> {
-                runPlayer(userId, query, intent, historyText, chatClient, sessionId, emitter);
+                runPlayer(userId, query, intent, historyText, cfg, sessionId, emitter);
                 return;
             }
             case "info" -> {
-                runInfo(userId, query, intent, historyText, chatClient, sessionId, emitter);
+                runInfo(userId, query, intent, historyText, cfg, sessionId, emitter);
                 return;
             }
             case "playlist" -> {
-                runPlaylistCreate(userId, sessionId, query, historyText, chatClient, emitter);
+                runPlaylistCreate(userId, sessionId, query, historyText, cfg, emitter);
                 return;
             }
             default -> { /* recommend：走下方主链路 */ }
@@ -151,7 +162,7 @@ public class AgentOrchestrator {
                 for (int attempt = 0; attempt < 2 && act == null; attempt++) {
                     String extra = attempt == 0 ? "" : "\n（你上一次的输出无法解析，请只输出一个 JSON 对象。）";
                     try {
-                        act = parseJson(callLlm(chatClient, AgentPrompts.LIBRARIAN, userMsg + extra, 1600, 0.4));
+                        act = parseJson(callLlm(cfg, emitter, "librarian", AgentPrompts.LIBRARIAN, userMsg + extra, 1600, 0.4));
                     } catch (Exception e) {
                         log.debug("Librarian 第{}步第{}次输出解析失败: {}", step, attempt + 1, e.getMessage());
                     }
@@ -201,7 +212,7 @@ public class AgentOrchestrator {
             send(emitter, "stage", Map.of("stage", "critic", "status", "start", "round", round, "elapsedMs", System.currentTimeMillis() - turnStart));
             Map<String, Object> verdict = null;
             try {
-                verdict = parseJson(callLlm(chatClient, AgentPrompts.CRITIC,
+                verdict = parseJson(callLlm(cfg, emitter, "critic", AgentPrompts.CRITIC,
                         "用户需求：" + query + "\n候选组：\n" + describe(picked), 800, 0.2));
             } catch (Exception e) {
                 log.debug("Critic 输出解析失败，视为通过: {}", e.getMessage());
@@ -228,7 +239,7 @@ public class AgentOrchestrator {
 
         // ---------- ③ DJ：串场词 + 逐首理由（P2：单次 JSON 调用，intro 切片伪流式） ----------
         send(emitter, "stage", Map.of("stage", "dj", "status", "start", "elapsedMs", System.currentTimeMillis() - turnStart));
-        String djRaw = callLlm(chatClient, AgentPrompts.DJ,
+        String djRaw = callLlm(cfg, emitter, "dj", AgentPrompts.DJ,
                 historyText + "用户需求：" + query + "\n候选歌曲（按推荐顺序）：\n" + describe(picked),
                 1800, 0.85);
         String intro = "";
@@ -265,6 +276,7 @@ public class AgentOrchestrator {
             } else {
                 card.put("songId", item.get("songId"));
                 card.put("source", "local");
+                card.put("url", item.get("url"));
             }
             card.put("title", item.get("title"));
             card.put("artist", item.get("artist"));
@@ -308,12 +320,12 @@ public class AgentOrchestrator {
 
     /** 播放控制：1 次 LLM 调用出命令 → player_command 事件由前端执行；点歌时带卡片数据 */
     private void runPlayer(Long userId, String query, Map<String, Object> intent, StringBuilder historyText,
-                           ChatClient chatClient, String sessionId, SseEmitter emitter) throws Exception {
+                           UserAiConfigService.AiConfig cfg, String sessionId, SseEmitter emitter) throws Exception {
         send(emitter, "stage", Map.of("stage", "player", "status", "start", "elapsedMs", 0));
         Map<String, Object> cmd = null;
         for (int attempt = 0; attempt < 2 && cmd == null; attempt++) {
             try {
-                cmd = parseJson(callLlm(chatClient, AgentPrompts.PLAYER,
+                cmd = parseJson(callLlm(cfg, emitter, "player", AgentPrompts.PLAYER,
                         historyText.toString() + "用户需求：" + query, 700, 0.2));
             } catch (Exception e) {
                 log.debug("PLAYER 输出解析失败: {}", e.getMessage());
@@ -374,7 +386,7 @@ public class AgentOrchestrator {
 
     /** 知识问答：歌词/详情工具取数 → INFO 提示词基于事实回答（禁编造） */
     private void runInfo(Long userId, String query, Map<String, Object> intent, StringBuilder historyText,
-                         ChatClient chatClient, String sessionId, SseEmitter emitter) throws Exception {
+                         UserAiConfigService.AiConfig cfg, String sessionId, SseEmitter emitter) throws Exception {
         send(emitter, "stage", Map.of("stage", "info", "status", "start", "elapsedMs", 0));
         String keyword = str(intent, "keyword", "");
         StringBuilder dataText = new StringBuilder();
@@ -439,7 +451,7 @@ public class AgentOrchestrator {
             dataText.append("（搜索没有找到相关歌曲数据）\n");
         }
 
-        String answer = callLlm(chatClient, AgentPrompts.INFO,
+        String answer = callLlm(cfg, emitter, "info", AgentPrompts.INFO,
                 historyText.toString() + "用户问题：" + query + "\n\n工具数据：\n" + dataText.toString(), 1200, 0.5);
         if (answer == null || answer.isBlank()) {
             answer = "这个我还不确定，数据里没有足够的线索～";
@@ -454,7 +466,7 @@ public class AgentOrchestrator {
 
     /** 歌单生成：把会话里最近一轮候选存为用户歌单（仅本地 songId 入库） */
     private void runPlaylistCreate(Long userId, String sessionId, String query, StringBuilder historyText,
-                                   ChatClient chatClient, SseEmitter emitter) throws Exception {
+                                   UserAiConfigService.AiConfig cfg, SseEmitter emitter) throws Exception {
         send(emitter, "stage", Map.of("stage", "playlist", "status", "start", "elapsedMs", 0));
         // 取本会话最近一轮的候选（titlesJson 派生不了 songId，这里重新按标题检索本地库）
         DjSessionStore.Context ctx = sessionStore.load(userId, sessionId);
@@ -482,7 +494,7 @@ public class AgentOrchestrator {
                     "name", result.get("name"),
                     "count", result.get("count"),
                     "skipped", result.getOrDefault("skipped", 0)));
-            reply = callLlm(chatClient, AgentPrompts.PLAYLIST,
+            reply = callLlm(cfg, emitter, "playlist", AgentPrompts.PLAYLIST,
                     "创建结果：歌单「" + result.get("name") + "」收录 " + result.get("count")
                             + " 首，" + result.getOrDefault("skipped", 0) + " 首试听源未入库", 400, 0.7);
         } else {
@@ -565,13 +577,18 @@ public class AgentOrchestrator {
 
     // ========== LLM 调用与 JSON 解析 ==========
 
-    private String callLlm(ChatClient chatClient, String system, String user, int maxTokens, double temperature) {
-        return chatClient.prompt()
-                .system(system)
-                .user(user)
-                .options(OpenAiChatOptions.builder().maxTokens(maxTokens).temperature(temperature).build())
-                .call()
-                .content();
+    private String callLlm(UserAiConfigService.AiConfig cfg, SseEmitter emitter, String stage,
+                           String system, String user, int maxTokens, double temperature) {
+        return callLlm(cfg, emitter, stage, system, user, null, maxTokens, temperature);
+    }
+
+    private String callLlm(UserAiConfigService.AiConfig cfg, SseEmitter emitter, String stage,
+                           String system, String user, java.util.List<String> images, int maxTokens, double temperature) {
+        // 流式调用：思考内容(reasoning_content)实时以 reasoning_delta 事件外发（拆黑盒，展示"模型在想什么"）；
+        // 正文累积后返回，下游 JSON 解析逻辑不变。reasoning_delta 用 sendSafe：思考增量高频，
+        // 即使客户端已断开也不应从这里抛出打断（真正的断开会在下一个 send 事件处被捕获并终止）。
+        return llm.stream(cfg, system, user, images, maxTokens, temperature,
+                reasoning -> sendSafe(emitter, "reasoning_delta", Map.of("stage", stage, "delta", reasoning)));
     }
 
     /** 防御性 JSON 提取：剥代码围栏 + 截取首个平衡大括号块 */

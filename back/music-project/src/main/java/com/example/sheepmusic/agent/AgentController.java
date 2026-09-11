@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
  * 未配 AGENT_API_KEY 时以 error 事件优雅降级；密钥不入仓库
  */
 @Slf4j
-@Tag(name = "小屋 DJ")
+@Tag(name = "奶包")
 @RestController
 @RequestMapping("/agent")
 @CrossOrigin
@@ -41,28 +41,49 @@ public class AgentController {
 
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
 
-    @Operation(summary = "小屋 DJ 对话（SSE 流式，支持会话记忆）")
+    @Operation(summary = "奶包对话（SSE 流式，支持会话记忆与图片多模态）")
     @PostMapping(value = "/dj/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter djStream(@RequestBody Map<String, String> body, HttpServletRequest request) {
+    public SseEmitter djStream(@RequestBody Map<String, Object> body, HttpServletRequest request) {
         SseEmitter emitter = new SseEmitter(0L);
         Long userId = jwtUtil.getUserIdFromRequest(request);
-        String query = body == null || body.get("query") == null ? "" : body.get("query").trim();
-        String sessionId = body == null || body.get("sessionId") == null ? "" : body.get("sessionId").trim();
+        String query = body == null || body.get("query") == null ? "" : String.valueOf(body.get("query")).trim();
+        String sessionId = body == null || body.get("sessionId") == null ? "" : String.valueOf(body.get("sessionId")).trim();
+        java.util.List<String> images = extractImages(body);
 
-        if (query.isEmpty()) {
-            sendAndComplete(emitter, "error", Map.of("message", "跟 DJ 说点想听什么吧～"));
+        if (query.isEmpty() && images.isEmpty()) {
+            sendAndComplete(emitter, "error", Map.of("message", "跟奶包说点想听什么，或附一张图片吧～"));
             return emitter;
         }
-        // BYOK（P3）：用户必须配置自己的密钥才能使用
+        // P4：管理员统一配置；无配置 → 明确指引到系统设置
         if (configService.resolve(userId) == null) {
             log.debug("用户 {} 未配置 AI 密钥，DJ 降级提示", userId);
             sendAndComplete(emitter, "error", Map.of("message",
-                    "当前用户还没有配置密钥，无法使用。请点击抽屉右上角 ⚙ 完成 AI 连接配置"));
+                    "管理员还没有配置 AI 连接，奶包暂时不能营业。请在 管理后台 → 系统设置 完成 AI 连接配置"));
             return emitter;
         }
         String sid = sessionId.isBlank() ? java.util.UUID.randomUUID().toString() : sessionId;
-        executor.submit(() -> orchestrator.run(userId, sid, query, emitter));
+        executor.submit(() -> orchestrator.run(userId, sid, query, images, emitter));
         return emitter;
+    }
+
+    /** 附图校验：≤3 张、data URL 格式、单张 ≤1.5M 字符（前端已压缩）；不合规直接忽略 */
+    private java.util.List<String> extractImages(Map<String, Object> body) {
+        Object raw = body == null ? null : body.get("images");
+        if (!(raw instanceof java.util.List<?> list)) {
+            return java.util.List.of();
+        }
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (Object o : list) {
+            if (!(o instanceof String s) || s.isBlank() || !s.startsWith("data:image/")
+                    || s.length() > 1_500_000) {
+                continue;
+            }
+            out.add(s);
+            if (out.size() >= 3) {
+                break;
+            }
+        }
+        return out;
     }
 
     private void sendAndComplete(SseEmitter emitter, String event, Object data) {
