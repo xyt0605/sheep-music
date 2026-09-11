@@ -168,7 +168,7 @@
           <el-button
             class="action-btn"
             circle
-            :disabled="!playerStore.currentSong?.id"
+            :disabled="!playerStore.currentSong?.id || playerStore.currentSong?.isExternal"
             @click="showCommentsDialog = true"
           >
             <el-icon><ChatLineRound /></el-icon>
@@ -183,7 +183,7 @@
           <el-button
             class="action-btn"
             circle
-            :disabled="!playerStore.currentSong?.id"
+            :disabled="!playerStore.currentSong?.id || playerStore.currentSong?.isExternal"
             @click="handleShareSong"
           >
             <el-icon><Share /></el-icon>

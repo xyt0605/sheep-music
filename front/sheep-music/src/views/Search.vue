@@ -114,115 +114,267 @@
       <p>搜索中...</p>
     </div>
 
-    <!-- 搜索结果 - 单曲 -->
+    <!-- 搜索结果 - 单曲（按来源分区：本地曲库 + 开放曲库，曲库供应链 v1） -->
     <transition name="fade">
       <div
         v-if="!loading && keyword && searchType === 'songs'"
         class="search-results"
       >
-        <div
-          v-if="songResults.length > 0"
-          class="songs-container"
-        >
-          <div class="result-header">
-            <h3>找到 {{ totalSongs }} 首歌曲</h3>
+        <!-- 分区一：本地曲库 -->
+        <div class="source-section">
+          <div class="result-header source-header">
+            <el-icon class="header-icon">
+              <Headset />
+            </el-icon>
+            <h3>本地曲库</h3>
+            <span class="source-count">{{ totalSongs }} 首</span>
           </div>
 
-          <div class="song-list">
-            <div 
-              v-for="(song, index) in songResults" 
-              :key="song.id"
-              class="song-item"
-              @click="handlePlaySong(song)"
-            >
-              <div class="song-index">
-                {{ (currentPage - 1) * pageSize + index + 1 }}
-              </div>
-              <img
-                :src="ossThumb(song.cover, 200) || defaultCover"
-                class="song-cover"
+          <div
+            v-if="songResults.length > 0"
+            class="songs-container"
+          >
+            <div class="song-list">
+              <div
+                v-for="(song, index) in songResults"
+                :key="song.id"
+                class="song-item"
+                @click="handlePlaySong(song)"
               >
-              <div class="song-info">
-                <div
-                  class="song-name"
-                  v-html="highlightKeyword(song.title)"
-                />
-                <div class="song-artist">
-                  <template
-                    v-for="(artist, idx) in song.artists || []"
-                    :key="artist.id"
-                  >
-                    <span
-                      class="clickable"
-                      @click.stop="goToArtist(artist.id)"
-                      v-html="highlightKeyword(artist.name)"
-                    />
-                    <span v-if="idx < (song.artists?.length || 0) - 1"> / </span>
-                  </template>
-                  <span v-if="!song.artists || song.artists.length === 0">未知歌手</span>
+                <div class="song-index">
+                  {{ (currentPage - 1) * pageSize + index + 1 }}
+                </div>
+                <img
+                  :src="ossThumb(song.cover, 200) || defaultCover"
+                  class="song-cover"
+                >
+                <div class="song-info">
+                  <div
+                    class="song-name"
+                    v-html="highlightKeyword(song.title)"
+                  />
+                  <div class="song-artist">
+                    <template
+                      v-for="(artist, idx) in song.artists || []"
+                      :key="artist.id"
+                    >
+                      <span
+                        class="clickable"
+                        @click.stop="goToArtist(artist.id)"
+                        v-html="highlightKeyword(artist.name)"
+                      />
+                      <span v-if="idx < (song.artists?.length || 0) - 1"> / </span>
+                    </template>
+                    <span v-if="!song.artists || song.artists.length === 0">未知歌手</span>
+                  </div>
+                </div>
+                <div class="song-duration">
+                  {{ formatDuration(song.duration) }}
+                </div>
+                <div class="song-actions">
+                  <el-button
+                    icon="CaretRight"
+                    circle
+                    size="small"
+                    title="播放"
+                    @click.stop="handlePlaySong(song)"
+                  />
+                  <el-button
+                    icon="Plus"
+                    circle
+                    size="small"
+                    title="添加到播放列表"
+                    @click.stop="handleAddToPlaylist(song)"
+                  />
+                  <el-button
+                    icon="FolderAdd"
+                    circle
+                    size="small"
+                    title="添加到歌单"
+                    @click.stop="showAddToPlaylistDialog(song.id)"
+                  />
+                  <el-button
+                    :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'"
+                    circle
+                    size="small"
+                    :type="favoriteSongs[song.id] ? 'danger' : ''"
+                    title="收藏"
+                    @click.stop="handleToggleFavorite(song.id)"
+                  />
                 </div>
               </div>
-              <div class="song-duration">
-                {{ formatDuration(song.duration) }}
-              </div>
-              <div class="song-actions">
-                <el-button 
-                  icon="CaretRight" 
-                  circle 
-                  size="small" 
-                  title="播放"
-                  @click.stop="handlePlaySong(song)"
-                />
-                <el-button 
-                  icon="Plus" 
-                  circle 
-                  size="small" 
-                  title="添加到播放列表"
-                  @click.stop="handleAddToPlaylist(song)"
-                />
-                <el-button 
-                  icon="FolderAdd" 
-                  circle 
-                  size="small" 
-                  title="添加到歌单"
-                  @click.stop="showAddToPlaylistDialog(song.id)"
-                />
-                <el-button 
-                  :icon="favoriteSongs[song.id] ? 'StarFilled' : 'Star'"
-                  circle 
-                  size="small" 
-                  :type="favoriteSongs[song.id] ? 'danger' : ''"
-                  title="收藏"
-                  @click.stop="handleToggleFavorite(song.id)"
-                />
+            </div>
+
+            <!-- 分页 -->
+            <el-pagination
+              v-if="totalSongs > pageSize"
+              v-model:current-page="currentPage"
+              :page-size="pageSize"
+              :total="totalSongs"
+              layout="prev, pager, next"
+              class="pagination"
+              @current-change="handlePageChange"
+            />
+          </div>
+
+          <!-- 空状态 - 本地曲库 -->
+          <div
+            v-else
+            class="empty-state"
+          >
+            <el-empty description="本地曲库中没有找到相关歌曲">
+              <template #image>
+                <el-icon class="empty-icon">
+                  <FolderOpened />
+                </el-icon>
+              </template>
+            </el-empty>
+          </div>
+        </div>
+
+        <!-- 分区二+：开放曲库（每个已启用音源一区，CC 授权，试听不入库） -->
+        <div
+          v-for="section in extSections"
+          :key="section.source"
+          class="source-section"
+        >
+          <div class="result-header source-header">
+            <el-icon class="header-icon">
+              <Connection />
+            </el-icon>
+            <h3>{{ section.label }}</h3>
+            <el-tag
+              v-if="section.enabled && section.openLicense"
+              size="small"
+              type="success"
+              effect="plain"
+            >
+              CC 授权
+            </el-tag>
+            <el-tag
+              v-else-if="section.enabled"
+              size="small"
+              type="warning"
+              effect="plain"
+            >
+              聚合试听
+            </el-tag>
+            <el-tag
+              v-else
+              size="small"
+              type="info"
+              effect="plain"
+            >
+              未启用
+            </el-tag>
+            <span
+              v-if="section.enabled && section.total > 0"
+              class="source-count"
+            >
+              {{ section.total }} 首
+            </span>
+          </div>
+
+          <div
+            v-if="section.loading"
+            class="ext-tip"
+          >
+            <el-icon class="is-loading">
+              <Loading />
+            </el-icon>
+            正在搜索{{ section.label }}...
+          </div>
+
+          <template v-else-if="section.enabled">
+            <div
+              v-if="section.songs.length > 0"
+              class="song-list"
+            >
+              <div
+                v-for="song in section.songs"
+                :key="song.id"
+                class="song-item"
+                @click="handlePlayExternal(section, song)"
+              >
+                <div class="song-index ext-index">
+                  <el-icon><Connection /></el-icon>
+                </div>
+                <img
+                  :src="song.cover || defaultCover"
+                  class="song-cover"
+                  @error="song.cover = ''"
+                >
+                <div class="song-info">
+                  <div
+                    class="song-name"
+                    v-html="highlightKeyword(song.title)"
+                  />
+                  <div
+                    class="song-artist"
+                    v-html="highlightKeyword(song.artists[0]?.name || '未知歌手')"
+                  />
+                </div>
+                <a
+                  v-if="song.licenseUrl"
+                  :href="song.licenseUrl"
+                  target="_blank"
+                  rel="noopener"
+                  class="license-badge"
+                  :title="'授权协议：' + (song.licenseName || 'CC')"
+                  @click.stop
+                >{{ song.licenseName || 'CC' }}</a>
+                <div class="song-duration">
+                  {{ formatDuration(song.duration) }}
+                </div>
+                <div class="song-actions">
+                  <el-button
+                    icon="CaretRight"
+                    circle
+                    size="small"
+                    title="播放"
+                    @click.stop="handlePlayExternal(section, song)"
+                  />
+                  <el-button
+                    icon="Plus"
+                    circle
+                    size="small"
+                    title="添加到播放列表"
+                    @click.stop="handleAddExternal(section, song)"
+                  />
+                </div>
               </div>
             </div>
+
+            <div
+              v-else-if="section.message"
+              class="ext-tip"
+            >
+              {{ section.message }}
+            </div>
+            <div
+              v-else
+              class="ext-tip"
+            >
+              {{ section.label }}中没有找到相关歌曲
+            </div>
+
+            <el-pagination
+              v-if="section.total > extPageSize"
+              v-model:current-page="section.page"
+              :page-size="extPageSize"
+              :total="section.total"
+              layout="prev, pager, next"
+              class="pagination"
+              @current-change="handleExtPageChange(section)"
+            />
+          </template>
+
+          <div
+            v-else
+            class="ext-tip"
+          >
+            {{ section.message || '音源未启用' }}
           </div>
-    
-          <!-- 分页 -->
-          <el-pagination
-            v-if="totalSongs > pageSize"
-            v-model:current-page="currentPage"
-            :page-size="pageSize"
-            :total="totalSongs"
-            layout="prev, pager, next"
-            class="pagination"
-            @current-change="handlePageChange"
-          />
-        </div>
-    
-        <!-- 空状态 - 单曲 -->
-        <div
-          v-else
-          class="empty-state"
-        >
-          <el-empty description="没有找到相关歌曲">
-            <template #image>
-              <el-icon class="empty-icon">
-                <FolderOpened />
-              </el-icon>
-            </template>
-          </el-empty>
         </div>
       </div>
     </transition>
@@ -304,19 +456,20 @@ import { useRouter } from 'vue-router'
 import { usePlayerStore } from '@/store/player'
 import { useUserStore } from '@/store/user'
 import { searchSongs } from '@/api/song'
+import { searchExternalSongs, getExternalSources, getExternalCover } from '@/api/externalMusic'
 import { getArtists } from '@/api/artist'
-import { 
-  getSearchHistory, 
-  addSearchHistory, 
+import {
+  getSearchHistory,
+  addSearchHistory,
   clearSearchHistory as clearSearchHistoryAPI,
   deleteSearchHistory,
-  getHotSearchKeywords 
+  getHotSearchKeywords
 } from '@/api/searchHistory'
 import { toggleFavorite, batchCheckFavorites } from '@/api/favorite'
 import { ElMessage } from 'element-plus'
-import { 
-  Search, Loading, FolderOpened, Headset, User, 
-  TrendCharts, Clock, Trophy, Close, CaretRight, UserFilled 
+import {
+  Search, Loading, FolderOpened, Headset, User, Connection,
+  TrendCharts, Clock, Trophy, Close, CaretRight, UserFilled
 } from '@element-plus/icons-vue'
 import PlaylistSelector from '@/components/PlaylistSelector.vue'
 
@@ -352,6 +505,35 @@ const totalSongs = ref(0)
 const artistResults = ref([])
 const totalArtists = ref(0)
 const allArtists = ref([]) // 缓存所有歌手
+
+// 开放曲库（外源）搜索——按音源分区，独立 loading 旁路加载，不阻塞本地结果（曲库供应链 v1）
+// section 结构：{ source, label, enabled, message, total, songs, page, loading }
+const extSections = ref([])
+const extPageSize = ref(20)
+let extSourcesPromise = null
+
+const loadSources = () => {
+  if (extSourcesPromise) return extSourcesPromise
+  extSourcesPromise = getExternalSources()
+    .then(res => {
+      extSections.value = (res.code === 200 ? res.data || [] : []).map(s => ({
+        source: s.source,
+        label: s.label,
+        enabled: s.enabled,
+        openLicense: s.openLicense,
+        message: '',
+        total: 0,
+        songs: [],
+        page: 1,
+        loading: false
+      }))
+    })
+    .catch(error => {
+      console.error('加载音源列表失败:', error)
+      extSections.value = []
+    })
+  return extSourcesPromise
+}
 
   const defaultCover = '/default-cover.svg'
   const defaultAvatar = '/default-artist.svg'
@@ -390,6 +572,7 @@ onMounted(() => {
   loadHotSearches()
   loadSearchHistory()
   loadAllArtists()
+  loadSources()
 })
 
 // 加载热门搜索
@@ -495,6 +678,7 @@ const performSearch = async () => {
   if (!keyword.value.trim()) {
     songResults.value = []
     artistResults.value = []
+    resetExternal()
     hasSearched.value = false
     return
   }
@@ -508,6 +692,8 @@ const performSearch = async () => {
   try {
     if (searchType.value === 'songs') {
       await searchSongsData()
+      // 开放曲库异步旁路搜索：先确保音源分区就绪，再并行搜索各源
+      loadSources().then(() => searchExternalData())
     } else {
       await searchArtistsData()
     }
@@ -538,6 +724,110 @@ const searchSongsData = async () => {
     console.error('搜索歌曲失败:', error)
     throw error
   }
+}
+
+// ========== 开放曲库（外源）搜索 ==========
+
+// 重置外源分区状态（保留分区骨架）
+const resetExternal = () => {
+  extSections.value.forEach(s => {
+    s.songs = []
+    s.total = 0
+    s.page = 1
+    s.message = ''
+    s.loading = false
+  })
+}
+
+// 后端 VO → player 歌曲对象（外源歌曲写操作不适用，见规格 FR-5）
+const mapExternalSong = (vo, source) => ({
+  id: `ext:${source}:${vo.sourceTrackId}`,
+  title: vo.title,
+  artists: [{ name: vo.artist }],
+  cover: vo.cover,
+  duration: vo.duration,
+  url: vo.streamUrl,
+  lyric: '',
+  isExternal: true,
+  source,
+  sourceTrackId: vo.sourceTrackId,
+  licenseName: vo.licenseName,
+  licenseUrl: vo.licenseUrl
+})
+
+// 搜索单个音源分区（异常只影响本分区展示）
+const searchSection = async (section, kw) => {
+  section.loading = true
+  try {
+    const res = await searchExternalSongs({
+      source: section.source,
+      keyword: kw,
+      page: section.page - 1,
+      size: extPageSize.value
+    })
+    if (res.code === 200 && res.data) {
+      section.enabled = res.data.enabled
+      section.message = res.data.message || ''
+      section.total = Math.max(0, res.data.total || 0)
+      section.songs = (res.data.items || []).map(vo => mapExternalSong(vo, res.data.source))
+      // 搜索页行不带封面：异步回填（响应式，加载完自动替换占位图）
+      fillCovers(section.songs)
+    } else {
+      section.songs = []
+      section.total = 0
+      section.message = '搜索失败，请稍后重试'
+    }
+  } catch (error) {
+    console.error(`开放曲库[${section.source}]搜索失败:`, error)
+    section.songs = []
+    section.total = 0
+    section.message = '搜索失败，请稍后重试'
+  } finally {
+    section.loading = false
+  }
+}
+
+// 并行搜索所有分区（旁路，不阻塞本地结果）
+const searchExternalData = () => {
+  const kw = keyword.value.trim()
+  extSections.value.forEach(section => {
+    section.page = 1
+    searchSection(section, kw)
+  })
+}
+
+// 外源分区翻页
+const handleExtPageChange = (section) => {
+  searchSection(section, keyword.value.trim())
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// 播放外源歌曲（整区入队，队列内可切歌）
+const handlePlayExternal = (section, song) => {
+  playerStore.play(song, section.songs)
+}
+
+// 外源歌曲加入播放队列
+const handleAddExternal = (section, song) => {
+  playerStore.addToPlaylist(song)
+  ElMessage.success(`已添加到播放列表: ${song.title}`)
+}
+
+// 外源列表封面异步回填：搜索页行本身不带封面，逐首向后端解析（后端 5 分钟页面缓存，3 并发防打爆上游）
+const fillCovers = (songs) => {
+  const queue = songs.filter(s => !s.cover && s.source && s.sourceTrackId)
+  const worker = async () => {
+    while (queue.length) {
+      const song = queue.shift()
+      try {
+        const res = await getExternalCover({ source: song.source, trackId: song.sourceTrackId })
+        if (res.code === 200 && res.data) song.cover = res.data
+      } catch (error) {
+        // 单曲封面失败保持占位图
+      }
+    }
+  }
+  for (let i = 0; i < 3 && i < queue.length; i++) worker()
 }
 
 // 加载收藏状态
@@ -600,6 +890,7 @@ const handleSearch = () => {
   if (!keyword.value.trim()) {
     songResults.value = []
     artistResults.value = []
+    resetExternal()
     hasSearched.value = false
     totalSongs.value = 0
     totalArtists.value = 0
@@ -715,7 +1006,8 @@ const handleAddSuccess = () => {
   margin-bottom: 30px;
   position: sticky;
   top: 0;
-  background: #f8f9fa;
+  background: var(--bg-glass);
+  backdrop-filter: var(--glass-blur);
   padding: 20px 0;
   z-index: 10;
 }
@@ -739,8 +1031,8 @@ const handleAddSuccess = () => {
 }
 
 .search-type-selector :deep(.el-segmented__item-selected) {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--gradient-primary);
+  color: #161812;
 }
 
 .search-input {
@@ -748,13 +1040,13 @@ const handleAddSuccess = () => {
 }
 
 .search-input :deep(.el-input__wrapper) {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   border-radius: 25px;
   padding: 5px 15px;
 }
 
 .search-input :deep(.el-input__wrapper:hover) {
-  box-shadow: 0 4px 16px rgba(64, 158, 255, 0.3);
+  box-shadow: var(--shadow-glow);
 }
 
 /* ========== 初始状态 ========== */
@@ -773,22 +1065,23 @@ const handleAddSuccess = () => {
 
 .section-header h3 {
   font-size: 18px;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
   flex: 1;
 }
 
 .header-icon {
   font-size: 24px;
-  color: #409eff;
+  color: var(--color-primary-light);
 }
 
 /* ========== 热门搜索 ========== */
 .hot-search-section {
-  background: white;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color-light);
   padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-xl);
+  box-shadow: none;
   margin-bottom: 25px;
 }
 
@@ -803,17 +1096,18 @@ const handleAddSuccess = () => {
   align-items: center;
   gap: 12px;
   padding: 12px 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
+  background: var(--bg-tertiary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .hot-search-item:hover {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  transform: translateX(5px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  background: var(--surface-elevated);
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .hot-rank {
@@ -822,53 +1116,54 @@ const handleAddSuccess = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ddd;
-  border-radius: 6px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: bold;
-  color: #666;
+  color: var(--text-secondary);
   transition: all 0.3s;
 }
 
 .hot-rank.top-three {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+  background: var(--color-accent);
+  color: #fff;
+  box-shadow: none;
 }
 
 .hot-search-item:hover .hot-rank {
-  background: rgba(255, 255, 255, 0.3);
-  color: white;
+  background: var(--color-accent);
+  color: #fff;
 }
 
 .hot-keyword {
   flex: 1;
   font-size: 14px;
-  color: #333;
+  color: var(--text-primary);
   transition: color 0.3s;
 }
 
 .hot-search-item:hover .hot-keyword {
-  color: white;
+  color: var(--text-primary);
 }
 
 .hot-icon {
   font-size: 18px;
-  color: #fbbf24;
+  color: var(--color-accent);
   transition: all 0.3s;
 }
 
 .hot-search-item:hover .hot-icon {
-  color: white;
+  color: var(--color-accent);
   transform: rotate(15deg);
 }
 
 /* ========== 搜索历史 ========== */
 .search-history-section {
-  background: white;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color-light);
   padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-xl);
+  box-shadow: none;
 }
 
 .history-list {
@@ -882,36 +1177,37 @@ const handleAddSuccess = () => {
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: #f0f2f5;
-  border-radius: 20px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-full);
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .history-item:hover {
-  background: #409eff;
-  color: white;
+  background: var(--gradient-primary);
+  border-color: transparent;
   transform: translateY(-2px);
 }
 
 .history-keyword {
   font-size: 14px;
-  color: #606266;
+  color: var(--text-secondary);
   transition: color 0.3s;
 }
 
 .history-item:hover .history-keyword {
-  color: white;
+  color: #161812;
 }
 
 .delete-icon {
   font-size: 14px;
-  color: #999;
+  color: var(--text-tertiary);
   transition: all 0.3s;
 }
 
 .history-item:hover .delete-icon {
-  color: white;
+  color: #161812;
   transform: rotate(90deg);
 }
 
@@ -919,13 +1215,13 @@ const handleAddSuccess = () => {
 .loading-state {
   text-align: center;
   padding: 80px 20px;
-  color: #909399;
+  color: var(--text-secondary);
 }
 
 .loading-state .el-icon {
   font-size: 50px;
   margin-bottom: 15px;
-  color: #409eff;
+  color: var(--color-primary-light);
 }
 
 /* ========== 搜索结果 ========== */
@@ -950,8 +1246,62 @@ const handleAddSuccess = () => {
 
 .result-header h3 {
   font-size: 18px;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 600;
+}
+
+/* ========== 来源分区（曲库供应链 v1） ========== */
+.source-section {
+  margin-bottom: 30px;
+}
+
+.source-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.source-count {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-weight: normal;
+}
+
+.ext-tip {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ext-index {
+  color: #67c23a;
+  display: flex;
+  justify-content: center;
+}
+
+.license-badge {
+  font-size: 12px;
+  color: #67c23a;
+  border: 1px solid #b3e19d;
+  border-radius: 10px;
+  padding: 2px 10px;
+  white-space: nowrap;
+  margin-right: 10px;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.license-badge:hover {
+  background: #f0f9eb;
 }
 
 /* ========== 单曲列表 ========== */
@@ -965,10 +1315,11 @@ const handleAddSuccess = () => {
 }
 
 .song-list {
-  background: white;
-  border-radius: 12px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   padding: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 .song-item {
@@ -982,14 +1333,13 @@ const handleAddSuccess = () => {
 }
 
 .song-item:hover {
-  background: linear-gradient(135deg, #f5f7fa 0%, #ecf0f5 100%);
-  transform: translateX(5px);
+  background: var(--card-hover-bg);
 }
 
 .song-index {
   width: 30px;
   text-align: center;
-  color: #999;
+  color: var(--text-tertiary);
   font-size: 14px;
   font-weight: 600;
 }
@@ -1014,7 +1364,7 @@ const handleAddSuccess = () => {
 
 .song-name {
   font-size: 15px;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1024,7 +1374,7 @@ const handleAddSuccess = () => {
 
 .song-artist {
   font-size: 13px;
-  color: #999;
+  color: var(--text-tertiary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1036,23 +1386,23 @@ const handleAddSuccess = () => {
 }
 
 .clickable:hover {
-  color: #409eff;
+  color: var(--color-primary-light);
 }
 
 /* 高亮关键词 */
 .song-name :deep(.highlight),
 .song-artist :deep(.highlight),
 .artist-name :deep(.highlight) {
-  color: #409eff;
+  color: var(--color-primary-dark);
   font-weight: bold;
-  background: linear-gradient(135deg, #ecf5ff 0%, #e3f2fd 100%);
+  background: rgba(201, 255, 69, 0.16);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .song-duration {
   font-size: 13px;
-  color: #999;
+  color: var(--text-tertiary);
   margin-right: 20px;
   font-weight: 500;
 }
@@ -1080,8 +1430,8 @@ const handleAddSuccess = () => {
 }
 
 .artist-card {
-  background: white;
-  border-radius: 12px;
+  background: var(--surface-raised);
+  border-radius: var(--radius-xl);
   padding: 20px;
   cursor: pointer;
   transition: all 0.3s;
@@ -1142,7 +1492,7 @@ const handleAddSuccess = () => {
 
 .artist-name {
   font-size: 16px;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 6px;
   font-weight: 600;
   overflow: hidden;
@@ -1152,7 +1502,7 @@ const handleAddSuccess = () => {
 
 .artist-region {
   font-size: 13px;
-  color: #999;
+  color: var(--text-tertiary);
 }
 
 /* ========== 分页 ========== */
@@ -1170,7 +1520,7 @@ const handleAddSuccess = () => {
 
 .empty-icon {
   font-size: 100px;
-  color: #dcdfe6;
+  color: var(--border-strong);
 }
 
 /* ========== 过渡动画 ========== */

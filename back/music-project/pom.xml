@@ -64,6 +64,13 @@
             <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
 
+        <!-- HTML 解析（曲库供应链：gequhai 聚合源搜索/播放页解析） -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.17.2</version>
+        </dependency>
+
         <!--实体类增强（自动生成getter、setter等）-->
         <dependency>
             <groupId>org.projectlombok</groupId>

@@ -598,6 +598,7 @@ export default {
     }
 
     return {
+      ossThumb,
       loading,
       playlist,
       songs,

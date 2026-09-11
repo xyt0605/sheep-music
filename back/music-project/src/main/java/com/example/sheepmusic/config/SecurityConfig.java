@@ -49,6 +49,8 @@ public class SecurityConfig {
                         // Security 6.1 起错误页/转发电会被鉴权，匿名访问 /error 会用 401
                         // 覆盖真实状态码（403/404 全变 401），这里恢复 Boot 2 的语义
                         .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD).permitAll()
+                        // ASYNC 分发：SseEmitter 完成后的异步回派不带请求头，必须放行（小屋 DJ SSE）
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         // 放行 OPTIONS 请求（CORS 预检）
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // 放行登录注册接口（同时支持 /auth/** 和 /api/auth/**）
@@ -61,8 +63,14 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**", "/ws-chat/**", "/api/ws/**", "/api/ws-chat/**").permitAll()
                         // 放行热门搜索接口（公开接口）
                         .requestMatchers(HttpMethod.GET, "/api/user/search-history/hot").permitAll()
+                        // 放行外源音频流代理（<audio> 无法携带 JWT；曲库供应链 v1，暴露面由数字 trackId+白名单收敛）
+                        .requestMatchers("/music/external/stream", "/api/music/external/stream").permitAll()
                         // 管理员接口（只有管理员可访问）
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
+                        // 婉婉小屋管理接口（素材 CRUD + 星星动态）
+                        .requestMatchers("/memory/admin/**", "/api/memory/admin/**").hasRole("ADMIN")
+                        // 系统设置（OSS 配置等，仅管理员）
+                        .requestMatchers("/system/config/**", "/api/system/config/**").hasRole("ADMIN")
                         // 其他请求需要认证
                         .anyRequest().authenticated()
                 )

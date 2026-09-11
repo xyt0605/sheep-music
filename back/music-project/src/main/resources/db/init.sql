@@ -32,6 +32,13 @@ USE `sheepmusic`;
 -- JPA 会自动创建，包含字段：
 -- id, title, artist_id, artist_name, album_id, album_name, duration, cover, url, lyric, play_count, release_time, status, create_time, update_time
 
+-- 婉婉小屋素材表（tb_memory_item）
+-- JPA 会自动创建，包含字段：
+-- id, type(photo/video), media_url, cover_url, title, caption, memory_date, song_id, song_title, song_artist, song_cover, status(published/draft), star_count, sort_order, create_time
+
+-- 婉婉小屋星星表（tb_memory_star）
+-- JPA 会自动创建，包含字段：id, item_id, user_id, create_time（唯一键 item_id+user_id）
+
 -- =============================================
 -- 初始化管理员账号（密码：123456）
 -- =============================================

@@ -753,6 +753,7 @@ export default {
     })
     
     return {
+      ossThumb,
       userStore,
       hotSongs,
       newSongs,

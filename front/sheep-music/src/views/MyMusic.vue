@@ -958,6 +958,7 @@ export default {
     })
     
     return {
+      ossThumb,
       activeTab,
       favorites,
       playHistory,

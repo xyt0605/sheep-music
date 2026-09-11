@@ -345,6 +345,7 @@ export default {
     })
     
     return {
+      ossThumb,
       activeTab,
       loading,
       songs,
