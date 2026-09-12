@@ -173,7 +173,78 @@
       title="需要抱抱"
       @click="onHug"
     >
-      <span class="hug-fab-emoji">🫂</span>
+      <svg
+        viewBox="0 0 40 40"
+        class="hug-fab-face"
+      >
+        <ellipse
+          cx="13"
+          cy="9"
+          rx="3"
+          ry="5.5"
+          transform="rotate(-14 13 9)"
+          fill="#fff7f9"
+        />
+        <ellipse
+          cx="27"
+          cy="9"
+          rx="3"
+          ry="5.5"
+          transform="rotate(14 27 9)"
+          fill="#fff7f9"
+        />
+        <circle
+          cx="12"
+          cy="24"
+          r="7"
+          fill="#fff7f9"
+        />
+        <circle
+          cx="20"
+          cy="20"
+          r="10"
+          fill="#fff7f9"
+        />
+        <circle
+          cx="28"
+          cy="24"
+          r="7"
+          fill="#fff7f9"
+        />
+        <circle
+          cx="15"
+          cy="21"
+          r="1.6"
+          fill="#4a2b33"
+        />
+        <circle
+          cx="25"
+          cy="21"
+          r="1.6"
+          fill="#4a2b33"
+        />
+        <circle
+          cx="12"
+          cy="25"
+          r="2.4"
+          fill="#ffb3c6"
+          opacity="0.9"
+        />
+        <circle
+          cx="28"
+          cy="25"
+          r="2.4"
+          fill="#ffb3c6"
+          opacity="0.9"
+        />
+        <path
+          d="M18 24.5 Q19.3 26.2 20 24.5 Q20.7 26.2 22 24.5"
+          stroke="#4a2b33"
+          stroke-width="1.4"
+          stroke-linecap="round"
+          fill="none"
+        />
+      </svg>
       <span class="hug-fab-label">需要抱抱</span>
     </button>
 
@@ -730,7 +801,19 @@ onBeforeUnmount(() => {
   box-shadow: 0 14px 32px rgba(255, 93, 143, 0.55);
 }
 .hug-fab:disabled { opacity: 0.7; cursor: wait; }
-.hug-fab-emoji { font-size: 18px; }
+.hug-fab-face {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  animation: fab-wiggle 3.6s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+@keyframes fab-wiggle {
+  0%, 78%, 100% { transform: rotate(0deg); }
+  84% { transform: rotate(-7deg); }
+  90% { transform: rotate(6deg); }
+  95% { transform: rotate(-3deg); }
+}
 .hug-fab-label { font-size: 13px; letter-spacing: 0.06em; }
 
 @media (max-width: 560px) {
