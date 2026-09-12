@@ -1,6 +1,7 @@
 <template>
   <Teleport to="body">
     <div
+      v-if="open"
       class="star-map-overlay"
       @click.self="close"
     >
@@ -54,6 +55,8 @@
 <script setup>
 import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
 import { getStarMap } from '@/api/memory'
+
+const onKey = (e) => { if (e.key === 'Escape') close() }
 
 const props = defineProps({
   open: { type: Boolean, default: false }
@@ -151,6 +154,8 @@ const onCanvasClick = (e) => {
 
 let onResize
 watch(() => props.open, async (v) => {
+  if (v) window.addEventListener('keydown', onKey)
+  else window.removeEventListener('keydown', onKey)
   if (!v) {
     cancelAnimationFrame(rafId)
     return
@@ -176,6 +181,7 @@ watch(() => props.open, async (v) => {
 
 onBeforeUnmount(() => {
   cancelAnimationFrame(rafId)
+  window.removeEventListener('keydown', onKey)
   if (onResize) window.removeEventListener('resize', onResize)
 })
 </script>
