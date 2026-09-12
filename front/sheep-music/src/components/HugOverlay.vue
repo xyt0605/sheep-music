@@ -6,153 +6,206 @@
     >
       <div class="hug-glow" />
 
-      <!-- 奶包本包：举着小手求抱抱的小羊驼 -->
+      <!-- 奶包本包：举着猫爪求抱抱的白色长毛猫（按本猫照片绘制） -->
       <div class="hug-alpaca">
         <svg
           viewBox="0 0 200 200"
           class="alpaca-svg"
         >
-          <!-- 耳朵 -->
-          <g class="alpaca-ears">
-            <ellipse
-              cx="82"
-              cy="46"
-              rx="8"
-              ry="15"
-              transform="rotate(-14 82 46)"
-              fill="#fff7f9"
-              stroke="#f3c9d4"
-              stroke-width="2.5"
-            />
-            <ellipse
-              cx="84"
-              cy="50"
-              rx="3.5"
-              ry="8"
-              transform="rotate(-14 84 50)"
-              fill="#ffc9d9"
-            />
-            <ellipse
-              cx="118"
-              cy="46"
-              rx="8"
-              ry="15"
-              transform="rotate(14 118 46)"
-              fill="#fff7f9"
-              stroke="#f3c9d4"
-              stroke-width="2.5"
-            />
-            <ellipse
-              cx="116"
-              cy="50"
-              rx="3.5"
-              ry="8"
-              transform="rotate(14 116 50)"
-              fill="#ffc9d9"
-            />
-          </g>
+          <!-- 耳朵（长毛猫小三角耳） -->
+          <path
+            d="M58 62 L66 24 Q67 18 73 23 L98 45 Z"
+            fill="#fffdfa"
+            stroke="#ece0d8"
+            stroke-width="2.5"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M142 62 L134 24 Q133 18 127 23 L102 45 Z"
+            fill="#fffdfa"
+            stroke="#ece0d8"
+            stroke-width="2.5"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M66 54 L70 36 L84 47 Z"
+            fill="#ffd9e2"
+          />
+          <path
+            d="M134 54 L130 36 L116 47 Z"
+            fill="#ffd9e2"
+          />
 
-          <!-- 举起来的小手 -->
+          <!-- 举起来的猫爪 -->
           <g class="alpaca-arms">
-            <ellipse
-              cx="46"
-              cy="104"
-              rx="10"
-              ry="19"
-              transform="rotate(24 46 104)"
-              fill="#fff7f9"
-              stroke="#f3c9d4"
+            <circle
+              cx="44"
+              cy="148"
+              r="12"
+              fill="#fffdfa"
+              stroke="#ece0d8"
               stroke-width="2.5"
             />
-            <ellipse
-              cx="154"
-              cy="104"
-              rx="10"
-              ry="19"
-              transform="rotate(-24 154 104)"
-              fill="#fff7f9"
-              stroke="#f3c9d4"
+            <path
+              d="M40 142 L40 152 M48 142 L48 152"
+              stroke="#f3d8d0"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <circle
+              cx="156"
+              cy="148"
+              r="12"
+              fill="#fffdfa"
+              stroke="#ece0d8"
               stroke-width="2.5"
+            />
+            <path
+              d="M152 142 L152 152 M160 142 L160 152"
+              stroke="#f3d8d0"
+              stroke-width="2"
+              stroke-linecap="round"
             />
           </g>
 
-          <!-- 圆滚滚的身体 + 头顶毛毛 -->
+          <!-- 圆滚滚的毛脸（长毛蓬松感：头顶毛毛球） -->
           <ellipse
             cx="100"
-            cy="122"
-            rx="56"
-            ry="50"
-            fill="#fff7f9"
-            stroke="#f3c9d4"
+            cy="118"
+            rx="60"
+            ry="54"
+            fill="#fffdfa"
+            stroke="#ece0d8"
             stroke-width="2.5"
           />
           <circle
-            cx="78"
-            cy="76"
+            cx="76"
+            cy="72"
             r="16"
-            fill="#fff7f9"
+            fill="#fffdfa"
           />
           <circle
             cx="100"
-            cy="70"
+            cy="66"
             r="18"
-            fill="#fff7f9"
+            fill="#fffdfa"
           />
           <circle
-            cx="122"
-            cy="76"
+            cx="124"
+            cy="72"
             r="16"
-            fill="#fff7f9"
+            fill="#fffdfa"
           />
 
-          <!-- 表情：闭眼笑 + 脸红 + ω 嘴 -->
+          <!-- 大眼睛（照片同款绿褐色） -->
+          <g>
+            <circle
+              cx="70"
+              cy="106"
+              r="12.5"
+              fill="#8fae5e"
+              stroke="#4a3f35"
+              stroke-width="2.5"
+            />
+            <circle
+              cx="70"
+              cy="106"
+              r="6"
+              fill="#241d1a"
+            />
+            <circle
+              cx="66.5"
+              cy="101.5"
+              r="3.2"
+              fill="#ffffff"
+            />
+            <circle
+              cx="73.5"
+              cy="109"
+              r="1.5"
+              fill="#ffffff"
+              opacity="0.9"
+            />
+          </g>
+          <g>
+            <circle
+              cx="130"
+              cy="106"
+              r="12.5"
+              fill="#8fae5e"
+              stroke="#4a3f35"
+              stroke-width="2.5"
+            />
+            <circle
+              cx="130"
+              cy="106"
+              r="6"
+              fill="#241d1a"
+            />
+            <circle
+              cx="126.5"
+              cy="101.5"
+              r="3.2"
+              fill="#ffffff"
+            />
+            <circle
+              cx="133.5"
+              cy="109"
+              r="1.5"
+              fill="#ffffff"
+              opacity="0.9"
+            />
+          </g>
+
+          <!-- 腮红 -->
+          <ellipse
+            cx="50"
+            cy="126"
+            rx="9"
+            ry="5.5"
+            fill="#ffc9d9"
+            opacity="0.8"
+          />
+          <ellipse
+            cx="150"
+            cy="126"
+            rx="9"
+            ry="5.5"
+            fill="#ffc9d9"
+            opacity="0.8"
+          />
+
+          <!-- 粉鼻子 + ω 嘴 -->
           <path
-            d="M74 96 Q80 90 86 96"
-            stroke="#4a2b33"
-            stroke-width="3"
-            stroke-linecap="round"
-            fill="none"
+            d="M93 123 L107 123 Q109 125 107 128 L101 132 Q100 133 99 132 L93 128 Q91 125 93 123 Z"
+            fill="#e8a2a2"
           />
           <path
-            d="M114 96 Q120 90 126 96"
-            stroke="#4a2b33"
-            stroke-width="3"
-            stroke-linecap="round"
-            fill="none"
-          />
-          <circle
-            cx="70"
-            cy="107"
-            r="7.5"
-            fill="#ffb3c6"
-            opacity="0.85"
-          />
-          <circle
-            cx="130"
-            cy="107"
-            r="7.5"
-            fill="#ffb3c6"
-            opacity="0.85"
-          />
-          <path
-            d="M94 104 Q97 108 100 104 Q103 108 106 104"
-            stroke="#4a2b33"
+            d="M100 132 L100 137 M100 137 Q95 142 91 137 M100 137 Q105 142 109 137"
+            stroke="#4a3f35"
             stroke-width="2.5"
             stroke-linecap="round"
             fill="none"
           />
 
-          <!-- 头顶小呆毛 + 爱心 -->
-          <path
-            d="M100 52 Q96 42 102 36"
-            stroke="#f3c9d4"
-            stroke-width="2.5"
+          <!-- 长胡须（本猫招牌） -->
+          <g
+            stroke="#d9c9c0"
+            stroke-width="2"
             stroke-linecap="round"
-            fill="none"
-          />
+          >
+            <path d="M42 110 L12 104" />
+            <path d="M42 120 L10 122" />
+            <path d="M42 130 L14 140" />
+            <path d="M158 110 L188 104" />
+            <path d="M158 120 L190 122" />
+            <path d="M158 130 L186 140" />
+          </g>
+
+          <!-- 头顶小爱心（心跳） -->
           <path
             class="alpaca-heart"
-            d="M150 42 c-3-4-9-1-9 3 c0 4 9 9 9 9 s9-5 9-9 c0-4-6-7-9-3z"
+            d="M152 40 c-3-4-9-1-9 3 c0 4 9 9 9 9 s9-5 9-9 c0-4-6-7-9-3z"
             fill="#ff5d8f"
           />
         </svg>

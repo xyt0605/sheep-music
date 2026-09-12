@@ -177,73 +177,72 @@
         viewBox="0 0 40 40"
         class="hug-fab-face"
       >
-        <ellipse
-          cx="13"
-          cy="9"
-          rx="3"
-          ry="5.5"
-          transform="rotate(-14 13 9)"
-          fill="#fff7f9"
+        <path
+          d="M8 17 L11 5 L20 13 Z"
+          fill="#fffdfa"
         />
-        <ellipse
-          cx="27"
-          cy="9"
-          rx="3"
-          ry="5.5"
-          transform="rotate(14 27 9)"
-          fill="#fff7f9"
+        <path
+          d="M32 17 L29 5 L20 13 Z"
+          fill="#fffdfa"
         />
         <circle
           cx="12"
           cy="24"
           r="7"
-          fill="#fff7f9"
+          fill="#fffdfa"
         />
         <circle
           cx="20"
           cy="20"
-          r="10"
-          fill="#fff7f9"
+          r="10.5"
+          fill="#fffdfa"
         />
         <circle
           cx="28"
           cy="24"
           r="7"
-          fill="#fff7f9"
+          fill="#fffdfa"
         />
         <circle
-          cx="15"
-          cy="21"
-          r="1.6"
-          fill="#4a2b33"
+          cx="15.5"
+          cy="20.5"
+          r="3"
+          fill="#8fae5e"
+          stroke="#4a3f35"
+          stroke-width="0.8"
         />
         <circle
-          cx="25"
-          cy="21"
-          r="1.6"
-          fill="#4a2b33"
+          cx="15.5"
+          cy="20.5"
+          r="1.3"
+          fill="#241d1a"
         />
         <circle
-          cx="12"
-          cy="25"
-          r="2.4"
-          fill="#ffb3c6"
-          opacity="0.9"
+          cx="24.5"
+          cy="20.5"
+          r="3"
+          fill="#8fae5e"
+          stroke="#4a3f35"
+          stroke-width="0.8"
         />
         <circle
-          cx="28"
-          cy="25"
-          r="2.4"
-          fill="#ffb3c6"
-          opacity="0.9"
+          cx="24.5"
+          cy="20.5"
+          r="1.3"
+          fill="#241d1a"
         />
         <path
-          d="M18 24.5 Q19.3 26.2 20 24.5 Q20.7 26.2 22 24.5"
-          stroke="#4a2b33"
-          stroke-width="1.4"
-          stroke-linecap="round"
-          fill="none"
+          d="M18.2 25 L21.8 25 Q22.5 25.7 21.8 26.4 L20 27.8 L18.2 26.4 Q17.5 25.7 18.2 25 Z"
+          fill="#e8a2a2"
         />
+        <g
+          stroke="#e8d8cc"
+          stroke-width="1"
+          stroke-linecap="round"
+        >
+          <path d="M6 22 L0.5 20.5" />
+          <path d="M34 22 L39.5 20.5" />
+        </g>
       </svg>
       <span class="hug-fab-label">需要抱抱</span>
     </button>
