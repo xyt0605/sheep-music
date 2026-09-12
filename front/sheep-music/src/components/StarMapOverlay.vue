@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <div
-      v-if="open"
+      v-if="modelValue"
       class="star-map-overlay"
       @click.self="close"
     >
@@ -59,7 +59,7 @@ import { getStarMap } from '@/api/memory'
 const onKey = (e) => { if (e.key === 'Escape') close() }
 
 const props = defineProps({
-  open: { type: Boolean, default: false }
+  modelValue: { type: Boolean, default: false }
 })
 const emit = defineEmits(['update:open', 'open-item'])
 
@@ -67,7 +67,7 @@ const loading = ref(false)
 const stars = ref([])
 const canvasRef = ref(null)
 
-const close = () => emit('update:open', false)
+const close = () => emit('update:modelValue', false)
 
 // 黄金角螺旋：同一颗星永远在同一位置（星星只会长，不会乱）
 const GOLDEN_ANGLE = 137.508 * Math.PI / 180
@@ -153,7 +153,7 @@ const onCanvasClick = (e) => {
 }
 
 let onResize
-watch(() => props.open, async (v) => {
+watch(() => props.modelValue, async (v) => {
   if (v) window.addEventListener('keydown', onKey)
   else window.removeEventListener('keydown', onKey)
   if (!v) {
